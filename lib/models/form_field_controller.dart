@@ -19,7 +19,7 @@ class FormFieldsController<F extends FormSchema> extends ChangeNotifier {
   GlobalKey<FormFieldState<T>> fieldKey<T>(TypedId<T> fieldId) {
     return _fieldKeys.putIfAbsent(
       fieldId.id,
-      () => GlobalKey<FormFieldState<T>>(debugLabel: '${fieldId.id}'),
+      () => GlobalKey<FormFieldState<T>>(debugLabel: fieldId.id),
     ) as GlobalKey<FormFieldState<T>>;
   }
 

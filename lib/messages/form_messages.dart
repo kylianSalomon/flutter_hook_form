@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 
-class FormMessages {
-  const FormMessages();
+class FormErrorMessages {
+  const FormErrorMessages();
 
   // Common messages
   String get required => 'Required';
@@ -25,26 +25,28 @@ class FormMessages {
   String maxItems(int count) => 'Must have at most $count items';
 }
 
+/// Add this widget on top of your widget tree to override the default
+/// form messages. Useful to translate the form error messages.
 class HookFormScope extends InheritedWidget {
   const HookFormScope({
     super.key,
     required super.child,
-    this.messages = const FormMessages(),
+    this.messages = const FormErrorMessages(),
   });
 
-  final FormMessages messages;
+  final FormErrorMessages messages;
 
-  static FormMessages? maybeOf(BuildContext context) {
+  static FormErrorMessages? maybeOf(BuildContext context) {
     return context
         .dependOnInheritedWidgetOfExactType<HookFormScope>()
         ?.messages;
   }
 
-  static FormMessages of(BuildContext context) {
+  static FormErrorMessages of(BuildContext context) {
     return context
             .dependOnInheritedWidgetOfExactType<HookFormScope>()
             ?.messages ??
-        const FormMessages();
+        const FormErrorMessages();
   }
 
   @override
