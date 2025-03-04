@@ -6,11 +6,9 @@ import '../models/form_schema.dart';
 
 /// A hook that provides a [FormFieldsController] to manage form field states.
 ///
-/// This hook is used to create a [FormFieldsController] instance that can be
-/// used to manage the state of form fields.
 ///
 /// The [FormFieldsController] is a [Listenable] that can be used to listen to
-/// changes in the form field states.
+/// changes in the form field states and created from a [FormSchema] instance.
 ///
 /// Be aware that this hook is a `flutter_hooks` hook and needs to be used
 /// inside a [HookWidget]. For more information about `flutter_hooks`, please
