@@ -1,0 +1,20 @@
+name: flutter_hook_form
+description: "A Flutter package that provides a hook to manage form fields."
+version: 0.0.1
+
+environment:
+  sdk: ^3.6.1
+  flutter: ">=1.17.0"
+
+dependencies:
+  collection: ^1.19.0
+  cross_file: ^0.3.4+2
+  flutter:
+    sdk: flutter
+  flutter_hooks: ^0.21.2
+  mime: ^2.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
