@@ -1,3 +1,9 @@
+## 0.0.3
+
+* Add comprehensive documentation
+* Update exports
+* Add example for package demonstration
+
 ## 0.0.2
 
 * Add test suite and improve comments
