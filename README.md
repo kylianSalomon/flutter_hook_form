@@ -276,6 +276,16 @@ void main() {
 (_, __) {}.maxItems(5)
 ```
 
+**Be Careful** : validators of the same type can be _chained_ but the order is important. Last in the chain will be the first executed.
+
+```dart
+// ❌ "required field" error will not appear because "min" is executed first
+(_,__){}.required().email().min(2)
+
+// ✅ "required field" error will appear if the field is empty.
+(_,__){}.email().min(2).required()
+```
+
 ### Use Cases
 
 #### Form Value Handling and Payload Conversion
