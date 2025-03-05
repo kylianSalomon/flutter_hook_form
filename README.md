@@ -276,7 +276,7 @@ void main() {
 (_, __) {}.maxItems(5)
 ```
 
-**Be Careful** : validators of the same type can be _chained_ but the order is important. Last in the chain will be the first executed.
+🚨 **Be Careful** : validators of the same type can be _chained_ but the order is important. Last in the chain will be the first executed.
 
 ```dart
 // ❌ "required field" error will not appear because "min" is executed first
