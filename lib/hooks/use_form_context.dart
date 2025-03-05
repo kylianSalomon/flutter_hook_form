@@ -1,5 +1,4 @@
 import 'package:flutter/widgets.dart';
-import 'package:flutter_hook_form/hooks/hooks.dart';
 
 import '../models/form_field_controller.dart';
 import '../models/form_schema.dart';
@@ -11,6 +10,7 @@ import '../models/form_schema.dart';
 /// and not the [useForm] that is used to create the [FormFieldsController].
 class FormProvider<F extends FormSchema>
     extends InheritedNotifier<FormFieldsController<F>> {
+  /// Creates a [FormProvider].
   const FormProvider({
     super.key,
     required super.child,
