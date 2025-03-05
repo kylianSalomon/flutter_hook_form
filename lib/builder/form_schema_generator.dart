@@ -4,7 +4,7 @@ import 'package:source_gen/source_gen.dart';
 import '../annotations/form_annotations.dart';
 
 /// Generator for form schemas.
-class FormSchemaGenerator extends GeneratorForAnnotation<FormSchema> {
+class FormSchemaGenerator extends GeneratorForAnnotation<HookFormSchema> {
   @override
   String generateForAnnotatedElement(
     Element element,
@@ -23,7 +23,7 @@ class FormSchemaGenerator extends GeneratorForAnnotation<FormSchema> {
     });
 
     final buffer = StringBuffer();
-    buffer.writeln('class ${className}Schema extends FormSchema {');
+    buffer.writeln('class ${className}Schema extends HookFormSchema {');
     buffer.writeln('  ${className}Schema() : super(');
     buffer.writeln('    fields: {');
 

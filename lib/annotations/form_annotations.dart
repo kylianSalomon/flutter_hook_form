@@ -1,12 +1,12 @@
 /// Annotation to mark a class as a form schema.
-class FormSchema {
-  const FormSchema();
+class HookFormSchema {
+  const HookFormSchema();
 }
 
 /// Annotation to mark a field as a form field.
-class FormField {
+class HookFormField {
   /// Creates a [FormField] annotation.
-  const FormField({
+  const HookFormField({
     this.validators = const [],
   });
 
