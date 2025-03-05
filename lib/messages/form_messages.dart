@@ -57,7 +57,7 @@ class HookFormScope extends InheritedWidget {
   const HookFormScope({
     super.key,
     required super.child,
-    this.messages = const FormErrorMessages(),
+    required this.messages,
   });
 
   /// The form error messages.

@@ -179,7 +179,10 @@ class _TestBuildContext extends BuildContext {
     Object? aspect,
   }) {
     if (T == HookFormScope) {
-      return HookFormScope(child: Container()) as T;
+      return HookFormScope(
+        messages: const FormErrorMessages(),
+        child: Container(),
+      ) as T;
     }
 
     throw UnimplementedError('dependOnInheritedWidgetOfExactType<$T>');
