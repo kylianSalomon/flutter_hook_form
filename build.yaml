@@ -1,0 +1,7 @@
+targets:
+  $default:
+    builders:
+      flutter_hook_form:
+        enabled: true
+        generate_for:
+          - lib/**.dart
