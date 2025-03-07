@@ -62,7 +62,17 @@ class FormFieldsController<F extends FormSchema> extends ChangeNotifier {
   /// Get the validators of a form field. Use `localize` to localize the
   /// validators.
   ValidatorFn<T>? validators<T>(TypedId<T> fieldId) {
-    return _formSchema.field(fieldId)?.validators;
+    final validators = _formSchema.field(fieldId)?.validators;
+
+    return validators?.fold<ValidatorFn<T>>(
+      (value, context) => null,
+      (previous, validator) {
+        return (value, context) {
+          final error = validator.validator(value, context);
+          return error ?? previous.call(value, context);
+        };
+      },
+    );
   }
 
   /// Validate the form.

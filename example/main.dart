@@ -14,22 +14,31 @@ class MyCustomMessages extends FormErrorMessages {
 class SignInFormSchema extends FormSchema {
   SignInFormSchema()
       : super(fields: {
-          FormFieldScheme<String>(
+          const FormFieldScheme<String>(
             email,
-            validators: (_, __) {}.email().required(),
+            validators: [RequiredValidator(), EmailValidator()],
           ),
-          FormFieldScheme<String>(
+          const FormFieldScheme<String>(
             password,
-            validators: (_, __) {}.required(),
+            validators: [RequiredValidator()],
           ),
-          const FormFieldScheme<bool>(
-            rememberMe,
-          ),
+          const FormFieldScheme<bool>(rememberMe),
         });
 
   static const TypedId<String> email = TypedId('email');
   static const TypedId<String> password = TypedId('password');
   static const TypedId<bool> rememberMe = TypedId('rememberMe');
+}
+
+class MyValidator extends Validator<String> {
+  @override
+  ValidatorFn<String> get validator {
+    return (value, context) {
+      const myMEssageError = 'Context.of(context).required';
+
+      return const RequiredValidator(myMEssageError).validator(value, context);
+    };
+  }
 }
 
 class MyApp extends StatelessWidget {

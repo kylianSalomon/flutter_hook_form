@@ -12,12 +12,12 @@ void main() {
 
   group('Common Validators', () {
     test('required validator works with any type', () {
-      final stringValidator = ((String? value, _) => null).required();
+      final stringValidator = const RequiredValidator<String>().validator;
       final stringValidator2 =
-          ((String? value, _) => null).required('Custom message');
-      final intValidator = ((int? value, _) => null).required();
-      final listValidator = ((List? value, _) => null).required();
-      final dateValidator = ((DateTime? value, _) => null).required();
+          const RequiredValidator<String>('Custom message').validator;
+      final intValidator = const RequiredValidator<int>().validator;
+      final listValidator = const RequiredValidator<List>().validator;
+      final dateValidator = const RequiredValidator<DateTime>().validator;
 
       // String tests
       expect(stringValidator(null, context), isNotNull);
@@ -44,8 +44,9 @@ void main() {
 
   group('String Validators', () {
     test('min length validator', () {
-      final validator = ((String? value, _) => null).min(3);
-      final validator2 = ((String? value, _) => null).min(3, 'Custom message');
+      final validator = const MinLengthValidator(3).validator;
+      final validator2 =
+          const MinLengthValidator(3, 'Custom message').validator;
 
       _expectNullOnNullValue(validator, context);
       expect(validator('ab', context), isNotNull);
@@ -55,8 +56,9 @@ void main() {
     });
 
     test('max length validator', () {
-      final validator = ((String? value, _) => null).max(3);
-      final validator2 = ((String? value, _) => null).max(3, 'Custom message');
+      final validator = const MaxLengthValidator(3).validator;
+      final validator2 =
+          const MaxLengthValidator(3, 'Custom message').validator;
 
       _expectNullOnNullValue(validator, context);
       expect(validator('ab', context), isNull);
@@ -66,8 +68,8 @@ void main() {
     });
 
     test('email validator', () {
-      final validator = ((String? value, _) => null).email();
-      final validator2 = ((String? value, _) => null).email('Custom message');
+      final validator = const EmailValidator().validator;
+      final validator2 = const EmailValidator('Custom message').validator;
 
       _expectNullOnNullValue(validator, context);
       expect(validator('not-an-email', context), isNotNull);
@@ -78,8 +80,8 @@ void main() {
     });
 
     test('phone validator', () {
-      final validator = ((String? value, _) => null).phone();
-      final validator2 = ((String? value, _) => null).phone('Custom message');
+      final validator = const PhoneValidator().validator;
+      final validator2 = const PhoneValidator('Custom message').validator;
 
       _expectNullOnNullValue(validator, context);
       expect(validator('123', context), isNotNull);
@@ -95,9 +97,9 @@ void main() {
     final tomorrow = now.add(const Duration(days: 1));
 
     test('isAfter validator', () {
-      final validator = ((DateTime? value, _) => null).isAfter(now);
+      final validator = DateTimeValidator.isAfter(now).validator;
       final validator2 =
-          ((DateTime? value, _) => null).isAfter(now, 'Custom message');
+          DateTimeValidator.isAfter(now, 'Custom message').validator;
 
       _expectNullOnNullValue(validator, context);
       expect(validator(yesterday, context), isNotNull);
@@ -106,9 +108,9 @@ void main() {
     });
 
     test('isBefore validator', () {
-      final validator = ((DateTime? value, _) => null).isBefore(now);
+      final validator = DateTimeValidator.isBefore(now).validator;
       final validator2 =
-          ((DateTime? value, _) => null).isBefore(now, 'Custom message');
+          DateTimeValidator.isBefore(now, 'Custom message').validator;
 
       _expectNullOnNullValue(validator, context);
       expect(validator(tomorrow, context), isNotNull);
@@ -119,9 +121,8 @@ void main() {
 
   group('List Validators', () {
     test('minItems validator', () {
-      final validator = ((List? value, _) => null).minItems(2);
-      final validator2 =
-          ((List? value, _) => null).minItems(2, 'Custom message');
+      final validator = ListValidator.minItems(2).validator;
+      final validator2 = ListValidator.minItems(2, 'Custom message').validator;
 
       _expectNullOnNullValue(validator, context);
       expect(validator(['one'], context), isNotNull);
@@ -131,9 +132,8 @@ void main() {
     });
 
     test('maxItems validator', () {
-      final validator = ((List? value, _) => null).maxItems(2);
-      final validator2 =
-          ((List? value, _) => null).maxItems(2, 'Custom message');
+      final validator = ListValidator.maxItems(2).validator;
+      final validator2 = ListValidator.maxItems(2, 'Custom message').validator;
 
       _expectNullOnNullValue(validator, context);
       expect(validator(['one'], context), isNull);
@@ -146,9 +146,11 @@ void main() {
   group('File Validators', () {
     test('format validator', () {
       final validator =
-          ((XFile? value, _) => null).mimeType({'image/jpeg', 'image/png'});
-      final validator2 = ((XFile? value, _) => null)
-          .mimeType({'image/jpeg', 'image/png'}, 'Custom message');
+          FileValidator.mimeType({'image/jpeg', 'image/png'}).validator;
+      final validator2 = FileValidator.mimeType(
+        {'image/jpeg', 'image/png'},
+        'Custom message',
+      ).validator;
       final jpegFile = XFile('test.jpg', mimeType: 'image/jpeg');
       final pdfFile = XFile('test.pdf', mimeType: 'application/pdf');
 
