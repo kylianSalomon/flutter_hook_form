@@ -7,5 +7,6 @@ export 'hooks/use_form_context.dart';
 export 'messages/form_messages.dart';
 export 'models/form_field_controller.dart';
 export 'models/form_schema.dart';
-export 'models/types.dart';
-export 'validators.dart';
+export 'models/validator.dart';
+export 'validators/validators.dart';
+export 'validators/validators.extension.dart';

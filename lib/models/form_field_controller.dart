@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 
 import 'form_schema.dart';
 import 'types.dart';
+import 'validator.dart';
 
 /// A controller that manages form field states and validation
 class FormFieldsController<F extends FormSchema> extends ChangeNotifier {

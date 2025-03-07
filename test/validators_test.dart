@@ -119,9 +119,9 @@ void main() {
 
   group('List Validators', () {
     test('minItems validator', () {
-      final validator = ((List? value, _) => null).minItems<String>(2);
+      final validator = ((List? value, _) => null).minItems(2);
       final validator2 =
-          ((List? value, _) => null).minItems<String>(2, 'Custom message');
+          ((List? value, _) => null).minItems(2, 'Custom message');
 
       _expectNullOnNullValue(validator, context);
       expect(validator(['one'], context), isNotNull);
@@ -131,9 +131,9 @@ void main() {
     });
 
     test('maxItems validator', () {
-      final validator = ((List? value, _) => null).maxItems<String>(2);
+      final validator = ((List? value, _) => null).maxItems(2);
       final validator2 =
-          ((List? value, _) => null).maxItems<String>(2, 'Custom message');
+          ((List? value, _) => null).maxItems(2, 'Custom message');
 
       _expectNullOnNullValue(validator, context);
       expect(validator(['one'], context), isNull);
@@ -146,9 +146,9 @@ void main() {
   group('File Validators', () {
     test('format validator', () {
       final validator =
-          ((XFile? value, _) => null).format({'image/jpeg', 'image/png'});
+          ((XFile? value, _) => null).mimeType({'image/jpeg', 'image/png'});
       final validator2 = ((XFile? value, _) => null)
-          .format({'image/jpeg', 'image/png'}, 'Custom message');
+          .mimeType({'image/jpeg', 'image/png'}, 'Custom message');
       final jpegFile = XFile('test.jpg', mimeType: 'image/jpeg');
       final pdfFile = XFile('test.pdf', mimeType: 'application/pdf');
 

@@ -1,6 +1,6 @@
 import 'package:collection/collection.dart';
 
-import 'types.dart';
+import 'validator.dart';
 
 /// A schema that defines the form fields and their validators.
 ///
