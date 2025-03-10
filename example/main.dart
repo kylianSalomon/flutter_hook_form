@@ -9,6 +9,16 @@ void main() {
 class MyCustomMessages extends FormErrorMessages {
   @override
   String get required => 'This field is required';
+
+  String minAge(int age) => 'You must be $age to use this.';
+
+  @override
+  String? parseErrorCode(String errorCode, dynamic value) {
+    return switch (errorCode) {
+      'min_age_error' when value is int => minAge(value),
+      _ => null,
+    };
+  }
 }
 
 class SignInFormSchema extends FormSchema {
@@ -36,9 +46,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: HookFormScope(
+      builder: (context, child) => HookFormScope(
         messages: MyCustomMessages(),
-        child: const SignInPage(),
+        child: child ?? const SignInPage(),
       ),
     );
   }
