@@ -284,7 +284,8 @@ extension ValidatorListExtension<T> on List<Validator<T>>? {
       _MaxItemsValidator(length: final length) =>
         HookFormScope.of(context).maxItems(length),
       _ =>
-        HookFormScope.of(context).parseErrorCode(validator.errorCode) ?? error,
+        HookFormScope.of(context).parseErrorCode(validator.errorCode, value) ??
+            error,
     };
   }
 }
