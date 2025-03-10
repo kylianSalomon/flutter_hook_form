@@ -46,7 +46,8 @@ class FormFieldsController<F extends FormSchema> extends ChangeNotifier {
 
   /// Get the error of a form field.
   String? getFieldError<T>(TypedId<T> fieldId) {
-    return _fieldKeys[fieldId.id]?.currentState?.errorText;
+    return _forcedErrors[fieldId.id] ??
+        _fieldKeys[fieldId.id]?.currentState?.errorText;
   }
 
   /// Set the error of a form field.
@@ -72,6 +73,23 @@ class FormFieldsController<F extends FormSchema> extends ChangeNotifier {
     final isValid = key.currentState?.validate() ?? false;
     notifyListeners(); // Notify listeners after validation
     return isValid;
+  }
+
+  /// Reset the form.
+  void reset() {
+    key.currentState?.reset();
+    _forcedErrors.clear();
+    notifyListeners(); // Notify listeners after reset
+  }
+
+  /// Validate the form fields.
+  bool validateFields<T>(TypedId<T> fieldId) {
+    return fieldKey(fieldId).currentState?.validate() ?? false;
+  }
+
+  /// Check if the form field has been interacted with.
+  bool isDirty<T>(TypedId<T> fieldId) {
+    return fieldKey(fieldId).currentState?.hasInteractedByUser ?? false;
   }
 
   /// Save the form.
