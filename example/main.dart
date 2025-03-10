@@ -30,17 +30,6 @@ class SignInFormSchema extends FormSchema {
   static const TypedId<bool> rememberMe = TypedId('rememberMe');
 }
 
-class MyValidator extends Validator<String> {
-  @override
-  ValidatorFn<String> get validator {
-    return (value, context) {
-      const myMEssageError = 'Context.of(context).required';
-
-      return const RequiredValidator(myMEssageError).validator(value, context);
-    };
-  }
-}
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 

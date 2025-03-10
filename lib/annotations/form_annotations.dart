@@ -1,3 +1,5 @@
+import '../models/validator.dart';
+
 /// Annotation to mark a class as a form schema.
 class HookFormSchema {
   const HookFormSchema();
@@ -15,5 +17,5 @@ class HookFormField<T> {
   });
 
   /// The validators to apply to this field.
-  final List<ValidatorAnnotation<T>> validators;
+  final List<Validator<T>> validators;
 }
