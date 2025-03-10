@@ -65,13 +65,21 @@ class FormSchemaGenerator extends GeneratorForAnnotation<HookFormSchema> {
       });
 
       final source = annotation.toSource();
-      final start = source.indexOf('[');
-      final end = source.lastIndexOf(']');
-      final validatorsSource = source.substring(start, end + 1);
+      String? validatorsSource;
+
+      if (source.contains('validators:')) {
+        final start = source.indexOf('[');
+        final end = source.lastIndexOf(']');
+        if (start != -1 && end != -1) {
+          validatorsSource = source.substring(start, end + 1);
+        }
+      }
 
       buffer.writeln('      FormFieldScheme<$fieldType>(');
       buffer.writeln('        $fieldName,');
-      buffer.writeln('        validators: $validatorsSource,');
+      if (validatorsSource != null) {
+        buffer.writeln('        validators: $validatorsSource,');
+      }
       buffer.writeln('      ),');
     }
 
@@ -122,8 +130,25 @@ class FormSchemaGenerator extends GeneratorForAnnotation<HookFormSchema> {
   }
 
   String _getFieldType(FieldElement field) {
-    final fieldType = field.type;
+    // First try to get type from annotation
+    final annotation = field.metadata.firstWhere(
+      (meta) => meta.toSource().startsWith('@HookFormField'),
+      orElse: () => throw InvalidGenerationSourceError(
+        'Field ${field.name} must have @HookFormField annotation',
+      ),
+    );
 
+    final source = annotation.toSource();
+    if (source.startsWith('@HookFormField<')) {
+      final start = source.indexOf('<') + 1;
+      final end = source.indexOf('>');
+      if (start != -1 && end != -1) {
+        return source.substring(start, end);
+      }
+    }
+
+    // Fallback to field type if no explicit type in annotation
+    final fieldType = field.type;
     if (fieldType is ParameterizedType) {
       if (fieldType.element?.name == 'TypedId') {
         final typeArgs = fieldType.typeArguments;
