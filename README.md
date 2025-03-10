@@ -385,7 +385,7 @@ class MinAgeValidator extends Validator<DateTime> {
 static const birthDate = _BirthDateFieldSchema();
 ```
 
-Note: Validators return an `errorCode` instead of the actual error message. This design enables internationalization of error messages. The error codes are mapped to translated messages using the `FormMessages` class. See [Custom Validation Messages & Internationalization](#custom-validation-messages--internationalization) for more details.
+Note: Validators return an `errorCode` instead of the actual error message. This design enables internationalization of error messages. The error codes are mapped to translated messages using the `FormErrorMessages` class. See [Custom Validation Messages & Internationalization](#custom-validation-messages--internationalization) for more details.
 
 ### How to use
 
@@ -590,10 +590,10 @@ class SignInForm extends HookWidget {
 
 ### Custom Validation Messages & Internationalization
 
-_flutter_hook_form_ comes with validators messages customization. Simply override the `FormMessages` class and provide it via the `HookFormScope`. This allow to translate errors messages that appears in forms.
+_flutter_hook_form_ comes with validators messages customization. Simply override the `FormErrorMessages` class and provide it via the `HookFormScope`. This allow to translate errors messages that appears in forms.
 
 ```dart
-class CustomFormMessages extends FormMessages {
+class CustomFormMessages extends FormErrorMessages {
   const CustomFormMessages(this.context);
 
   final BuildContext context;

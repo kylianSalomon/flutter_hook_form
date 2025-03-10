@@ -5,7 +5,7 @@
 * ⚠️ Validator usage has been updated to support internationalization:
   * Validators are now declared in a list instead of being chained in a function.
   * Validators now return `errorCode` instead of error messages
-  * Error messages are handled through the `FormMessages` class
+  * Error messages are handled through the `FormErrorMessages` class
   * Custom validators need to extend `Validator<T>` and provide an `errorCode`
   * See the [documentation](README.md#custom-validation-messages--internationalization) for migration details
 
