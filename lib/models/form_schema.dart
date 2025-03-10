@@ -1,6 +1,6 @@
 import 'package:collection/collection.dart';
 
-import 'types.dart';
+import 'validator.dart';
 
 /// A schema that defines the form fields and their validators.
 ///
@@ -56,7 +56,7 @@ class FormFieldScheme<T> {
   final TypedId<T> id;
 
   /// The validators.
-  final ValidatorFn<T>? validators;
+  final List<Validator<T>>? validators;
 }
 
 /// A class that defines a form field id. This allow to have type safety
