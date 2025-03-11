@@ -10,6 +10,7 @@ final _phonePattern = RegExp(r'^\+?[0-9]{9,14}$');
 
 /// Required field validator.
 class RequiredValidator<T> extends Validator<T> {
+  /// Creates a [RequiredValidator].
   const RequiredValidator({
     super.message,
   }) : super(errorCode: 'required');
@@ -28,6 +29,7 @@ class RequiredValidator<T> extends Validator<T> {
 
 /// Email validator.
 class EmailValidator extends Validator<String> {
+  /// Creates a [EmailValidator].
   const EmailValidator({
     super.message,
   }) : super(errorCode: 'invalid_email');
@@ -50,8 +52,11 @@ class EmailValidator extends Validator<String> {
 
 /// Minimum length validator.
 class MinLengthValidator extends Validator<String> {
+  /// Creates a [MinLengthValidator].
   const MinLengthValidator(this.length, {super.message})
       : super(errorCode: 'min_length');
+
+  /// The minimum length.
   final int length;
 
   @override
@@ -68,9 +73,11 @@ class MinLengthValidator extends Validator<String> {
 
 /// Maximum length validator.
 class MaxLengthValidator extends Validator<String> {
+  /// Creates a [MaxLengthValidator].
   const MaxLengthValidator(this.length, {super.message})
       : super(errorCode: 'max_length');
 
+  /// The maximum length.
   final int length;
 
   @override
@@ -85,7 +92,9 @@ class MaxLengthValidator extends Validator<String> {
   }
 }
 
+/// Phone validator.
 class PhoneValidator extends Validator<String> {
+  /// Creates a [PhoneValidator].
   const PhoneValidator({
     super.message,
   }) : super(errorCode: 'invalid_phone');
@@ -106,15 +115,20 @@ class PhoneValidator extends Validator<String> {
   }
 }
 
+/// File validator.
 class FileValidator {
+  /// Creates a [FileValidator].
   const FileValidator._();
 
+  /// Creates a [MimeTypeValidator].
   static Validator<XFile> mimeType(Set<String> mimeType, [String? message]) {
     return _MimeTypeValidator(mimeType, message: message);
   }
 }
 
+/// Mime type validator.
 class _MimeTypeValidator extends Validator<XFile> {
+  /// Creates a [_MimeTypeValidator].
   const _MimeTypeValidator(this.mimeType, {super.message})
       : super(errorCode: 'invalid_file_format');
 
@@ -134,13 +148,17 @@ class _MimeTypeValidator extends Validator<XFile> {
   }
 }
 
+/// Date validator.
 class DateTimeValidator {
+  /// Creates a [DateTimeValidator].
   const DateTimeValidator._();
 
+  /// Creates a date after validator.
   static Validator<DateTime> isAfter(DateTime min, [String? message]) {
     return _IsAfterValidator(min, message: message);
   }
 
+  /// Creates a date before validator.
   static Validator<DateTime> isBefore(DateTime max, [String? message]) {
     return _IsBeforeValidator(max, message: message);
   }
@@ -185,13 +203,17 @@ class _IsBeforeValidator extends Validator<DateTime> {
   }
 }
 
+/// List validator.
 class ListValidator {
+  /// Creates a [ListValidator].
   const ListValidator._();
 
+  /// Creates a minimum items validator.
   static Validator<List<T>> minItems<T>(int length, [String? message]) {
     return _MinItemsValidator(length, message: message);
   }
 
+  /// Creates a maximum items validator.
   static Validator<List<T>> maxItems<T>(int length, [String? message]) {
     return _MaxItemsValidator(length, message: message);
   }
@@ -235,7 +257,9 @@ class _MaxItemsValidator<T> extends Validator<List<T>> {
   }
 }
 
+/// Validator list extension.
 extension ValidatorListExtension<T> on List<Validator<T>>? {
+  /// Localizes the error messages.
   ValidatorFn<T>? localize(BuildContext context) {
     return this?.fold<ValidatorFn<T>>(
       (value) => null,
