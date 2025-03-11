@@ -48,6 +48,9 @@ class FormErrorMessages {
 
   /// The default maximum items message.
   String maxItems(int count) => 'Must have at most $count items';
+
+  /// The default parse error code message.
+  String? parseErrorCode(String errorCode, dynamic value) => null;
 }
 
 /// Add this widget on top of your widget tree to override the default
