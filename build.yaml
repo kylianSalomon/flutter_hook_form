@@ -8,7 +8,7 @@ targets:
 
 builders:
   form_schema:
-    import: "package:flutter_hook_form/builder/builder.dart"
+    import: "package:flutter_hook_form/builder.dart"
     builder_factories: ["formSchemaBuilder"]
     build_extensions: { ".dart": [".schema.dart"] }
     auto_apply: dependents
