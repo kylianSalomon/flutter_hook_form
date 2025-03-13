@@ -46,7 +46,7 @@ class HookedTextFormField<F extends FormSchema> extends StatelessWidget {
     this.forceErrorText,
     this.validator,
     this.autovalidateMode,
-    required this.enabled,
+    this.enabled,
     this.initialValue,
     this.onSaved,
     this.restorationId,
@@ -129,7 +129,7 @@ class HookedTextFormField<F extends FormSchema> extends StatelessWidget {
   /// ```dart
   /// /// Recommended way of using the [HookedTextFormField.explicit] constructor
   /// Form(
-  ///   form: form,
+  ///   key: form.key,
   ///   child: HookedTextFormField.explicit(
   ///     fieldKey: MyFormSchema.fieldKey,
   ///     form: form,
@@ -242,7 +242,7 @@ class HookedTextFormField<F extends FormSchema> extends StatelessWidget {
   final AutovalidateMode? autovalidateMode;
 
   /// Whether the field is enabled.
-  final bool enabled;
+  final bool? enabled;
 
   /// Initial value for the field.
   final String? initialValue;

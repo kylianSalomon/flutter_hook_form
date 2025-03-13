@@ -6,3 +6,6 @@ export 'src/models/form_field_controller.dart';
 export 'src/models/form_schema.dart';
 export 'src/models/validator.dart';
 export 'src/validators/validators.dart';
+export 'src/widget/hooked_form.dart';
+export 'src/widget/hooked_form_field.dart';
+export 'src/widget/hooked_text_form_field.dart';
