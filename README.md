@@ -265,9 +265,9 @@ class SignInForm extends HookWidget {
 }
 ```
 
-**Why can't I initialized my form value in the form controller or form schema?**
+**Why can't I initialize my form value in the form controller or form schema?**
 
-When you need to pre-populate a form, the correct approach is to provide initial values at the widget level in the `initialValue` propety provided by Flutter `FormField`, or update the values after the first build cycle when the form fields have been properly initialized and connected to their keys (not recommended).
+When you need to pre-populate a form, the correct approach is to provide initial values at the widget level in the `initialValue` property provided by Flutter `FormField`, or update the values after the first build cycle when the form fields have been properly initialized and connected to their keys (not recommended).
 
 #### Form State Management
 
@@ -319,7 +319,7 @@ class ParentWidget extends HookWidget {
     final form = useForm(formSchema: SignInFormSchema());
 
     return HookedForm(
-      notifier: form,
+      form: form,
       child: Column(
         children: [
           // Child widgets can access the form using useFormContext
@@ -581,19 +581,19 @@ Here's how to implement asynchronous validation:
 
 ```dart
 @HookFormSchema()
-class RegistrationFormSchema extends _SignInFormSchema {
-  SignInFormSchema() : super(email: email, password: password);
+class RegistrationFormSchema extends _RegistrationFormSchema {
+  RegistrationFormSchema() : super(username: username);
 
   @HookFormField<String>(validators: [
     RequiredValidator<String>(),
     EmailValidator(),
   ])
-  static const email = _EmailFieldSchema();
+  static const username = _UsernameFieldSchema();
 
   // Static method to do form asynchronous validation
   static Future<bool> validateUsername(FormFieldsController form) async{
     if(!form.validate()){
-      return null;
+      return false;
     }
 
     try {
@@ -625,15 +625,12 @@ class RegistrationForm extends HookWidget {
             fieldKey: RegistrationFormSchema.username,
             decoration: InputDecoration(
               labelText: 'Username',
-              suffixIcon: isLoading.value 
-                ? const CircularProgressIndicator(strokeWidth: 2)
-                : null,
             ),
           ),
           ElevatedButton(
             onPressed: () async {
               // Form is validated synchronously first then asynchronously.
-              final isValid = await form.validateUsername();
+              final isValid = await RegistrationFormSchema.validateUsername();
 
               if (isValid) {
                 // No errors, proceed with form submission
