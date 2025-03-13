@@ -71,6 +71,27 @@ class MinLengthValidator extends Validator<String> {
   }
 }
 
+/// Pattern validator.
+class PatternValidator extends Validator<String> {
+  /// Creates a [PatternValidator].
+  const PatternValidator(this.pattern, {super.message})
+      : super(errorCode: 'invalid_pattern');
+
+  /// The pattern to validate against.
+  final RegExp pattern;
+
+  @override
+  ValidatorFn<String> get validator {
+    return (String? value) {
+      if (value != null && !pattern.hasMatch(value)) {
+        return message ?? errorCode;
+      }
+
+      return null;
+    };
+  }
+}
+
 /// Maximum length validator.
 class MaxLengthValidator extends Validator<String> {
   /// Creates a [MaxLengthValidator].
@@ -292,6 +313,7 @@ extension ValidatorListExtension<T> on List<Validator<T>>? {
     return switch (validator) {
       RequiredValidator() => HookFormScope.of(context).required,
       EmailValidator() => HookFormScope.of(context).invalidEmail,
+      PatternValidator() => HookFormScope.of(context).invalidPattern,
       MinLengthValidator(length: final length) =>
         HookFormScope.of(context).minLength(length),
       MaxLengthValidator(length: final length) =>
