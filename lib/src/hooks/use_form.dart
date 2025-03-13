@@ -10,7 +10,7 @@ import '../models/form_schema.dart';
 /// The [FormFieldsController] is a [Listenable] that can be used to listen to
 /// changes in the form field states and created from a [FormSchema] instance.
 ///
-/// Be aware that this hook is a `flutter_hooks` hook and needs to be used
+/// **Careful !**: this hook is a `flutter_hooks` hook and needs to be used
 /// inside a [HookWidget]. For more information about `flutter_hooks`, please
 /// refer to the [flutter_hooks documentation](https://pub.dev/packages/flutter_hooks).
 FormFieldsController<F> useForm<F extends FormSchema>({
