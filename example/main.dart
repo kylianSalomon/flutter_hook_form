@@ -65,31 +65,32 @@ class SignInPage extends HookWidget {
       appBar: AppBar(
         title: const Text('Sign In'),
       ),
-      body: FormProvider(
-        notifier: form,
-        child: Form(
-          key: form.key,
-          child: Column(
-            children: [
-              TextFormField(
-                key: form.fieldKey(SignInFormSchema.email),
-                validator: form.validators(SignInFormSchema.email)?.localize(
-                      context,
-                    ),
-              ),
-              TextFormField(
-                key: form.fieldKey(SignInFormSchema.password),
-                validator: form.validators(SignInFormSchema.password)?.localize(
-                      context,
-                    ),
-              ),
-              const SignUpCheckBox(),
-              ElevatedButton(
-                onPressed: () => form.validate(),
-                child: const Text('Sign In'),
-              ),
-            ],
-          ),
+      body: HookedForm(
+        form: form,
+        child: Column(
+          children: [
+            const HookedTextFormField<SignInFormSchema>(
+              fieldKey: SignInFormSchema.email,
+            ),
+            const HookedTextFormField<SignInFormSchema>(
+              fieldKey: SignInFormSchema.password,
+            ),
+            HookedFormField<SignInFormSchema, bool>(
+              fieldKey: SignInFormSchema.rememberMe,
+              initialValue: false,
+              builder: (field) {
+                return Checkbox(
+                  value: field.value,
+                  onChanged: (value) => field.didChange(value),
+                );
+              },
+            ),
+            const SignUpCheckBox(),
+            ElevatedButton(
+              onPressed: () => form.validate(),
+              child: const Text('Sign In'),
+            ),
+          ],
         ),
       ),
     );

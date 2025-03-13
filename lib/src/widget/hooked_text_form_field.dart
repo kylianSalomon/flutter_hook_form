@@ -11,35 +11,35 @@ import '../validators/validators.dart';
 import 'hooked_form.dart';
 
 /// A text form field that integrates with flutter_hook_form.
-///
-/// This widget wraps a standard [TextFormField] and connects it to a [FormFieldsController].
-///
-/// Use the recommended [HookedForm] to wrap your form to provide the form
-/// controller to this widget. If not, use [HookedTextFormField.explicit] to provide
-/// the form controller explicitly.
-///
-/// ```dart
-/// /// Recommended
-/// HookedForm( // <--- Form is provided via context
-///   form: form,
-///   child: HookedTextFormField<MyFormSchema>(
-///     fieldKey: MyFormSchema.fieldKey,
-///     builder: (field) => MyWidget(field: field),
-///   ),
-/// )
-///
-/// /// Alternative
-/// Form(
-///   key: form.key,
-///   child: HookedTextFormField.explicit(
-///     form: form, // <--- Form is provided explicitly
-///     fieldKey: MyFormSchema.fieldKey,
-///     builder: (field) => MyWidget(field: field),
-///   ),
-/// )
-/// ```
 class HookedTextFormField<F extends FormSchema> extends StatelessWidget {
   /// Creates a [HookedTextFormField] that gets the form from context.
+  ///
+  /// This widget wraps a standard [TextFormField] and connects it to a [FormFieldsController].
+  ///
+  /// Use the recommended [HookedForm] to wrap your form to provide the form
+  /// controller to this widget. If not, use [HookedTextFormField.explicit] to provide
+  /// the form controller explicitly.
+  ///
+  /// ```dart
+  /// /// Recommended
+  /// HookedForm( // <--- Form is provided via context
+  ///   form: form,
+  ///   child: HookedTextFormField<MyFormSchema>(
+  ///     fieldKey: MyFormSchema.fieldKey,
+  ///     builder: (field) => MyWidget(field: field),
+  ///   ),
+  /// )
+  ///
+  /// /// Alternative
+  /// Form(
+  ///   key: form.key,
+  ///   child: HookedTextFormField.explicit(
+  ///     form: form, // <--- Form is provided explicitly
+  ///     fieldKey: MyFormSchema.fieldKey,
+  ///     builder: (field) => MyWidget(field: field),
+  ///   ),
+  /// )
+  /// ```
   const HookedTextFormField({
     super.key,
     required this.fieldKey,

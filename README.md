@@ -6,160 +6,6 @@ A type-safe form controller for Flutter applications using hooks. This package p
 
 Managing forms in Flutter can be challenging, especially when dealing with multiple form fields and their controllers. The traditional approach requires creating and managing individual controllers for each field, which can lead to boilerplate code and reduced maintainability. `flutter_hook_form` was created to address these challenges by providing a more streamlined and declarative way to handle forms, making the form configuration process more intuitive and maintainable. Unlike other form solutions that introduce new widgets and require significant refactoring, `flutter_hook_form` is designed to work seamlessly with Flutter's built-in form widgets. This means you can gradually adopt it in your existing forms without having to rewrite your entire form structure or learn new widget patterns.
 
-### Before & After
-
-Here's how a typical sign-in form looks with and without `flutter_hook_form`:
-
-#### Before (Traditional Approach)
-
-```dart
-class SignInForm extends StatefulWidget {
-  @override
-  _SignInFormState createState() => _SignInFormState();
-}
-
-class _SignInFormState extends State<SignInForm> {
-  final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  bool _isLoading = false;
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
-  }
-
-  String? _validateEmail(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Email is required';
-    }
-    if (!value.contains('@')) {
-      return 'Please enter a valid email';
-    }
-    return null;
-  }
-
-  String? _validatePassword(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Password is required';
-    }
-    if (value.length < 8) {
-      return 'Password must be at least 8 characters';
-    }
-    return null;
-  }
-
-  Future<void> _handleSubmit() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() => _isLoading = true);
-    try {
-      await signIn(_emailController.text, _passwordController.text);
-    } finally {
-      setState(() => _isLoading = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Form(
-      key: _formKey,
-      child: Column(
-        children: [
-          TextFormField(
-            controller: _emailController,
-            validator: _validateEmail,
-            decoration: const InputDecoration(labelText: 'Email'),
-          ),
-          TextFormField(
-            controller: _passwordController,
-            validator: _validatePassword,
-            obscureText: true,
-            decoration: const InputDecoration(labelText: 'Password'),
-          ),
-          ElevatedButton(
-            onPressed: _isLoading ? null : _handleSubmit,
-            child: _isLoading 
-              ? const CircularProgressIndicator()
-              : const Text('Sign In'),
-          ),
-        ],
-      ),
-    );
-  }
-}
-```
-
-#### After (With flutter_hook_form)
-
-```dart
-@HookFormSchema()
-class SignInFormSchema extends _SignInFormSchema {
-  SignInFormSchema() : super(email: email, password: password);
-
-  @HookFormField<String>(validators: [
-    RequiredValidator<String>(),
-    EmailValidator(),
-  ])
-  static const email = _EmailFieldSchema();
-
-  @HookFormField<String>(validators: [
-    RequiredValidator<String>(),
-    MinLengthValidator(8),
-  ])
-  static const password = _PasswordFieldSchema();
-}
-
-class SignInForm extends HookWidget {
-  @override
-  Widget build(BuildContext context) {
-    final form = useForm(formSchema: SignInFormSchema());
-    final isLoading = useState(false);
-
-    return Form(
-      key: form.key,
-      child: Column(
-        children: [
-          TextFormField(
-            key: form.fieldKey(SignInFormSchema.email),
-            validator: form.validators(SignInFormSchema.email),
-            onChanged: (value) => form.updateValue(SignInFormSchema.email, value),
-            decoration: const InputDecoration(labelText: 'Email'),
-          ),
-          TextFormField(
-            key: form.fieldKey(SignInFormSchema.password),
-            validator: form.validators(SignInFormSchema.password),
-            onChanged: (value) => form.updateValue(SignInFormSchema.password, value),
-            obscureText: true,
-            decoration: const InputDecoration(labelText: 'Password'),
-          ),
-          ElevatedButton(
-            onPressed: isLoading.value ? null : () async {
-              if (!form.validate()) return;
-              
-              isLoading.value = true;
-              try {
-                await signIn(
-                  form.getValue(SignInFormSchema.email)!,
-                  form.getValue(SignInFormSchema.password)!,
-                );
-              } finally {
-                isLoading.value = false;
-              }
-            },
-            child: isLoading.value 
-              ? const CircularProgressIndicator()
-              : const Text('Sign In'),
-          ),
-        ],
-      ),
-    );
-  }
-}
-```
-
 The benefits of using `flutter_hook_form` are clear:
 
 - 🧹 **Reduced Boilerplate**: No need to manually create and dispose controllers
@@ -195,13 +41,7 @@ dev_dependencies:
   build_runner: ^2.4.0
 ```
 
-Then run the build_runner to generate the code:
-
-```bash
-flutter pub run build_runner build
-```
-
-Now you can define your form schema:
+Then define your form schema:
 
 ```dart
 import 'package:flutter_hook_form/flutter_hook_form.dart';
@@ -336,27 +176,6 @@ class UsernameValidator extends Validator<String> {
 static const username = _UsernameFieldSchema();
 ```
 
-When using manual form definition:
-
-```dart
-class SignUpFormSchema extends FormSchema {
-  SignUpFormSchema()
-      : super(
-          fields: {
-            const FormFieldScheme<String>(
-              username,
-              validators: [
-                RequiredValidator<String>(),
-                UsernameValidator(),
-              ],
-            ),
-          },
-        );
-
-  static const TypedId<String> username = TypedId('username');
-}
-```
-
 Custom validators can also include additional parameters:
 
 ```dart
@@ -389,7 +208,9 @@ Note: Validators return an `errorCode` instead of the actual error message. This
 
 ### How to use
 
-Once you have defined your form schema, you can use it in your widgets. Here's a complete example:
+`flutter_hook_form` includes a set of convenient Form widgets to streamline your development process.
+
+_Note that these widgets are entirely optional and simply wrap Flutter's standard form widgets. This package is designed to be highly customizable and adaptable to your specific needs._
 
 ```dart
 class SignInForm extends HookWidget {
@@ -397,30 +218,34 @@ class SignInForm extends HookWidget {
   Widget build(BuildContext context) {
     final form = useForm(formSchema: SignInFormSchema());
 
-    return Form(
-      key: form.key, // Bind the form controller with the Form widget
+    return HookedForm(
+      form: form, // Bind the form controller with the Form widget
       child: Column(
         children: [
-          TextFormField(
-            key: form.fieldKey(SignInFormSchema.email), // Bind each field with the generated key
-            validator: form.validators(SignInFormSchema.email)?.localize( // Get field validators
-                      context,
-                    ), 
+          HookedTextFormField<SignInFormSchema>( // <- Don't forget to provide the FormSchema
+            fieldKey: SignInFormSchema.email,
             decoration: const InputDecoration(
               labelText: 'Email',
               hintText: 'Enter your email',
             ),
           ),
-          TextFormField(
-            key: form.fieldKey(SignInFormSchema.password),
-            validator: form.validators(SignInFormSchema.password)?.localize(
-                      context,
-                    )
+          HookedTextFormField<SignInFormSchema>(
+            fieldKey: SignInFormSchema.password,
             obscureText: true,
             decoration: const InputDecoration(
               labelText: 'Password',
               hintText: 'Enter your password',
             ),
+          ),
+          HookedFormField<SignInFormSchema, bool>( // <- use the HookedFormField for custom form field
+            fieldKey: SignInFormSchema.rememberMe,
+            initialValue: false,
+            builder: (field) {
+              return Checkbox(
+                value: field.value,
+                onChanged: (value) => field.didChange(value),
+              );
+            },
           ),
           ElevatedButton(
             onPressed: () {
@@ -439,6 +264,10 @@ class SignInForm extends HookWidget {
   }
 }
 ```
+
+**Why can't I initialized my form value in the form controller or form schema?**
+
+When you need to pre-populate a form, the correct approach is to provide initial values at the widget level in the `initialValue` propety provided by Flutter `FormField`, or update the values after the first build cycle when the form fields have been properly initialized and connected to their keys (not recommended).
 
 #### Form State Management
 
@@ -481,13 +310,15 @@ final error = form.getFieldError(SignInFormSchema.email);
 
 _flutter_hook_form_ provides a way to inject and access form controllers throughout your widget tree using the `FormProvider` and `useFormContext` hook.
 
+Remember that you don't need `useFormContext` if you use a _"Hooked"_ widget.
+
 ```dart
 class ParentWidget extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final form = useForm(formSchema: SignInFormSchema());
 
-    return FormProvider(
+    return HookedForm(
       notifier: form,
       child: Column(
         children: [
@@ -504,10 +335,7 @@ class ChildWidget extends HookWidget {
   Widget build(BuildContext context) {
     final form = useFormContext<SignInFormSchema>();
 
-    return TextFormField(
-      key: form.fieldKey(SignInFormSchema.email),
-      validator: form.validators(SignInFormSchema.email),
-    );
+    return ///... child widget
   }
 }
 ```
@@ -531,8 +359,8 @@ class SignInForm extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final form = ref.watch(signInFormProvider);
     
-    return Form(
-      key: form.key,
+    return HookedForm(
+      form: form,
       child: // ... form fields
     );
   }
@@ -558,8 +386,8 @@ class SignInForm extends HookWidget {
   Widget build(BuildContext context) {
     final form = getIt<FormFieldsController<SignInFormSchema>>();
     
-    return Form(
-      key: form.key,
+    return HookedForm(
+      form: form,
       child: // ... form fields
     );
   }
@@ -579,8 +407,8 @@ class SignInForm extends HookWidget {
 
     return ChangeNotifierProvider.value(
       value: form,
-      child: Form(
-        key: form.key,
+      child: HookedForm(
+        form: form,
         child: // ... form fields
       ),
     );
@@ -740,6 +568,86 @@ This approach provides several benefits:
 - Easy payload conversion
 - Reusable form schemas
 - Clear separation of concerns
+
+#### Asynchronous form validation
+
+Flutter's built-in form validation is synchronous, but real-world applications often require asynchronous validation, such as checking if a username is already taken or validating an address with an API.
+
+`flutter_hook_form` supports asynchronous validation through the `forceErrorText` property and the `setError` method on the form controller.
+
+##### Basic Implementation
+
+Here's how to implement asynchronous validation:
+
+```dart
+@HookFormSchema()
+class RegistrationFormSchema extends _SignInFormSchema {
+  SignInFormSchema() : super(email: email, password: password);
+
+  @HookFormField<String>(validators: [
+    RequiredValidator<String>(),
+    EmailValidator(),
+  ])
+  static const email = _EmailFieldSchema();
+
+  // Static method to do form asynchronous validation
+  static Future<bool> validateUsername(FormFieldsController form) async{
+    if(!form.validate()){
+      return null;
+    }
+
+    try {
+      // Call your API to check if username exists
+      final exists = await userRepository.checkUsernameExists(username);
+      
+      if (exists) {
+        // Set error manually if username is taken
+        form.setError(RegistrationFormSchema.username, 'Username is already taken');
+        return false;
+      }
+
+      return true;
+    } finally {
+     return true;
+    }
+  }
+}
+class RegistrationForm extends HookWidget {
+  @override
+  Widget build(BuildContext context) {
+    final form = useForm(formSchema: RegistrationFormSchema());
+
+    return HookedForm(
+      form: form,
+      child: Column(
+        children: [
+          HookedTextFormField<RegistrationFormSchema>(
+            fieldKey: RegistrationFormSchema.username,
+            decoration: InputDecoration(
+              labelText: 'Username',
+              suffixIcon: isLoading.value 
+                ? const CircularProgressIndicator(strokeWidth: 2)
+                : null,
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              // Form is validated synchronously first then asynchronously.
+              final isValid = await form.validateUsername();
+
+              if (isValid) {
+                // No errors, proceed with form submission
+                submitForm(form);
+              }
+            },
+            child: const Text('Register'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+```
 
 ## Additional Information
 

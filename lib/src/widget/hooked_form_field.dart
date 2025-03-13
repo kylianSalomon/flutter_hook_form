@@ -7,35 +7,35 @@ import '../validators/validators.dart';
 import 'hooked_form.dart';
 
 /// A form field that integrates with flutter_hook_form.
-///
-/// This widget wraps a standard [FormField] and connects it to a [FormFieldsController].
-///
-/// Use the recommended [HookedForm] to wrap your form to provide the form
-/// controller to this widget. If not, use [HookedFormField.explicit] to provide
-/// the form controller explicitly.
-///
-/// ```dart
-/// /// Recommended
-/// HookedForm( // <--- Form is provided via context
-///   form: form,
-///   child: HookedFormField<MyFormSchema, String>(
-///     fieldKey: MyFormSchema.fieldKey,
-///     builder: (field) => MyWidget(field: field),
-///   ),
-/// )
-///
-/// /// Alternative
-/// Form(
-///   key: form.key,
-///   child: HookedFormField.explicit(
-///     form: form, // <--- Form is provided explicitly
-///     fieldKey: MyFormSchema.fieldKey,
-///     builder: (field) => MyWidget(field: field),
-///   ),
-/// )
-/// ```
 class HookedFormField<F extends FormSchema, T> extends StatelessWidget {
   /// Creates a [HookedFormField] that gets the form from context.
+  ///
+  /// This widget wraps a standard [FormField] and connects it to a [FormFieldsController].
+  ///
+  /// Use the recommended [HookedForm] to wrap your form to provide the form
+  /// controller to this widget. If not, use [HookedFormField.explicit] to provide
+  /// the form controller explicitly.
+  ///
+  /// ```dart
+  /// /// Recommended
+  /// HookedForm( // <--- Form is provided via context
+  ///   form: form,
+  ///   child: HookedFormField<MyFormSchema, String>(
+  ///     fieldKey: MyFormSchema.fieldKey,
+  ///     builder: (field) => MyWidget(field: field),
+  ///   ),
+  /// )
+  ///
+  /// /// Alternative
+  /// Form(
+  ///   key: form.key,
+  ///   child: HookedFormField.explicit(
+  ///     form: form, // <--- Form is provided explicitly
+  ///     fieldKey: MyFormSchema.fieldKey,
+  ///     builder: (field) => MyWidget(field: field),
+  ///   ),
+  /// )
+  /// ```
   const HookedFormField({
     super.key,
     required this.fieldKey,
