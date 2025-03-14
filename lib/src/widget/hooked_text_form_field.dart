@@ -20,6 +20,8 @@ class HookedTextFormField<F extends FormSchema> extends StatelessWidget {
   /// controller to this widget. If not, use [HookedTextFormField.explicit] to provide
   /// the form controller explicitly.
   ///
+  /// If you want to notify the form when the field value changes, set
+  /// [notifyOnChange] to `true`.
   /// ```dart
   /// /// Recommended
   /// HookedForm( // <--- Form is provided via context
@@ -119,12 +121,16 @@ class HookedTextFormField<F extends FormSchema> extends StatelessWidget {
     this.textStyle,
     this.magnifierConfiguration,
     this.scrollController,
+    this.notifyOnChange = false,
   }) : _form = null;
 
   /// Creates a [HookedTextFormField] with an explicitly provided form.
   ///
   /// Consider using [HookedTextFormField.explicit] if you did not use [HookedForm] to
   /// wrap your form or use [FormProvider] to provide the form.
+  ///
+  /// If you want to notify the form when the field value changes, set
+  /// [notifyOnChange] to `true`.
   ///
   /// ```dart
   /// /// Recommended way of using the [HookedTextFormField.explicit] constructor
@@ -224,6 +230,7 @@ class HookedTextFormField<F extends FormSchema> extends StatelessWidget {
     this.textStyle,
     this.magnifierConfiguration,
     this.scrollController,
+    this.notifyOnChange = false,
   }) : _form = form;
 
   /// The form controller, if provided directly.
@@ -455,6 +462,11 @@ class HookedTextFormField<F extends FormSchema> extends StatelessWidget {
   /// The scroll controller for the text form field.
   final ScrollController? scrollController;
 
+  /// Whether to notify the form when the field value changes.
+  ///
+  /// Default to `false` to avoid any unwanted rebuilds.
+  final bool notifyOnChange;
+
   @override
   Widget build(BuildContext context) {
     final form = _form ?? useFormContext<F>(context);
@@ -481,7 +493,12 @@ class HookedTextFormField<F extends FormSchema> extends StatelessWidget {
       minLines: minLines,
       expands: expands ?? false,
       maxLength: maxLength,
-      onChanged: onChanged,
+      onChanged: notifyOnChange
+          ? (value) {
+              onChanged?.call(value);
+              form.updateValue(fieldHook, value);
+            }
+          : onChanged,
       onTap: onTap,
       onTapAlwaysCalled: onTapAlwaysCalled ?? false,
       onTapOutside: onTapOutside,

@@ -26,10 +26,9 @@ class FormFieldsController<F extends FormSchema> extends ChangeNotifier {
 
   /// Get or create a GlobalKey for a form field
   GlobalKey<FormFieldState<T>> fieldKey<T>(HookedFieldId<F, T> fieldId) {
-    return _fieldKeys.putIfAbsent(
-      fieldId.toString(),
-      () => GlobalKey<FormFieldState<T>>(debugLabel: fieldId.toString()),
-    ) as GlobalKey<FormFieldState<T>>;
+    return _fieldKeys.putIfAbsent(fieldId.toString(),
+            () => GlobalKey<FormFieldState<T>>(debugLabel: fieldId.toString()))
+        as GlobalKey<FormFieldState<T>>;
   }
 
   /// Get the value of a form field.
@@ -40,6 +39,9 @@ class FormFieldsController<F extends FormSchema> extends ChangeNotifier {
   /// Update the value of a form field.
   T? updateValue<T>(HookedFieldId<F, T> fieldId, T? value) {
     _fieldKeys[fieldId.toString()]?.currentState?.didChange(value);
+
+    // Notify listeners when a field value changes
+    notifyListeners();
 
     return value;
   }
