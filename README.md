@@ -100,8 +100,8 @@ class SignInFormSchema extends FormSchema {
           },
         );
 
-  static const TypedId<String> email = TypedId('email');
-  static const TypedId<String> password = TypedId('password');
+  static const HookedFieldId<String> email = HookedFieldId('email');
+  static const HookedFieldId<String> password = HookedFieldId('password');
 }
 ```
 
@@ -268,6 +268,8 @@ class SignInForm extends HookWidget {
 **Why can't I initialize my form value in the form controller or form schema?**
 
 When you need to pre-populate a form, the correct approach is to provide initial values at the widget level in the `initialValue` property provided by Flutter `FormField`, or update the values after the first build cycle when the form fields have been properly initialized and connected to their keys (not recommended).
+
+This is because form values in `flutter_hook_form` are stored in `FormFieldState` objects that are associated with `GlobalKey` instances, which don't exist until the form is actually built in the widget tree. For more details, see our [Form Initialization Guide](https://github.com/kylianSalomon/flutter_hook_form/wiki/Form-Initialization).
 
 #### Form State Management
 
@@ -574,49 +576,36 @@ This approach provides several benefits:
 
 Flutter's built-in form validation is synchronous, but real-world applications often require asynchronous validation, such as checking if a username is already taken or validating an address with an API.
 
-`flutter_hook_form` supports asynchronous validation through the `forceErrorText` property and the `setError` method on the form controller.
+`flutter_hook_form` supports asynchronous validation through the `setError` method on the form controller.
 
 ##### Basic Implementation
 
 Here's how to implement asynchronous validation:
 
 ```dart
-@HookFormSchema()
-class RegistrationFormSchema extends _RegistrationFormSchema {
-  RegistrationFormSchema() : super(username: username);
-
-  @HookFormField<String>(validators: [
-    RequiredValidator<String>(),
-    EmailValidator(),
-  ])
-  static const username = _UsernameFieldSchema();
-
-  // Static method to do form asynchronous validation
-  static Future<bool> validateUsername(FormFieldsController form) async{
-    if(!form.validate()){
-      return false;
-    }
-
-    try {
-      // Call your API to check if username exists
-      final exists = await userRepository.checkUsernameExists(username);
-      
-      if (exists) {
-        // Set error manually if username is taken
-        form.setError(RegistrationFormSchema.username, 'Username is already taken');
-        return false;
-      }
-
-      return true;
-    } finally {
-     return true;
-    }
-  }
-}
 class RegistrationForm extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final form = useForm(formSchema: RegistrationFormSchema());
+    final isLoading = useState(false);
+
+    Future<void> validateUsernameAsync(String username) async {
+      // Skip validation if empty (let the required validator handle it)
+      if (username.isEmpty) return;
+      
+      isLoading.value = true;
+      try {
+        // Call your API to check if username exists
+        final exists = await userRepository.checkUsernameExists(username);
+        
+        if (exists) {
+          // Set error manually if username is taken
+          form.setError(RegistrationFormSchema.username, 'Username is already taken');
+        }
+      } finally {
+        isLoading.value = false;
+      }
+    }
 
     return HookedForm(
       form: form,
@@ -626,16 +615,29 @@ class RegistrationForm extends HookWidget {
             fieldKey: RegistrationFormSchema.username,
             decoration: InputDecoration(
               labelText: 'Username',
+              suffixIcon: isLoading.value 
+                ? const CircularProgressIndicator(strokeWidth: 2)
+                : null,
             ),
+            onChanged: (value) {
+              // Trigger async validation when the value changes
+              validateUsernameAsync(value);
+            },
           ),
           ElevatedButton(
             onPressed: () async {
-              // Form is validated synchronously first then asynchronously.
-              final isValid = await RegistrationFormSchema.validateUsername();
-
-              if (isValid) {
-                // No errors, proceed with form submission
-                submitForm(form);
+              // First perform synchronous validation
+              if (form.validate()) {
+                final username = form.getValue(RegistrationFormSchema.username);
+                
+                // Then perform async validation before submission
+                await validateUsernameAsync(username);
+                
+                // Check if any async errors were set
+                if (!form.hasFieldError(RegistrationFormSchema.username)) {
+                  // No errors, proceed with form submission
+                  submitForm(form);
+                }
               }
             },
             child: const Text('Register'),
@@ -643,6 +645,64 @@ class RegistrationForm extends HookWidget {
         ],
       ),
     );
+  }
+}
+```
+
+##### Debouncing Validation Requests
+
+For better user experience and to avoid excessive API calls, you should debounce validation requests:
+
+```dart
+class RegistrationForm extends HookWidget {
+  @override
+  Widget build(BuildContext context) {
+    final form = useForm(formSchema: RegistrationFormSchema());
+    final isLoading = useState(false);
+    final debouncer = useMemoized(() => Debouncer(milliseconds: 500));
+
+    Future<void> validateUsernameAsync(String username) async {
+      // Implementation as above
+    }
+
+    return HookedForm(
+      form: form,
+      child: Column(
+        children: [
+          HookedTextFormField<RegistrationFormSchema>(
+            fieldKey: RegistrationFormSchema.username,
+            decoration: InputDecoration(
+              labelText: 'Username',
+              suffixIcon: isLoading.value 
+                ? const CircularProgressIndicator(strokeWidth: 2)
+                : null,
+            ),
+            onChanged: (value) {
+              // Debounce the validation call
+              debouncer.run(() => validateUsernameAsync(value));
+            },
+          ),
+          // Rest of the form
+        ],
+      ),
+    );
+  }
+}
+
+// Simple debouncer implementation
+class Debouncer {
+  final int milliseconds;
+  Timer? _timer;
+
+  Debouncer({required this.milliseconds});
+
+  void run(VoidCallback action) {
+    _timer?.cancel();
+    _timer = Timer(Duration(milliseconds: milliseconds), action);
+  }
+
+  void dispose() {
+    _timer?.cancel();
   }
 }
 ```

@@ -14,7 +14,7 @@ class ValidatorAnnotation<T> {
 
 /// Annotation to mark a field as a form field.
 class HookFormField<T> {
-  /// Creates a [FormField] annotation.
+  /// Creates a [HookFormField] annotation.
   const HookFormField({
     this.validators,
   });

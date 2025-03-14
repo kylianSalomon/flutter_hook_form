@@ -76,7 +76,7 @@ class SignInPage extends HookWidget {
               fieldKey: SignInFormSchema.password,
             ),
             HookedFormField<SignInFormSchema, bool>(
-              fieldKey: SignInFormSchema.rememberMe,
+              fieldHook: SignInFormSchema.rememberMe,
               initialValue: false,
               builder: (field) {
                 return Checkbox(

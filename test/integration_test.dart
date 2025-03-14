@@ -25,11 +25,11 @@ void main() {
                       child: Column(
                         children: [
                           const HookedTextFormField<TestFormSchema>(
-                            fieldKey: TestFormSchema.email,
+                            fieldHook: TestFormSchema.email,
                             decoration: InputDecoration(labelText: 'Email'),
                           ),
                           const HookedTextFormField<TestFormSchema>(
-                            fieldKey: TestFormSchema.password,
+                            fieldHook: TestFormSchema.password,
                             decoration: InputDecoration(labelText: 'Password'),
                             obscureText: true,
                           ),
@@ -97,11 +97,11 @@ void main() {
                       child: Column(
                         children: [
                           const HookedTextFormField<TestFormSchema>(
-                            fieldKey: TestFormSchema.email,
+                            fieldHook: TestFormSchema.email,
                             decoration: InputDecoration(labelText: 'Email'),
                           ),
                           const HookedTextFormField<TestFormSchema>(
-                            fieldKey: TestFormSchema.password,
+                            fieldHook: TestFormSchema.password,
                             decoration: InputDecoration(labelText: 'Password'),
                           ),
                           ElevatedButton(
@@ -155,7 +155,7 @@ void main() {
                       child: Column(
                         children: [
                           HookedTextFormField<TestFormSchema>(
-                            fieldKey: TestFormSchema.email,
+                            fieldHook: TestFormSchema.email,
                             decoration: InputDecoration(labelText: 'Email'),
                           ),
                         ],
@@ -196,7 +196,7 @@ void main() {
                       child: Column(
                         children: [
                           HookedTextFormField<TestFormSchema>(
-                            fieldKey: TestFormSchema.email,
+                            fieldHook: TestFormSchema.email,
                             decoration:
                                 const InputDecoration(labelText: 'Email'),
                             validator: (_) => 'Custom error message',
@@ -244,11 +244,11 @@ void main() {
                       child: Column(
                         children: [
                           HookedTextFormField<TestFormSchema>(
-                            fieldKey: TestFormSchema.email,
+                            fieldHook: TestFormSchema.email,
                             decoration: InputDecoration(labelText: 'Email'),
                           ),
                           HookedTextFormField<TestFormSchema>(
-                            fieldKey: TestFormSchema.password,
+                            fieldHook: TestFormSchema.password,
                             decoration: InputDecoration(labelText: 'Password'),
                           ),
                         ],

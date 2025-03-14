@@ -38,7 +38,7 @@ class HookedFormField<F extends FormSchema, T> extends StatelessWidget {
   /// ```
   const HookedFormField({
     super.key,
-    required this.fieldKey,
+    required this.fieldHook,
     required this.builder,
     this.forceErrorText,
     this.validator,
@@ -55,7 +55,7 @@ class HookedFormField<F extends FormSchema, T> extends StatelessWidget {
   /// wrap your form or use [FormProvider] to provide the form.
   const HookedFormField.explicit({
     super.key,
-    required this.fieldKey,
+    required this.fieldHook,
     required this.builder,
     required FormFieldsController<F> form,
     this.forceErrorText,
@@ -71,7 +71,7 @@ class HookedFormField<F extends FormSchema, T> extends StatelessWidget {
   final FormFieldsController<F>? _form;
 
   /// The field identifier from the form schema.
-  final TypedId<T> fieldKey;
+  final HookedFieldId<T> fieldHook;
 
   /// Builder function to create the form field widget.
   final Widget Function(FormFieldState<T>) builder;
@@ -102,9 +102,9 @@ class HookedFormField<F extends FormSchema, T> extends StatelessWidget {
     final form = _form ?? useFormContext<F>(context);
 
     return FormField<T>(
-      key: form.fieldKey(fieldKey),
-      validator: validator ?? form.validators(fieldKey)?.localize(context),
-      forceErrorText: forceErrorText ?? form.getFieldError(fieldKey),
+      key: form.fieldKey(fieldHook),
+      validator: validator ?? form.validators(fieldHook)?.localize(context),
+      forceErrorText: forceErrorText ?? form.getFieldError(fieldHook),
       autovalidateMode: autovalidateMode,
       enabled: enabled,
       initialValue: initialValue,

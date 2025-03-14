@@ -42,7 +42,7 @@ class HookedTextFormField<F extends FormSchema> extends StatelessWidget {
   /// ```
   const HookedTextFormField({
     super.key,
-    required this.fieldKey,
+    required this.fieldHook,
     this.forceErrorText,
     this.validator,
     this.autovalidateMode,
@@ -146,7 +146,7 @@ class HookedTextFormField<F extends FormSchema> extends StatelessWidget {
   /// )
   const HookedTextFormField.explicit({
     super.key,
-    required this.fieldKey,
+    required this.fieldHook,
     required FormFieldsController<F> form,
     this.forceErrorText,
     this.validator,
@@ -230,7 +230,7 @@ class HookedTextFormField<F extends FormSchema> extends StatelessWidget {
   final FormFieldsController<F>? _form;
 
   /// The field identifier from the form schema.
-  final TypedId<String> fieldKey;
+  final HookedFieldId<String> fieldHook;
 
   /// Optional error text to force the field into an error state.
   final String? forceErrorText;
@@ -460,9 +460,9 @@ class HookedTextFormField<F extends FormSchema> extends StatelessWidget {
     final form = _form ?? useFormContext<F>(context);
 
     return TextFormField(
-      key: form.fieldKey(fieldKey),
-      validator: validator ?? form.validators(fieldKey)?.localize(context),
-      forceErrorText: forceErrorText ?? form.getFieldError(fieldKey),
+      key: form.fieldKey(fieldHook),
+      validator: validator ?? form.validators(fieldHook)?.localize(context),
+      forceErrorText: forceErrorText ?? form.getFieldError(fieldHook),
       autovalidateMode: autovalidateMode,
       enabled: enabled,
       initialValue: initialValue,
