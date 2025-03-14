@@ -479,11 +479,12 @@ The package comes with several built-in validators that can be used in your form
 | | `MinLengthValidator` | Checks minimum length | `MinLengthValidator(8)` |
 | | `MaxLengthValidator` | Checks maximum length | `MaxLengthValidator(32)` |
 | | `PhoneValidator` | Validates phone number format | `PhoneValidator()` |
-| **Date** | `DateTimeValidator.isAfter` | Validates minimum date | `DateTimeValidator.isAfter(DateTime.now())` |
-| | `DateTimeValidator.isBefore` | Validates maximum date | `DateTimeValidator.isBefore(DateTime.now())` |
-| **List** | `ListValidator.minItems` | Checks minimum items | `ListValidator.minItems<T>(2)` |
-| | `ListValidator.maxItems` | Checks maximum items | `ListValidator.maxItems<T>(5)` |
-| **File** | `FileValidator.mimeType` | Validates file type | `FileValidator.mimeType({'image/jpeg', 'image/png'})` |
+| | `PatternValidator` | Validate the value with the given pattern | `PatternValidator(r'^[A-zÀ-ú \-]+$')` |
+| **Date** | `IsAfterValidator` | Validates minimum date | `IsAfterValidator(DateTime.now())` |
+| | `IsBeforeValidator` | Validates maximum date | `IsBeforeValidator(DateTime.now())` |
+| **List** | `ListMinItemsValidator` | Checks minimum items | `ListMinItemsValidator<T>(2)` |
+| | `ListMaxItemsValidator` | Checks maximum items | `ListMaxItemsValidator<T>(5)` |
+| **File** | `MimeTypeValidator` | Validates file type | `MimeTypeValidator({'image/jpeg', 'image/png'})` |
 
 🚨 **Important**: When using multiple validators, they are executed in the order they are defined in the list. For example:
 
