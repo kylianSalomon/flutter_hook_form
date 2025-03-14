@@ -82,8 +82,8 @@ class FormFieldsController<F extends FormSchema> extends ChangeNotifier {
     notifyListeners(); // Notify listeners after reset
   }
 
-  /// Validate the form fields.
-  bool validateFields<T>(TypedId<T> fieldId) {
+  /// Validate the form field.
+  bool validateField<T>(TypedId<T> fieldId) {
     return fieldKey(fieldId).currentState?.validate() ?? false;
   }
 
