@@ -71,7 +71,7 @@ class HookedFormField<F extends FormSchema, T> extends StatelessWidget {
   final FormFieldsController<F>? _form;
 
   /// The field identifier from the form schema.
-  final HookedFieldId<T> fieldHook;
+  final HookedFieldId<F, T> fieldHook;
 
   /// Builder function to create the form field widget.
   final Widget Function(FormFieldState<T>) builder;

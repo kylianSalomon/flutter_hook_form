@@ -100,8 +100,9 @@ class SignInFormSchema extends FormSchema {
           },
         );
 
-  static const HookedFieldId<String> email = HookedFieldId('email');
-  static const HookedFieldId<String> password = HookedFieldId('password');
+  // The form schema type is included in the field ID
+  static const HookedFieldId<SignInFormSchema, String> email = HookedFieldId('email');
+  static const HookedFieldId<SignInFormSchema, String> password = HookedFieldId('password');
 }
 ```
 
@@ -222,23 +223,27 @@ class SignInForm extends HookWidget {
       form: form, // Bind the form controller with the Form widget
       child: Column(
         children: [
-          HookedTextFormField<SignInFormSchema>( // <- Don't forget to provide the FormSchema
-            fieldKey: SignInFormSchema.email,
+          // No need to specify the form schema type - it's inferred from the fieldHook
+          HookedTextFormField(
+            fieldHook: SignInFormSchema.email,
             decoration: const InputDecoration(
               labelText: 'Email',
               hintText: 'Enter your email',
             ),
           ),
-          HookedTextFormField<SignInFormSchema>(
-            fieldKey: SignInFormSchema.password,
+          
+          HookedTextFormField(
+            fieldHook: SignInFormSchema.password,
             obscureText: true,
             decoration: const InputDecoration(
               labelText: 'Password',
               hintText: 'Enter your password',
             ),
           ),
-          HookedFormField<SignInFormSchema, bool>( // <- use the HookedFormField for custom form field
-            fieldKey: SignInFormSchema.rememberMe,
+          
+          // No need to specify the form schema type or value type - both are inferred
+          HookedFormField(
+            fieldHook: SignInFormSchema.rememberMe,
             initialValue: false,
             builder: (field) {
               return Checkbox(
@@ -247,6 +252,7 @@ class SignInForm extends HookWidget {
               );
             },
           ),
+          
           ElevatedButton(
             onPressed: () {
               if (form.validate()) {

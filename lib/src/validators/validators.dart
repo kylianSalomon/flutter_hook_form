@@ -18,7 +18,14 @@ class RequiredValidator<T> extends Validator<T> {
   @override
   ValidatorFn<T> get validator {
     return (T? value) {
-      if (value == null) {
+      final isEmpty = switch (value) {
+        final String s => s.isEmpty,
+        final Iterable l => l.isEmpty,
+        final Map m => m.isEmpty,
+        _ => false,
+      };
+
+      if (value == null || isEmpty) {
         return message ?? errorCode;
       }
 
@@ -255,7 +262,7 @@ class ListMaxItemsValidator<T> extends Validator<List<T>> {
 extension ValidatorListExtension<T> on List<Validator<T>>? {
   /// Localizes the error messages.
   ValidatorFn<T>? localize(BuildContext context) {
-    return this?.fold<ValidatorFn<T>>(
+    return this?.reversed.fold<ValidatorFn<T>>(
       (value) => null,
       (previous, validator) {
         return (value) {

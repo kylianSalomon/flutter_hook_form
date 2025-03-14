@@ -25,8 +25,8 @@ import 'validator.dart';
 ///           },
 ///         );
 ///
-///   static const HookedFieldId<String> email = HookedFieldId('email');
-///   static const HookedFieldId<String> password = HookedFieldId('password');
+///   static const HookedFieldId<SignInFormSchema, String> email = HookedFieldId('email');
+///   static const HookedFieldId<SignInFormSchema, String> password = HookedFieldId('password');
 /// }
 /// ```
 abstract class FormSchema {
@@ -39,7 +39,7 @@ abstract class FormSchema {
   final Set<FormFieldScheme> fields;
 
   /// Get a form field by its id.
-  FormFieldScheme<T>? field<T>(HookedFieldId<T> id) {
+  FormFieldScheme<T>? field<T, S extends FormSchema>(HookedFieldId<S, T> id) {
     return fields.firstWhereOrNull((e) => e.id == id) as FormFieldScheme<T>?;
   }
 }
@@ -53,7 +53,7 @@ class FormFieldScheme<T> {
   });
 
   /// The form field id.
-  final HookedFieldId<T> id;
+  final HookedFieldId<FormSchema, T> id;
 
   /// The validators.
   final List<Validator<T>>? validators;
@@ -61,7 +61,10 @@ class FormFieldScheme<T> {
 
 /// A class that defines a form field id. This allows for type safety
 /// when accessing form fields and integrates with the hooked form ecosystem.
-class HookedFieldId<T> {
+///
+/// The type parameter F represents the form schema type that this field belongs to.
+/// This enables type inference when using the field in form widgets.
+class HookedFieldId<F extends FormSchema, T> {
   /// Creates a [HookedFieldId] instance.
   const HookedFieldId(String id) : _id = id;
 

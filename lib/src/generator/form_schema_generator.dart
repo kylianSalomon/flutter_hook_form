@@ -93,7 +93,7 @@ class FormSchemaGenerator extends GeneratorForAnnotation<HookFormSchema> {
       final fieldName = field.name;
       final fieldType = _getFieldType(field);
       buffer.writeln(
-          'class _${fieldName._capitalize()}FieldSchema extends TypedId<$fieldType> {');
+          'class _${fieldName._capitalize()}FieldSchema extends HookedFieldId<$className, $fieldType> {');
       buffer.writeln(
           '  const _${fieldName._capitalize()}FieldSchema() : super(\'$fieldName\');');
       buffer.writeln('}');
@@ -150,7 +150,7 @@ class FormSchemaGenerator extends GeneratorForAnnotation<HookFormSchema> {
     // Fallback to field type if no explicit type in annotation
     final fieldType = field.type;
     if (fieldType is ParameterizedType) {
-      if (fieldType.element?.name == 'TypedId') {
+      if (fieldType.element?.name == 'HookedFieldId') {
         final typeArgs = fieldType.typeArguments;
         if (typeArgs.isNotEmpty) {
           return typeArgs.first.getDisplayString();

@@ -14,6 +14,6 @@ class TestFormSchema extends FormSchema {
           },
         );
 
-  static const email = HookedFieldId<String>('email');
-  static const password = HookedFieldId<String>('password');
+  static const email = HookedFieldId<TestFormSchema, String>('email');
+  static const password = HookedFieldId<TestFormSchema, String>('password');
 }
