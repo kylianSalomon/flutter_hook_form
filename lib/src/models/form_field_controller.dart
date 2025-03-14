@@ -87,9 +87,18 @@ class FormFieldsController<F extends FormSchema> extends ChangeNotifier {
     return fieldKey(fieldId).currentState?.validate() ?? false;
   }
 
-  /// Check if the form field has been interacted with.
-  bool isDirty<T>(HookedFieldId<F, T> fieldId) {
-    return fieldKey(fieldId).currentState?.hasInteractedByUser ?? false;
+  /// Check if the form fields have been interacted with.
+  bool isDirty<T>(Set<HookedFieldId<F, T>> fieldIds) {
+    return fieldIds.every(
+      (fieldId) => fieldKey(fieldId).currentState?.hasInteractedByUser ?? false,
+    );
+  }
+
+  /// Check if all form fields have been interacted with.
+  bool isAllDirty() {
+    return _fieldKeys.values.every(
+      (field) => field.currentState?.hasInteractedByUser ?? false,
+    );
   }
 
   /// Save the form.
