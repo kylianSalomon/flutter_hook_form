@@ -48,13 +48,19 @@ class FormFieldsController<F extends FormSchema> extends ChangeNotifier {
 
   /// Get the error of a form field.
   String? getFieldError<T>(HookedFieldId<F, T> fieldId) {
-    return _forcedErrors[fieldId.toString()] ??
+    return getFieldForcedError(fieldId) ??
         _fieldKeys[fieldId.toString()]?.currentState?.errorText;
+  }
+
+  /// Get the forced error of a form field.
+  String? getFieldForcedError<T>(HookedFieldId<F, T> fieldId) {
+    return _forcedErrors[fieldId.toString()];
   }
 
   /// Set the error of a form field.
   void setError<T>(HookedFieldId<F, T> fieldId, String error) {
     _forcedErrors[fieldId.toString()] = error;
+    notifyListeners();
   }
 
   /// Check if a form field has an error.
@@ -86,7 +92,10 @@ class FormFieldsController<F extends FormSchema> extends ChangeNotifier {
 
   /// Validate the form field.
   bool validateField<T>(HookedFieldId<F, T> fieldId) {
-    return fieldKey(fieldId).currentState?.validate() ?? false;
+    final isValid = fieldKey(fieldId).currentState?.validate();
+
+    notifyListeners();
+    return isValid ?? false;
   }
 
   /// Check if the form fields have been interacted with.
