@@ -35,9 +35,12 @@ class SignInFormSchema extends FormSchema {
           const FormFieldScheme<bool>(rememberMe),
         });
 
-  static const TypedId<String> email = TypedId('email');
-  static const TypedId<String> password = TypedId('password');
-  static const TypedId<bool> rememberMe = TypedId('rememberMe');
+  static const HookedFieldId<SignInFormSchema, String> email =
+      HookedFieldId('email');
+  static const HookedFieldId<SignInFormSchema, String> password =
+      HookedFieldId('password');
+  static const HookedFieldId<SignInFormSchema, bool> rememberMe =
+      HookedFieldId('rememberMe');
 }
 
 class MyApp extends StatelessWidget {
@@ -65,31 +68,32 @@ class SignInPage extends HookWidget {
       appBar: AppBar(
         title: const Text('Sign In'),
       ),
-      body: FormProvider(
-        notifier: form,
-        child: Form(
-          key: form.key,
-          child: Column(
-            children: [
-              TextFormField(
-                key: form.fieldKey(SignInFormSchema.email),
-                validator: form.validators(SignInFormSchema.email)?.localize(
-                      context,
-                    ),
-              ),
-              TextFormField(
-                key: form.fieldKey(SignInFormSchema.password),
-                validator: form.validators(SignInFormSchema.password)?.localize(
-                      context,
-                    ),
-              ),
-              const SignUpCheckBox(),
-              ElevatedButton(
-                onPressed: () => form.validate(),
-                child: const Text('Sign In'),
-              ),
-            ],
-          ),
+      body: HookedForm(
+        form: form,
+        child: Column(
+          children: [
+            const HookedTextFormField<SignInFormSchema>(
+              fieldHook: SignInFormSchema.email,
+            ),
+            const HookedTextFormField<SignInFormSchema>(
+              fieldHook: SignInFormSchema.password,
+            ),
+            HookedFormField<SignInFormSchema, bool>(
+              fieldHook: SignInFormSchema.rememberMe,
+              initialValue: false,
+              builder: ({value, onChanged, error}) {
+                return Checkbox(
+                  value: value,
+                  onChanged: onChanged,
+                );
+              },
+            ),
+            const SignUpCheckBox(),
+            ElevatedButton(
+              onPressed: () => form.validate(),
+              child: const Text('Sign In'),
+            ),
+          ],
         ),
       ),
     );

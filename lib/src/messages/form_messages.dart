@@ -19,6 +19,9 @@ class FormErrorMessages {
   /// The default invalid phone message.
   String get invalidPhone => 'Invalid phone number';
 
+  /// The default invalid pattern message.
+  String get invalidPattern => 'Invalid pattern';
+
   // String validation messages
 
   /// The default minimum length message.

@@ -21,7 +21,7 @@ void main() {
 
       // String tests
       expect(stringValidator(null), isNotNull);
-      expect(stringValidator(''), isNull);
+      expect(stringValidator(''), 'required');
       expect(stringValidator('test'), isNull);
       expect(stringValidator2(null), 'Custom message');
 
@@ -32,7 +32,7 @@ void main() {
 
       // List tests
       expect(listValidator(null), isNotNull);
-      expect(listValidator([]), isNull);
+      expect(listValidator([]), 'required');
       expect(listValidator(['test']), isNull);
 
       // DateTime tests
@@ -99,9 +99,9 @@ void main() {
     final tomorrow = now.add(const Duration(days: 1));
 
     test('isAfter validator', () {
-      final validator = DateTimeValidator.isAfter(now).validator;
+      final validator = IsAfterValidator(now).validator;
       final validator2 =
-          DateTimeValidator.isAfter(now, 'Custom message').validator;
+          IsAfterValidator(now, message: 'Custom message').validator;
 
       _expectNullOnNullValue(validator, context);
       expect(validator(yesterday), isNotNull);
@@ -110,9 +110,9 @@ void main() {
     });
 
     test('isBefore validator', () {
-      final validator = DateTimeValidator.isBefore(now).validator;
+      final validator = IsBeforeValidator(now).validator;
       final validator2 =
-          DateTimeValidator.isBefore(now, 'Custom message').validator;
+          IsBeforeValidator(now, message: 'Custom message').validator;
 
       _expectNullOnNullValue(validator, context);
       expect(validator(tomorrow), isNotNull);
@@ -123,8 +123,9 @@ void main() {
 
   group('List Validators', () {
     test('minItems validator', () {
-      final validator = ListValidator.minItems(2).validator;
-      final validator2 = ListValidator.minItems(2, 'Custom message').validator;
+      final validator = const ListMinItemsValidator(2).validator;
+      final validator2 =
+          const ListMinItemsValidator(2, message: 'Custom message').validator;
 
       _expectNullOnNullValue(validator, context);
       expect(validator(['one']), isNotNull);
@@ -134,8 +135,9 @@ void main() {
     });
 
     test('maxItems validator', () {
-      final validator = ListValidator.maxItems(2).validator;
-      final validator2 = ListValidator.maxItems(2, 'Custom message').validator;
+      final validator = const ListMaxItemsValidator(2).validator;
+      final validator2 =
+          const ListMaxItemsValidator(2, message: 'Custom message').validator;
 
       _expectNullOnNullValue(validator, context);
       expect(validator(['one']), isNull);
@@ -148,22 +150,18 @@ void main() {
   group('File Validators', () {
     test('format validator', () {
       final validator =
-          FileValidator.mimeType({'image/jpeg', 'image/png'}).validator;
-      final validator2 = FileValidator.mimeType(
+          const MimeTypeValidator({'image/jpeg', 'image/png'}).validator;
+      final validator2 = const MimeTypeValidator(
         {'image/jpeg', 'image/png'},
-        'Custom message',
+        message: 'Custom message',
       ).validator;
       final jpegFile = XFile('test.jpg', mimeType: 'image/jpeg');
       final pdfFile = XFile('test.pdf', mimeType: 'application/pdf');
 
       _expectNullOnNullValue(validator, context);
       expect(validator(jpegFile), isNull);
-      expect(
-        validator(pdfFile),
-        HookFormScope.of(context).invalidFileFormat(
-          {'image/jpeg', 'image/png'},
-        ),
-      );
+      expect(validator(pdfFile),
+          const MimeTypeValidator({'image/jpeg', 'image/png'}).errorCode);
       expect(validator2(pdfFile), 'Custom message');
     });
   });

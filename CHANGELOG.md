@@ -1,3 +1,41 @@
+## 1.1.0
+
+### New Features
+
+* ✨ Introduced `HookedFieldId<F, T>` with generic type parameters for improved type safety:
+  * The form schema type `F` is now included in the field ID
+  * This enables better type inference when using form fields
+  * No need to specify form schema type in most widget usages
+
+* 🔄 Added reactive form capabilities:
+  * Form controller now properly notifies listeners when field values change
+  * Added `registerFieldChange` method to track field modifications
+  * Added methods to check if fields are dirty: `isDirty`, `areAnyDirty`, `areAllDirty`
+
+* ✨ Introduced `HookedFormField` and `HookedTextFormField`:
+  * Updated to use the new `fieldHook` parameter instead of `fieldKey`
+  * Better type inference from field hooks
+  * Added support for tracking field changes
+
+### Improvements
+
+* 📝 Comprehensive documentation updates:
+  * Added examples for custom form fields
+  * Improved explanation of form initialization
+  * Added section on writing custom form fields
+  * Updated code examples to use the latest API
+
+* 🐛 Fixed validation issues:
+  * Resolved bug where forced errors took precedence over validation errors
+  * Improved error clearing during validation
+  * Better handling of field rebuilds after validation
+
+### Breaking Changes
+
+* 🔄 Renamed parameter from `fieldKey` to `fieldHook` in form field widgets
+  * Update your code to use `fieldHook: MySchema.field` instead of `fieldKey: MySchema.field`
+  * This change better reflects the purpose of the parameter
+
 ## 1.0.0
 
 ### Breaking Changes
