@@ -21,7 +21,7 @@ void main() {
 
       // String tests
       expect(stringValidator(null), isNotNull);
-      expect(stringValidator(''), isNull);
+      expect(stringValidator(''), 'required');
       expect(stringValidator('test'), isNull);
       expect(stringValidator2(null), 'Custom message');
 
@@ -32,7 +32,7 @@ void main() {
 
       // List tests
       expect(listValidator(null), isNotNull);
-      expect(listValidator([]), isNull);
+      expect(listValidator([]), 'required');
       expect(listValidator(['test']), isNull);
 
       // DateTime tests
@@ -160,12 +160,8 @@ void main() {
 
       _expectNullOnNullValue(validator, context);
       expect(validator(jpegFile), isNull);
-      expect(
-        validator(pdfFile),
-        HookFormScope.of(context).invalidFileFormat(
-          {'image/jpeg', 'image/png'},
-        ),
-      );
+      expect(validator(pdfFile),
+          const MimeTypeValidator({'image/jpeg', 'image/png'}).errorCode);
       expect(validator2(pdfFile), 'Custom message');
     });
   });
