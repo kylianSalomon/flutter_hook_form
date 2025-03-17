@@ -22,7 +22,9 @@ class HookedFormField<F extends FormSchema, T> extends StatelessWidget {
   ///   form: form,
   ///   child: HookedFormField<MyFormSchema, String>(
   ///     fieldKey: MyFormSchema.fieldKey,
-  ///     builder: (field) => MyWidget(field: field),
+  ///     builder: ({value, onChanged, error}){
+  ///       return MyWidget(value: value, onChanged: onChanged, error: error);
+  ///     },
   ///   ),
   /// )
   ///
@@ -32,7 +34,9 @@ class HookedFormField<F extends FormSchema, T> extends StatelessWidget {
   ///   child: HookedFormField.explicit(
   ///     form: form, // <--- Form is provided explicitly
   ///     fieldKey: MyFormSchema.fieldKey,
-  ///     builder: (field) => MyWidget(field: field),
+  ///     builder: ({value, onChanged, error}){
+  ///       return MyWidget(value: value, onChanged: onChanged, error: error);
+  ///     },
   ///   ),
   /// )
   /// ```
@@ -76,6 +80,11 @@ class HookedFormField<F extends FormSchema, T> extends StatelessWidget {
   final HookedFieldId<F, T> fieldHook;
 
   /// Builder function to create the form field widget.
+  ///
+  /// The builder function receives a map with the following parameters:
+  /// - `value`: The current value of the field.
+  /// - `onChanged`: A function to update the value of the field.
+  /// - `error`: The error message of the field.
   final Widget Function({
     T? value,
     void Function(T?)? onChanged,

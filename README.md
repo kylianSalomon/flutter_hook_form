@@ -15,7 +15,36 @@ The benefits of using `flutter_hook_form` are clear:
 - 🎮 **Better State Management**: Form state is handled automatically
 - 🌍 **Internationalization Ready**: Built-in support for translated error messages
 
-## Getting started
+## Table of Contents
+
+- [Getting Started](#getting-started)
+- [How to use](#how-to-use)
+  - [Install](#install)
+  - [Create your Schema](#create-your-schema)
+    - [Available Validators](#available-validators)
+    - [Create validators](#create-validators)
+  - [Use "hooked" widget](#use-hooked-widgets)
+    - [Use form controller](#use-form-controller)
+    - [HookedTextFormField](#hookedtextformfield)
+    - [HookedFormField](#hookedformfield)
+    - [Form State Management](#form-state-management)
+    - [Form Field State](#form-field-state)
+- [Customizations](#customizations)
+  - [Custom Validation Messages & Internationalization](#custom-validation-messages--internationalization)
+  - [Alternative Injection Methods](#alternative-injection-methods)
+  - [Form Injection and Context Access](#form-injection-and-context-access)
+  - [Use schema without code generation](#use-schema-without-code-generation)
+  - [Write your own Form field](#write-your-own-form-field)
+- [Use Cases](#use-cases)
+  - [Form Value Handling and Payload Conversion](#form-value-handling-and-payload-conversion)
+  - [Asynchronous Form Validation](#asynchronous-form-validation)
+- [Additional Information](#additional-information)
+  - [Dependencies](#dependencies)
+  - [Contributing](#contributing)
+  - [License](#license)
+- [Support](#support)
+
+## Getting Started
 
 Add this to your package's `pubspec.yaml` file:
 
@@ -24,24 +53,33 @@ dependencies:
   flutter_hook_form: ^1.0.0
 ```
 
-## Usage
+## How to use
 
-### Basic Form Setup
+### Install
 
-`flutter_hook_form` provides two ways to define your form schema:
+To use `flutter_hook_form`, you need to add it to your dependencies in `pubspec.yaml`:
 
-#### 1. Using Code Generation (Recommended)
+```yaml
+dependencies:
+  flutter_hook_form: ^1.0.0
+  
+  # Not essential but recommended, for different dependency injection
+  # see "Alternative Injection Methods" paragraph.
+  flutter_hooks: ^0.20.0
+```
 
-The package includes a code generator that helps you define form schemas using annotations. This approach reduces boilerplate and provides better type safety.
-
-First, add the following dependencies to your `pubspec.yaml`:
+If you plan to use code generation (recommended), also add:
 
 ```yaml
 dev_dependencies:
   build_runner: ^2.4.0
 ```
 
-Then define your form schema:
+### Create your Schema
+
+The package includes a code generator that helps you define form schemas using annotations. This approach reduces boilerplate and provides better type safety.
+
+Define the schema with the `@HookFormSchema()` annotation and each fields with a `@HookFormField()` annotation:
 
 ```dart
 import 'package:flutter_hook_form/flutter_hook_form.dart';
@@ -50,8 +88,7 @@ part 'signin_form.schema.dart';
 
 @HookFormSchema()
 class SignInFormSchema extends _SignInFormSchema {
-  SignInFormSchema() : super(email: email, password: password);
-
+  SignInFormSchema() : super(email: email, password: password); //<- don't forget to pass fields to super constructor
   @HookFormField<String>(validators: [
     RequiredValidator<String>(),
     EmailValidator(),
@@ -72,89 +109,30 @@ After defining your schema:
 2. The generator will create the `_SignInFormSchema` class and field schema classes
 3. Make sure to pass all static fields to the super constructor as shown above
 
-#### 2. Manual Definition
+#### Available Validators
 
-If you prefer not to use code generation, you can define your form schema manually:
+The package comes with several built-in validators:
 
-```dart
-import 'package:flutter_hook_form/flutter_hook_form.dart';
+| Category | Validator | Description | Example |
+|----------|-----------|-------------|---------|
+| **Generic** | `RequiredValidator<T>` | Ensures field is not empty | `RequiredValidator<String>()` |
+| **String** | `EmailValidator` | Validates email format | `EmailValidator()` |
+| | `MinLengthValidator` | Checks minimum length | `MinLengthValidator(8)` |
+| | `MaxLengthValidator` | Checks maximum length | `MaxLengthValidator(32)` |
+| | `PhoneValidator` | Validates phone number format | `PhoneValidator()` |
+| | `PatternValidator` | Validate the value with the given pattern | `PatternValidator(r'^[A-zÀ-ú \-]+$')` |
+| **Date** | `IsAfterValidator` | Validates minimum date | `IsAfterValidator(DateTime.now())` |
+| | `IsBeforeValidator` | Validates maximum date | `IsBeforeValidator(DateTime.now())` |
+| **List** | `ListMinItemsValidator` | Checks minimum items | `ListMinItemsValidator<T>(2)` |
+| | `ListMaxItemsValidator` | Checks maximum items | `ListMaxItemsValidator<T>(5)` |
+| **File** | `MimeTypeValidator` | Validates file type | `MimeTypeValidator({'image/jpeg', 'image/png'})` |
 
-class SignInFormSchema extends FormSchema {
-  SignInFormSchema()
-      : super(
-          fields: {
-            const FormFieldScheme<String>(
-              email,
-              validators: [
-                RequiredValidator(),
-                EmailValidator(),
-              ],
-            ),
-            const FormFieldScheme<String>(
-              password,
-              validators: [
-                RequiredValidator<String>(),
-                MinLengthValidator(8),
-              ],
-            ),
-          },
-        );
+🚨 **Important**: When using multiple validators, they are executed in the order they are defined in the list.
 
-  // The form schema type is included in the field ID
-  static const HookedFieldId<SignInFormSchema, String> email = HookedFieldId('email');
-  static const HookedFieldId<SignInFormSchema, String> password = HookedFieldId('password');
-}
-```
+#### Create validators
 
-Both approaches produce the same result, but the code generation approach is recommended as it:
-
-- Reduces boilerplate code
-- Provides better type safety
-- Makes form maintenance easier
-- Ensures consistency in form field definitions
-
-### Using the Form Hook
-
-To use the `useForm` hook, you need to install `flutter_hooks` in your project. The `useForm` hook can only be used within a `HookWidget` or a widget that uses the `HookConsumerWidget` mixin.
-
-```dart
-// ✅ Correct usage
-class MyForm extends HookWidget {
-  @override
-  Widget build(BuildContext context) {
-    final form = useForm(formSchema: MyFormSchema());
-    // ...
-  }
-}
-
-// ✅ Also correct with Riverpod
-class MyForm extends HookConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final form = useForm(formSchema: MyFormSchema());
-    // ...
-  }
-}
-
-// ❌ Incorrect usage
-class MyForm extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final form = useForm(formSchema: MyFormSchema()); // This will not work
-    // ...
-  }
-}
-```
-
-If you need to use the form controller in a regular widget, you can either:
-
-1. Use the `FormFieldsController` directly
-2. Access it through a provider using `useFormContext` (`HookWidget` not necessary here as it is not a hook.)
-3. Use any other dependency injection method (see [Alternative Injection Methods](#alternative-injection-methods))
-
-### Custom Validators
-
-You can create custom validators by extending the `Validator` class. This allows you to define reusable validation logic that can be used across different forms.
+You can create custom validators by extending the `Validator` class. To support **Internationalization**, return the defined
+`errorCode` on error. For more info about internationalization see [Custom Validation Messages & Internationalization](#custom-validation-messages--internationalization).
 
 ```dart
 class UsernameValidator extends Validator<String> {
@@ -196,28 +174,94 @@ class MinAgeValidator extends Validator<DateTime> {
         return null;
       };
 }
-
-// Usage
-@HookFormField<DateTime>(validators: [
-  RequiredValidator<DateTime>(),
-  MinAgeValidator(minAge: 18),
-])
-static const birthDate = _BirthDateFieldSchema();
 ```
 
-Note: Validators return an `errorCode` instead of the actual error message. This design enables internationalization of error messages. The error codes are mapped to translated messages using the `FormErrorMessages` class. See [Custom Validation Messages & Internationalization](#custom-validation-messages--internationalization) for more details.
-
-### How to use
+### Use "Hooked" widgets
 
 `flutter_hook_form` includes a set of convenient Form widgets to streamline your development process.
 
 _Note that these widgets are entirely optional and simply wrap Flutter's standard form widgets. This package is designed to be highly customizable and adaptable to your specific needs._
+
+#### Use form controller
+
+To use the `useForm` hook, you need to install `flutter_hooks` in your project. The `useForm` hook can only be used within a `HookWidget` or a widget that uses the `HookConsumerWidget` mixin.
+
+```dart
+// ✅ Correct usage
+class MyForm extends HookWidget {
+  @override
+  Widget build(BuildContext context) {
+    final form = useForm(formSchema: MyFormSchema());
+    // ...
+  }
+}
+
+// ✅ Also correct with Riverpod
+class MyForm extends HookConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final form = useForm(formSchema: MyFormSchema());
+    // ...
+  }
+}
+
+// ❌ Incorrect usage
+class MyForm extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final form = useForm(formSchema: MyFormSchema()); // This will not work
+    // ...
+  }
+}
+```
+
+If you need to use the form controller in a regular widget, you can either:
+
+1. Use the `FormFieldsController` directly
+2. Access it through a provider using `useFormContext` (`HookWidget` not necessary here as it is not a hook.)
+3. Use any other dependency injection method (see [Alternative Injection Methods](#alternative-injection-methods))
+
+#### HookedTextFormField
+
+`HookedTextFormField` is a wrapper around Flutter's `TextFormField` that integrates with the form controller:
+
+```dart
+HookedTextFormField(
+  fieldHook: SignInFormSchema.email,
+  decoration: const InputDecoration(
+    labelText: 'Email',
+    hintText: 'Enter your email',
+  ),
+)
+```
+
+#### HookedFormField
+
+`HookedFormField` is a generic form field that can be used with any type of input:
+
+```dart
+HookedFormField(
+  fieldHook: SignInFormSchema.rememberMe,
+  initialValue: false,
+  builder: ({value, onChanged, error}) {
+    return Checkbox(
+      value: value,
+      onChanged: onChanged,
+    );
+  },
+)
+```
+
+Here's a complete example of a form using these widgets:
 
 ```dart
 class SignInForm extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final form = useForm(formSchema: SignInFormSchema());
+    // You can define initial values here if needed
+    // final initialEmailValue = 'user@example.com';
+    // final initialPasswordValue = '';
 
     return HookedForm(
       form: form, // Bind the form controller with the Form widget
@@ -226,6 +270,7 @@ class SignInForm extends HookWidget {
           // No need to specify the form schema type - it's inferred from the fieldHook
           HookedTextFormField(
             fieldHook: SignInFormSchema.email,
+            // initialValue: initialEmailValue, // Uncomment to use initial values
             decoration: const InputDecoration(
               labelText: 'Email',
               hintText: 'Enter your email',
@@ -234,6 +279,7 @@ class SignInForm extends HookWidget {
           
           HookedTextFormField(
             fieldHook: SignInFormSchema.password,
+            // initialValue: initialPasswordValue, // Uncomment to use initial values
             obscureText: true,
             decoration: const InputDecoration(
               labelText: 'Password',
@@ -296,7 +342,6 @@ form.reset();
 
 // Validate the form
 final isValid = form.validate();
-
 ```
 
 #### Form Field State
@@ -314,9 +359,58 @@ final isEmailValid = form.validateField(SignInFormSchema.email);
 final error = form.getFieldError(SignInFormSchema.email);
 ```
 
+## Customizations
+
+### Custom Validation Messages & Internationalization
+
+_flutter_hook_form_ comes with validators messages customization. Simply override the `FormErrorMessages` class and provide it via the `HookFormScope`. This allows you to translate error messages that appear in forms.
+
+```dart
+class CustomFormMessages extends FormErrorMessages {
+  const CustomFormMessages(this.context);
+
+  final BuildContext context;
+
+  @override
+  String get required => 'This field is required.';
+  
+  @override
+  String get invalidEmail => AppLocalizations.of(context).invalidEmail;
+
+  String minAgeError(int age) => 'You must be $age to use this.'
+
+   @override
+  String? parseErrorCode(String errorCode, dynamic value) {
+    final error = switch (errorCode) {
+      // Same error code used in the MinAgeValidator definition
+      'min_age_error' when value is int => minAgeError(value),
+      _ => null,
+    };
+
+    return error;
+  }
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      builder: (context, child) => HookFormScope(
+        messages: CustomFormMessages(context),
+        child: child ?? const SignInPage(),
+      ),
+    );
+  }
+}
+```
+
+The `parseErrorCode` method is the key component for custom error message handling. It maps your validator error codes to their corresponding translated messages.
+
 ### Form Injection and Context Access
 
-_flutter_hook_form_ provides a way to inject and access form controllers throughout your widget tree using the `FormProvider` and `useFormContext` hook.
+_flutter_hook_form_ provides a way to inject and access form controllers throughout your widget tree using the `HookedForm` widget and `useFormContext` hook. Use the `HookedForm` to inject the `form` in the widget tree and then retrieve the instance with the `useFormContext` in child widget.
 
 Remember that you don't need `useFormContext` if you use a _"Hooked"_ widget.
 
@@ -350,7 +444,7 @@ class ChildWidget extends HookWidget {
 
 ### Alternative Injection Methods
 
-While `FormProvider` is the recommended way to inject form controllers, you can also use any other dependency injection method or package. Here are some examples:
+While `HookedForm` is the recommended way to inject form controllers, you can also use any other dependency injection method or package. Here are some examples:
 
 #### Using Riverpod
 
@@ -424,89 +518,117 @@ class SignInForm extends HookWidget {
 }
 ```
 
-### Custom Validation Messages & Internationalization
+### Use schema without code generation
 
-_flutter_hook_form_ comes with validators messages customization. Simply override the `FormErrorMessages` class and provide it via the `HookFormScope`. This allow to translate errors messages that appears in forms.
+If you prefer not to use code generation, you can define your form schema manually:
 
 ```dart
-class CustomFormMessages extends FormErrorMessages {
-  const CustomFormMessages(this.context);
+import 'package:flutter_hook_form/flutter_hook_form.dart';
 
-  final BuildContext context;
+class SignInFormSchema extends FormSchema {
+  SignInFormSchema()
+      : super(
+          fields: {
+            const FormFieldScheme<String>(
+              email,
+              validators: [
+                RequiredValidator(),
+                EmailValidator(),
+              ],
+            ),
+            const FormFieldScheme<String>(
+              password,
+              validators: [
+                RequiredValidator<String>(),
+                MinLengthValidator(8),
+              ],
+            ),
+          },
+        );
 
-  @override
-  String get required => 'This field is required.';
-  
-  @override
-  String get invalidEmail => AppLocalizations.of(context).invalideEmail;
-
-  String minAgeError(int age) => 'You must be $age to use this.'
-
-   @override
-  String? parseErrorCode(String errorCode, dynamic value) {
-    final error = switch (errorCode) {
-      // Same error code used in the MinAgeValidator definition
-      'min_age_error' when value is int => minAgeError(value),
-      _ => null,
-    };
-
-    return error;
-  }
+  // The form schema type is included in the field ID
+  static const HookedFieldId<SignInFormSchema, String> email = HookedFieldId('email');
+  static const HookedFieldId<SignInFormSchema, String> password = HookedFieldId('password');
 }
+```
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+### Write your own Form field
+
+"Hooked" widgets are here to facilitate form development, but you can write your own form fields to fit your specific needs. Behind the scenes, `HookedFormField` and `HookedTextFormField` are simply wrappers around Flutter's standard `FormField` and `TextFormField` that connect them to the form controller.
+
+To create your own custom form field, you need to:
+
+1. Connect to the form controller (either via `useFormContext` or by passing it directly)
+2. Use the correct field ID from your schema
+3. Handle validation and error display
+4. Register value changes with the form controller
+
+Here's a simple example of a custom checkbox form field:
+
+```dart
+class CustomCheckboxField<F extends FormSchema> extends HookWidget {
+  const CustomCheckboxField({
+    Key? key,
+    required this.fieldHook,
+    this.initialValue = false,
+    required this.label,
+  }) : super(key: key);
+
+  final HookedFieldId<F, bool> fieldHook;
+  final bool initialValue;
+  final String label;
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      builder: (context, child) => HookFormScope(
-        messages: MyCustomMessages(context),
-        child: child ?? const SignInPage(),
-      ),
+    // Get the form controller from context
+    final form = useFormContext<F>();
+    
+    return FormField<bool>(
+      // Connect the field to the form using the fieldHook
+      key: form.getFieldKey(fieldHook),
+      initialValue: initialValue,
+      validator: (_) => form.getFieldError(fieldHook),
+      builder: (field) {
+        return Row(
+          children: [
+            Checkbox(
+              value: field.value ?? false,
+              onChanged: (value) {
+                // Update the field value
+                field.didChange(value);
+                // Notify the form controller about the change
+                form.registerFieldChange(fieldHook, value);
+              },
+            ),
+            Text(label),
+            if (field.hasError)
+              Text(
+                field.errorText!,
+                style: TextStyle(color: Colors.red),
+              ),
+          ],
+        );
+      },
     );
   }
 }
 ```
 
-The `parseErrorCode` method is the key component for custom error message handling. It maps your validator error codes to their corresponding translated messages. This allows you to:
+For more complex implementations, refer to the source code of:
 
-- Define custom error codes in your validators
-- Map these codes to localized messages
-- Handle parameterized error messages (like the `minAgeError` example above)
-- Fallback to default messages when no custom mapping is defined
+- [HookedFormField](https://github.com/kylianSalomon/flutter_hook_form/blob/main/lib/src/widget/hooked_form_field.dart)
+- [HookedTextFormField](https://github.com/kylianSalomon/flutter_hook_form/blob/main/lib/src/widget/hooked_text_form_field.dart)
 
-### Available Validators
+The key aspects to remember when creating custom form fields:
 
-The package comes with several built-in validators that can be used in your form fields:
+- Use `form.getFieldKey(fieldHook)` to connect the field to the form controller
+- Use `form.getFieldError(fieldHook)` for validation
+- Call `form.registerFieldChange(fieldHook, newValue)` when the value changes
+- Handle the display of error messages appropriately
 
-| Category | Validator | Description | Example |
-|----------|-----------|-------------|---------|
-| **Generic** | `RequiredValidator<T>` | Ensures field is not empty | `RequiredValidator<String>()` |
-| **String** | `EmailValidator` | Validates email format | `EmailValidator()` |
-| | `MinLengthValidator` | Checks minimum length | `MinLengthValidator(8)` |
-| | `MaxLengthValidator` | Checks maximum length | `MaxLengthValidator(32)` |
-| | `PhoneValidator` | Validates phone number format | `PhoneValidator()` |
-| | `PatternValidator` | Validate the value with the given pattern | `PatternValidator(r'^[A-zÀ-ú \-]+$')` |
-| **Date** | `IsAfterValidator` | Validates minimum date | `IsAfterValidator(DateTime.now())` |
-| | `IsBeforeValidator` | Validates maximum date | `IsBeforeValidator(DateTime.now())` |
-| **List** | `ListMinItemsValidator` | Checks minimum items | `ListMinItemsValidator<T>(2)` |
-| | `ListMaxItemsValidator` | Checks maximum items | `ListMaxItemsValidator<T>(5)` |
-| **File** | `MimeTypeValidator` | Validates file type | `MimeTypeValidator({'image/jpeg', 'image/png'})` |
+## Use Cases
 
-🚨 **Important**: When using multiple validators, they are executed in the order they are defined in the list. For example:
-
-```dart
-@HookFormField<String>(validators: [
-  RequiredValidator<String>(), // Executed first
-  EmailValidator(),           // Executed second
-])
-static const email = _EmailFieldSchema();
-```
-
-### Use Cases
-
-#### Form Value Handling and Payload Conversion
+### Form Value Handling and Payload Conversion
 
 One of the main pain points in Flutter forms is handling form values and converting them to the correct payload format. _flutter_hook_form_ makes this process much easier by allowing you to define static methods in your form schema for validation and payload conversion.
 
@@ -554,11 +676,8 @@ class SignInForm extends HookWidget {
           ElevatedButton(
             onPressed: () {
               if (form.validate()) {
-                final values = form.getValues();
-                if (SignInFormSchema.validateForm(values)) {
-                  final payload = SignInFormSchema.toPayload(values);
-                  // Send payload to API
-                }
+                final payload = SignInFormSchema.toPayload(form);
+                // Send payload to API
               }
             },
             child: const Text('Sign In'),
@@ -578,13 +697,11 @@ This approach provides several benefits:
 - Reusable form schemas
 - Clear separation of concerns
 
-#### Asynchronous form validation
+### Asynchronous Form Validation
 
 Flutter's built-in form validation is synchronous, but real-world applications often require asynchronous validation, such as checking if a username is already taken or validating an address with an API.
 
 `flutter_hook_form` supports asynchronous validation through the `setError` method on the form controller.
-
-##### Basic Implementation
 
 Here's how to implement asynchronous validation:
 
@@ -617,8 +734,8 @@ class RegistrationForm extends HookWidget {
       form: form,
       child: Column(
         children: [
-          HookedTextFormField<RegistrationFormSchema>(
-            fieldKey: RegistrationFormSchema.username,
+          HookedTextFormField(
+            fieldHook: RegistrationFormSchema.username,
             decoration: InputDecoration(
               labelText: 'Username',
               suffixIcon: isLoading.value 
@@ -651,64 +768,6 @@ class RegistrationForm extends HookWidget {
         ],
       ),
     );
-  }
-}
-```
-
-##### Debouncing Validation Requests
-
-For better user experience and to avoid excessive API calls, you should debounce validation requests:
-
-```dart
-class RegistrationForm extends HookWidget {
-  @override
-  Widget build(BuildContext context) {
-    final form = useForm(formSchema: RegistrationFormSchema());
-    final isLoading = useState(false);
-    final debouncer = useMemoized(() => Debouncer(milliseconds: 500));
-
-    Future<void> validateUsernameAsync(String username) async {
-      // Implementation as above
-    }
-
-    return HookedForm(
-      form: form,
-      child: Column(
-        children: [
-          HookedTextFormField<RegistrationFormSchema>(
-            fieldKey: RegistrationFormSchema.username,
-            decoration: InputDecoration(
-              labelText: 'Username',
-              suffixIcon: isLoading.value 
-                ? const CircularProgressIndicator(strokeWidth: 2)
-                : null,
-            ),
-            onChanged: (value) {
-              // Debounce the validation call
-              debouncer.run(() => validateUsernameAsync(value));
-            },
-          ),
-          // Rest of the form
-        ],
-      ),
-    );
-  }
-}
-
-// Simple debouncer implementation
-class Debouncer {
-  final int milliseconds;
-  Timer? _timer;
-
-  Debouncer({required this.milliseconds});
-
-  void run(VoidCallback action) {
-    _timer?.cancel();
-    _timer = Timer(Duration(milliseconds: milliseconds), action);
-  }
-
-  void dispose() {
-    _timer?.cancel();
   }
 }
 ```
