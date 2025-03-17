@@ -37,11 +37,17 @@ class FormFieldsController<F extends FormSchema> extends ChangeNotifier {
   }
 
   /// Update the value of a form field.
-  T? updateValue<T>(HookedFieldId<F, T> fieldId, T? value) {
+  T? updateValue<T>(
+    HookedFieldId<F, T> fieldId,
+    T? value, {
+    bool notify = true,
+  }) {
     _fieldKeys[fieldId.toString()]?.currentState?.didChange(value);
 
-    // Notify listeners when a field value changes
-    notifyListeners();
+    if (notify) {
+      // Notify listeners when a field value changes
+      notifyListeners();
+    }
 
     return value;
   }

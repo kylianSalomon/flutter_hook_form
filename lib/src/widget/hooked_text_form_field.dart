@@ -462,7 +462,7 @@ class HookedTextFormField<F extends FormSchema> extends StatelessWidget {
   /// The scroll controller for the text form field.
   final ScrollController? scrollController;
 
-  /// Whether to notify the form when the field value changes.
+  /// Whether to notify form listeners when the field value changes.
   ///
   /// Default to `false` to avoid any unwanted rebuilds.
   final bool notifyOnChange;
@@ -493,12 +493,10 @@ class HookedTextFormField<F extends FormSchema> extends StatelessWidget {
       minLines: minLines,
       expands: expands ?? false,
       maxLength: maxLength,
-      onChanged: notifyOnChange
-          ? (value) {
-              onChanged?.call(value);
-              form.updateValue(fieldHook, value);
-            }
-          : onChanged,
+      onChanged: (value) {
+        onChanged?.call(value);
+        form.updateValue(fieldHook, value, notify: notifyOnChange);
+      },
       onTap: onTap,
       onTapAlwaysCalled: onTapAlwaysCalled ?? false,
       onTapOutside: onTapOutside,

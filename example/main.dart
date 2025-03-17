@@ -81,10 +81,10 @@ class SignInPage extends HookWidget {
             HookedFormField<SignInFormSchema, bool>(
               fieldHook: SignInFormSchema.rememberMe,
               initialValue: false,
-              builder: (field) {
+              builder: ({value, onChanged, error}) {
                 return Checkbox(
-                  value: field.value,
-                  onChanged: (value) => field.didChange(value),
+                  value: value,
+                  onChanged: onChanged,
                 );
               },
             ),

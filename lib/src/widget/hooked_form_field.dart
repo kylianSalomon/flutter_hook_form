@@ -47,6 +47,7 @@ class HookedFormField<F extends FormSchema, T> extends StatelessWidget {
     this.initialValue,
     this.onSaved,
     this.restorationId,
+    this.notifyOnChange = false,
   }) : _form = null;
 
   /// Creates a [HookedFormField] with an explicitly provided form.
@@ -65,6 +66,7 @@ class HookedFormField<F extends FormSchema, T> extends StatelessWidget {
     this.initialValue,
     this.onSaved,
     this.restorationId,
+    this.notifyOnChange = false,
   }) : _form = form;
 
   /// The form controller, if provided directly.
@@ -74,7 +76,11 @@ class HookedFormField<F extends FormSchema, T> extends StatelessWidget {
   final HookedFieldId<F, T> fieldHook;
 
   /// Builder function to create the form field widget.
-  final Widget Function(FormFieldState<T>) builder;
+  final Widget Function({
+    T? value,
+    void Function(T?)? onChanged,
+    String? error,
+  }) builder;
 
   /// Optional error text to force the field into an error state.
   final String? forceErrorText;
@@ -97,6 +103,11 @@ class HookedFormField<F extends FormSchema, T> extends StatelessWidget {
   /// Restoration ID for saving and restoring the field state.
   final String? restorationId;
 
+  /// Whether to notify form listeners when the field value changes.
+  ///
+  /// Default to `false` to avoid any unwanted rebuilds.
+  final bool notifyOnChange;
+
   @override
   Widget build(BuildContext context) {
     final form = _form ?? useFormContext<F>(context);
@@ -110,7 +121,17 @@ class HookedFormField<F extends FormSchema, T> extends StatelessWidget {
       initialValue: initialValue,
       onSaved: onSaved,
       restorationId: restorationId,
-      builder: builder,
+      builder: (_) {
+        return builder(
+          value: form.getValue(fieldHook),
+          onChanged: (value) => form.updateValue<T>(
+            fieldHook,
+            value,
+            notify: notifyOnChange,
+          ),
+          error: form.getFieldForcedError(fieldHook),
+        );
+      },
     );
   }
 }
