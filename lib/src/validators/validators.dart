@@ -315,3 +315,17 @@ extension ValidatorListExtension<T> on List<Validator<T>>? {
     };
   }
 }
+
+/// Localize error extension.
+extension LocalizeError on String? {
+  /// Localizes the error. Useful to translate the forced error messages.
+  String? localize(BuildContext context, dynamic value) {
+    return switch (this) {
+      final String errorCode => HookFormScope.of(context).parseErrorCode(
+          errorCode,
+          value,
+        ),
+      _ => null,
+    };
+  }
+}
