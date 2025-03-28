@@ -38,6 +38,7 @@ The benefits of using `flutter_hook_form` are clear:
 - [Use Cases](#use-cases)
   - [Form Value Handling and Payload Conversion](#form-value-handling-and-payload-conversion)
   - [Asynchronous Form Validation](#asynchronous-form-validation)
+  - [Form Controller Enhancements](#form-controller-enhancements)
 - [Additional Information](#additional-information)
   - [Dependencies](#dependencies)
   - [Contributing](#contributing)
@@ -771,6 +772,52 @@ class RegistrationForm extends HookWidget {
   }
 }
 ```
+
+### Form Controller Enhancements
+
+#### Error Handling and Validation
+
+The FormFieldsController now provides finer control over error handling and validation:
+
+```dart
+// Set a field error with optional notification control
+controller.setError(fieldId, "Error message", notify: false);
+
+// Clear all forced errors
+controller.clearForcedErrors(notify: true);
+```
+
+#### Automatic Form Validation
+
+When using `formController.validate()` to automatically validate forms, you might encounter rebuild errors if the widget hasn't finished its initial build cycle. To prevent this and gain more control over validation behavior, use the new optional parameters:
+
+```dart
+// Validate with custom options
+controller.validate(
+  notify: false,     // Prevent listener notifications that would trigger rebuilds
+  clearErrors: false // Keep existing forced errors instead of clearing them
+);
+```
+
+These parameters are particularly useful when validating forms in response to button presses or when implementing conditional form submission logic.
+
+#### Form State Tracking
+
+New properties help you track form interaction and changes:
+
+```dart
+// Check if any field has been interacted with by the user
+if (controller.hasBeenInteracted) {
+  // Show confirmation dialog before navigating away
+}
+
+// Check if any field value has changed from its initial value
+if (controller.hasChanged) {
+  // Enable the "Save Changes" button
+}
+```
+
+These state tracking features simplify the implementation of common form patterns like "dirty form" detection and user interaction monitoring.
 
 ## Additional Information
 
