@@ -1,10 +1,5 @@
 import 'package:flutter/material.dart';
-
-import '../hooks/use_form_context.dart';
-import '../models/form_field_controller.dart';
-import '../models/form_schema.dart';
-import '../validators/validators.dart';
-import 'hooked_form.dart';
+import 'package:flutter_hook_form/flutter_hook_form.dart';
 
 /// A form field that integrates with flutter_hook_form.
 class HookedFormField<F extends FormSchema, T> extends StatelessWidget {
@@ -124,7 +119,10 @@ class HookedFormField<F extends FormSchema, T> extends StatelessWidget {
     return FormField<T>(
       key: form.fieldKey(fieldHook),
       validator: validator ?? form.validators(fieldHook)?.localize(context),
-      forceErrorText: forceErrorText ?? form.getFieldForcedError(fieldHook),
+      forceErrorText: forceErrorText ??
+          form
+              .getFieldForcedError(fieldHook)
+              .localize(context, form.getValue(fieldHook)),
       autovalidateMode: autovalidateMode,
       enabled: enabled,
       initialValue: initialValue,

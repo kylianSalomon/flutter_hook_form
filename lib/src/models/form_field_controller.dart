@@ -64,9 +64,15 @@ class FormFieldsController<F extends FormSchema> extends ChangeNotifier {
   }
 
   /// Set the error of a form field.
-  void setError<T>(HookedFieldId<F, T> fieldId, String error) {
+  void setError<T>(
+    HookedFieldId<F, T> fieldId,
+    String error, {
+    bool notify = true,
+  }) {
     _forcedErrors[fieldId.toString()] = error;
-    notifyListeners();
+    if (notify) {
+      notifyListeners();
+    }
   }
 
   /// Check if a form field has an error.
@@ -81,12 +87,32 @@ class FormFieldsController<F extends FormSchema> extends ChangeNotifier {
   }
 
   /// Validate the form.
-  bool validate() {
-    _forcedErrors.clear();
+  ///
+  /// If `notify` is `true`, the form will notify listeners after validation.
+  /// Consider setting `notify` to `false` if you are using `validate` as a
+  /// condition to enable or disable a button.
+  ///
+  /// If `clearErrors` is `true`, the forced errors will be cleared.
+  /// Consider setting `clearErrors` to `false` if you are calling `validate`
+  /// as a condition to enable or disable a button.
+  bool validate({bool notify = true, bool clearErrors = true}) {
+    if (clearErrors) {
+      _forcedErrors.clear();
+    }
 
     final isValid = key.currentState?.validate() ?? false;
-    notifyListeners(); // Notify listeners after validation
+    if (notify) {
+      notifyListeners(); // Notify listeners after validation
+    }
     return isValid;
+  }
+
+  /// Clear the forced errors.
+  void clearForcedErrors({bool notify = true}) {
+    _forcedErrors.clear();
+    if (notify) {
+      notifyListeners();
+    }
   }
 
   /// Reset the form.
@@ -117,6 +143,22 @@ class FormFieldsController<F extends FormSchema> extends ChangeNotifier {
       (field) => field.currentState?.hasInteractedByUser ?? false,
     );
   }
+
+  /// Check if the form has been interacted with.
+  bool get hasBeenInteracted => _fieldKeys.values.any(
+        (field) => field.currentState?.hasInteractedByUser ?? false,
+      );
+
+  /// Check if the form has changed.
+  bool get hasChanged => _fieldKeys.values.any(
+        (field) {
+          if (field.currentWidget case final FormField formField) {
+            return field.currentState?.value != formField.initialValue;
+          }
+
+          return false;
+        },
+      );
 
   /// Save the form.
   void save() {

@@ -1,3 +1,19 @@
+## 1.1.1
+
+### Improvements
+
+* ✨ Enhanced `FormFieldsController` with improved validation and error handling:
+  * Added optional `notify` and `clearErrors` parameters to `validate()` method for more control
+  * Added `setError()` method with `notify` parameter to control rebuilds
+  * Introduced `clearForcedErrors()` method to manage form errors independently
+  * Added new state tracking properties:
+    * `hasBeenInteracted` - Detects if any field has been interacted with by user
+    * `hasChanged` - Checks if any field value differs from its initial value
+
+### Fix
+
+* 🐛 Update form generator to correctly identify closing brackets for generic types in annotations.
+
 ## 1.1.0
 
 ### New Features

@@ -141,8 +141,20 @@ class FormSchemaGenerator extends GeneratorForAnnotation<HookFormSchema> {
     final source = annotation.toSource();
     if (source.startsWith('@HookFormField<')) {
       final start = source.indexOf('<') + 1;
-      final end = source.indexOf('>');
-      if (start != -1 && end != -1) {
+      // Find the matching closing bracket by counting open/close brackets
+      int openBrackets = 1;
+      int end = start;
+
+      while (openBrackets > 0 && end < source.length) {
+        end++;
+        if (source[end] == '<') {
+          openBrackets++;
+        } else if (source[end] == '>') {
+          openBrackets--;
+        }
+      }
+
+      if (start != -1 && end != -1 && end > start) {
         return source.substring(start, end);
       }
     }
