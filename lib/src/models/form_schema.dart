@@ -1,4 +1,5 @@
 import 'package:collection/collection.dart';
+import 'package:flutter_hook_form/flutter_hook_form.dart';
 
 import 'validator.dart';
 
@@ -6,27 +7,25 @@ import 'validator.dart';
 ///
 /// ```dart
 /// class SignInFormSchema extends FormSchema {
-///   SignInFormSchema()
-///       : super(
-///           fields: {
-///             FormFieldScheme<String>(
-///               email,
-///               validators: (_, __) {}.email().required(),
-///             ),
-///             FormFieldScheme<String>(
-///               password,
-///               validators: (String ? value, __) {
-///                 // You can specify custom validation function like that.
-///                 if(value == 'password'){
-///                   return '"password" not allowed.'
-///                 }
-///               }.required(),
-///             ),
-///           },
-///         );
+///   const SignInFormSchema();
 ///
-///   static const HookedFieldId<SignInFormSchema, String> email = HookedFieldId('email');
-///   static const HookedFieldId<SignInFormSchema, String> password = HookedFieldId('password');
+///   static const email = HookField<SignInFormSchema, String>(
+///     'email',
+///     validators: [
+///       EmailValidator(),
+///       RequiredValidator<String>(),
+///     ],
+///   );
+///
+///   static const password = HookField<SignInFormSchema, String>(
+///     'password',
+///     validators: [
+///       RequiredValidator<String>(),
+///     ],
+///   );
+///
+///   @override
+///   Set<HookField<FormSchema, dynamic>> get fields => {email, password};
 /// }
 /// ```
 abstract class FormSchema {
@@ -71,7 +70,7 @@ extension type InitializedField<F extends FormSchema, T>(
   T? get initialValue => pair.$2;
 }
 
-/// Extension methods for [HookedFieldId].
+/// Extension methods for [HookField].
 extension HookedFieldIdExtension<F extends FormSchema, T> on HookField<F, T> {
   /// Creates an [InitializedField] with the given initial value.
   InitializedField<F, T> withInitialValue([T? value]) =>
