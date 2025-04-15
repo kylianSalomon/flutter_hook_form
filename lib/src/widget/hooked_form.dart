@@ -26,8 +26,8 @@ class HookedForm<F extends FormSchema> extends StatelessWidget {
   Widget build(BuildContext context) {
     return Form(
       key: form.key,
-      child: FormProvider(
-        notifier: form,
+      child: HookedFormProvider(
+        form: form,
         child: child,
       ),
     );

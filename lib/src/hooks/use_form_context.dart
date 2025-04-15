@@ -8,20 +8,20 @@ import '../models/form_schema.dart';
 /// Wrap your widget with a [FormProvider] to access the [FormFieldsController].
 /// Be careful to use [useFormContext] to access a provided [FormFieldsController]
 /// and not the [useForm] that is used to create the [FormFieldsController].
-class FormProvider<F extends FormSchema>
+class HookedFormProvider<F extends FormSchema>
     extends InheritedNotifier<FormFieldsController<F>> {
   /// Creates a [FormProvider].
-  const FormProvider({
+  const HookedFormProvider({
     super.key,
     required super.child,
-    required super.notifier,
-  });
+    required FormFieldsController<F> form,
+  }) : super(notifier: form);
 
   static FormFieldsController<F> _of<F extends FormSchema>(
     BuildContext context,
   ) {
     return context
-        .dependOnInheritedWidgetOfExactType<FormProvider<F>>()!
+        .dependOnInheritedWidgetOfExactType<HookedFormProvider<F>>()!
         .notifier!;
   }
 }
@@ -34,5 +34,5 @@ class FormProvider<F extends FormSchema>
 FormFieldsController<F> useFormContext<F extends FormSchema>(
   BuildContext context,
 ) {
-  return FormProvider._of<F>(context);
+  return HookedFormProvider._of<F>(context);
 }
