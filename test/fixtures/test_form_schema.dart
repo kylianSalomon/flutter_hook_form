@@ -1,19 +1,23 @@
 import 'package:flutter_hook_form/flutter_hook_form.dart';
 
 class TestFormSchema extends FormSchema {
-  TestFormSchema()
-      : super(
-          fields: {
-            const FormFieldScheme<String>(email, validators: [
-              RequiredValidator<String>(),
-              EmailValidator(),
-            ]),
-            const FormFieldScheme<String>(password, validators: [
-              RequiredValidator<String>(),
-            ]),
-          },
-        );
+  const TestFormSchema();
 
-  static const email = HookedFieldId<TestFormSchema, String>('email');
-  static const password = HookedFieldId<TestFormSchema, String>('password');
+  static const email = HookField<TestFormSchema, String>(
+    'email',
+    validators: [
+      RequiredValidator<String>(),
+      EmailValidator(),
+    ],
+  );
+
+  static const password = HookField<TestFormSchema, String>(
+    'password',
+    validators: [
+      RequiredValidator<String>(),
+    ],
+  );
+
+  @override
+  Set<HookField<FormSchema, dynamic>> get fields => {email, password};
 }

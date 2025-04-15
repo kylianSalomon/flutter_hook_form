@@ -237,7 +237,7 @@ class HookedTextFormField<F extends FormSchema> extends StatelessWidget {
   final FormFieldsController<F>? _form;
 
   /// The field identifier from the form schema.
-  final HookedFieldId<F, String> fieldHook;
+  final HookField<F, String> fieldHook;
 
   /// Optional error text to force the field into an error state.
   final String? forceErrorText;
@@ -481,7 +481,7 @@ class HookedTextFormField<F extends FormSchema> extends StatelessWidget {
               .localize(context, form.getValue(fieldHook)),
       autovalidateMode: autovalidateMode,
       enabled: enabled,
-      initialValue: initialValue,
+      initialValue: form.getValue(fieldHook) ?? initialValue,
       onSaved: onSaved,
       restorationId: restorationId,
       toolbarOptions: toolbarOptions,

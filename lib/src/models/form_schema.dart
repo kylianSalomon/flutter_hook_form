@@ -31,47 +31,49 @@ import 'validator.dart';
 /// ```
 abstract class FormSchema {
   /// Creates a [FormSchema] instance.
-  const FormSchema({
-    required this.fields,
-  });
+  const FormSchema();
 
   /// The form fields.
-  final Set<FormFieldScheme> fields;
+  Set<HookField> get fields;
 
   /// Get a form field by its id.
-  FormFieldScheme<T>? field<T, S extends FormSchema>(HookedFieldId<S, T> id) {
-    return fields.firstWhereOrNull((e) => e.id == id) as FormFieldScheme<T>?;
+  HookField<F, T>? field<F extends FormSchema, T>(HookField<F, T> hookField) {
+    return fields.firstWhereOrNull((e) => e.id == hookField.id)
+        as HookField<F, T>?;
   }
 }
 
 /// A class that defines a form field.
-class FormFieldScheme<T> {
-  /// Creates a [FormFieldScheme] instance.
-  const FormFieldScheme(
+class HookField<F extends FormSchema, T> {
+  /// Creates a [HookField] instance.
+  const HookField(
     this.id, {
     this.validators,
   });
 
   /// The form field id.
-  final HookedFieldId<FormSchema, T> id;
+  final String id;
 
   /// The validators.
   final List<Validator<T>>? validators;
-}
-
-/// A class that defines a form field id. This allows for type safety
-/// when accessing form fields and integrates with the hooked form ecosystem.
-///
-/// The type parameter F represents the form schema type that this field belongs to.
-/// This enables type inference when using the field in form widgets.
-class HookedFieldId<F extends FormSchema, T> {
-  /// Creates a [HookedFieldId] instance.
-  const HookedFieldId(String id) : _id = id;
-
-  /// The id to be used in the form controller. There is no need to use this
-  /// class directly, it is used internally by the hooked form ecosystem.
-  final String _id;
 
   @override
-  String toString() => _id;
+  String toString() => id;
+}
+
+/// An extension type that represents an initialized form field.
+extension type InitializedField<F extends FormSchema, T>(
+    (HookField<F, T>, T?) pair) {
+  /// The field id.
+  HookField<F, T> get fieldId => pair.$1;
+
+  /// The initial value.
+  T? get initialValue => pair.$2;
+}
+
+/// Extension methods for [HookedFieldId].
+extension HookedFieldIdExtension<F extends FormSchema, T> on HookField<F, T> {
+  /// Creates an [InitializedField] with the given initial value.
+  InitializedField<F, T> withInitialValue([T? value]) =>
+      InitializedField((this, value));
 }

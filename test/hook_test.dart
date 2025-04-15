@@ -15,7 +15,7 @@ void main() {
         MaterialApp(
           home: HookBuilder(
             builder: (context) {
-              capturedController = useForm(formSchema: TestFormSchema());
+              capturedController = useForm(formSchema: const TestFormSchema());
               return Container();
             },
           ),
@@ -30,15 +30,15 @@ void main() {
         (tester) async {
       final controller = FormFieldsController<TestFormSchema>(
         GlobalKey<FormState>(),
-        TestFormSchema(),
+        const TestFormSchema(),
       );
 
       FormFieldsController<TestFormSchema>? capturedController;
 
       await tester.pumpWidget(
         MaterialApp(
-          home: FormProvider<TestFormSchema>(
-            notifier: controller,
+          home: HookedForm<TestFormSchema>(
+            form: controller,
             child: HookBuilder(
               builder: (context) {
                 capturedController = useFormContext<TestFormSchema>(context);

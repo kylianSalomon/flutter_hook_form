@@ -14,11 +14,11 @@ void main() {
         MaterialApp(
           home: HookBuilder(
             builder: (context) {
-              final form = useForm(formSchema: TestFormSchema());
+              final form = useForm(formSchema: const TestFormSchema());
 
               return Scaffold(
-                body: FormProvider<TestFormSchema>(
-                  notifier: form,
+                body: HookedForm<TestFormSchema>(
+                  form: form,
                   child: Form(
                     key: form.key,
                     child: SingleChildScrollView(
@@ -86,11 +86,11 @@ void main() {
         MaterialApp(
           home: HookBuilder(
             builder: (context) {
-              final form = useForm(formSchema: TestFormSchema());
+              final form = useForm(formSchema: const TestFormSchema());
 
               return Scaffold(
-                body: FormProvider<TestFormSchema>(
-                  notifier: form,
+                body: HookedForm<TestFormSchema>(
+                  form: form,
                   child: Form(
                     key: form.key,
                     child: SingleChildScrollView(
@@ -143,11 +143,11 @@ void main() {
         MaterialApp(
           home: HookBuilder(
             builder: (context) {
-              final form = useForm(formSchema: TestFormSchema());
+              final form = useForm(formSchema: const TestFormSchema());
 
               return Scaffold(
-                body: FormProvider<TestFormSchema>(
-                  notifier: form,
+                body: HookedForm<TestFormSchema>(
+                  form: form,
                   child: Form(
                     key: form.key,
                     autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -185,11 +185,11 @@ void main() {
         MaterialApp(
           home: HookBuilder(
             builder: (context) {
-              final form = useForm(formSchema: TestFormSchema());
+              final form = useForm(formSchema: const TestFormSchema());
 
               return Scaffold(
-                body: FormProvider<TestFormSchema>(
-                  notifier: form,
+                body: HookedForm<TestFormSchema>(
+                  form: form,
                   child: Form(
                     key: form.key,
                     child: SingleChildScrollView(
@@ -232,12 +232,12 @@ void main() {
         MaterialApp(
           home: HookBuilder(
             builder: (context) {
-              final form = useForm(formSchema: TestFormSchema());
+              final form = useForm(formSchema: const TestFormSchema());
               formController = form;
 
               return Scaffold(
-                body: FormProvider<TestFormSchema>(
-                  notifier: form,
+                body: HookedForm<TestFormSchema>(
+                  form: form,
                   child: Form(
                     key: form.key,
                     child: const SingleChildScrollView(
