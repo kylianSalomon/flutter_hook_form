@@ -90,7 +90,7 @@ class PatternValidator extends Validator<String> {
   @override
   ValidatorFn<String> get validator {
     return (String? value) {
-      if (value != null && !pattern.hasMatch(value)) {
+      if (value != null && value.isNotEmpty && !pattern.hasMatch(value)) {
         return message ?? errorCode;
       }
 
