@@ -89,18 +89,28 @@ part 'signin_form.schema.dart';
 
 @HookFormSchema()
 class SignInFormSchema extends _SignInFormSchema {
-  SignInFormSchema() : super(email: email, password: password); //<- don't forget to pass fields to super constructor
+  SignInFormSchema(); //<- don't forget to pass fields to super constructor
   @HookFormField<String>(validators: [
     RequiredValidator<String>(),
     EmailValidator(),
   ])
-  static const email = _EmailFieldSchema();
+  static const email = _SignInFormSchema.email;
 
   @HookFormField<String>(validators: [
     RequiredValidator<String>(),
     MinLengthValidator(8),
   ])
-  static const password = _PasswordFieldSchema();
+  static const password = _SignInFormSchema.password;
+
+  static Set<InitializedField<SignInFormSchema, dynamic>> initWith(
+      String? email,
+      String? password,
+    ) {
+    return _SignInFormSchema.initializeWith(
+      email: email,
+      password: password,
+    );
+  }
 }
 ```
 
@@ -243,7 +253,6 @@ HookedTextFormField(
 ```dart
 HookedFormField(
   fieldHook: SignInFormSchema.rememberMe,
-  initialValue: false,
   builder: ({value, onChanged, error}) {
     return Checkbox(
       value: value,
@@ -259,10 +268,14 @@ Here's a complete example of a form using these widgets:
 class SignInForm extends HookWidget {
   @override
   Widget build(BuildContext context) {
-    final form = useForm(formSchema: SignInFormSchema());
+    final form = useForm(
+      formSchema: SignInFormSchema()
     // You can define initial values here if needed
-    // final initialEmailValue = 'user@example.com';
-    // final initialPasswordValue = '';
+      initialValues: SignInFormSchema.initializeWith(
+        email: 'user@example.com',
+        password: '',
+      )
+    );
 
     return HookedForm(
       form: form, // Bind the form controller with the Form widget
@@ -271,7 +284,6 @@ class SignInForm extends HookWidget {
           // No need to specify the form schema type - it's inferred from the fieldHook
           HookedTextFormField(
             fieldHook: SignInFormSchema.email,
-            // initialValue: initialEmailValue, // Uncomment to use initial values
             decoration: const InputDecoration(
               labelText: 'Email',
               hintText: 'Enter your email',
@@ -280,7 +292,6 @@ class SignInForm extends HookWidget {
           
           HookedTextFormField(
             fieldHook: SignInFormSchema.password,
-            // initialValue: initialPasswordValue, // Uncomment to use initial values
             obscureText: true,
             decoration: const InputDecoration(
               labelText: 'Password',
@@ -291,7 +302,6 @@ class SignInForm extends HookWidget {
           // No need to specify the form schema type or value type - both are inferred
           HookedFormField(
             fieldHook: SignInFormSchema.rememberMe,
-            initialValue: false,
             builder: (field) {
               return Checkbox(
                 value: field.value,
@@ -318,11 +328,32 @@ class SignInForm extends HookWidget {
 }
 ```
 
-**Why can't I initialize my form value in the form controller or form schema?**
+#### Form initialization
 
-When you need to pre-populate a form, the correct approach is to provide initial values at the widget level in the `initialValue` property provided by Flutter `FormField`, or update the values after the first build cycle when the form fields have been properly initialized and connected to their keys (not recommended).
+When you want to initialized your form with a value, you can either use the generated method from the .schema.dart
+or assign to each `HookField` of your choice a value :
 
-This is because form values in `flutter_hook_form` are stored in `FormFieldState` objects that are associated with `GlobalKey` instances, which don't exist until the form is actually built in the widget tree. For more details, see our [Form Initialization Guide](https://github.com/kylianSalomon/flutter_hook_form/wiki/Form-Initialization).
+```dart
+// If you use generated schema
+final form = useForm(
+  formSchema: SignInFormSchema()
+  // You can define initial values here if needed. This function is from the generated class _SignInFormSchema and the
+  // SignInFormSchema just redirect to this function
+  initialValues: SignInFormSchema.initializeWith(
+    email: 'user@example.com',
+    password: '',
+  )
+);
+
+// If you don't use generated schema, simply use the extension method on HookField `withInitialValue`.
+final form = useForm(
+  formSchema: SignInFormSchema()
+  initialValues: {
+    SignInFormSchema.email.withInitialValue('user@example.com'),
+    SignInFormSchema.password.withInitialValue(''),
+  }
+);
+```
 
 #### Form State Management
 
@@ -519,6 +550,24 @@ class SignInForm extends HookWidget {
 }
 ```
 
+#### Navigating with the form instance
+
+In case of a navigation, a new widget tree is generated and you may loose the access to the form instance, resulting in an
+error when using the `userFormContext`. To avoid this, use a `HookedFormProvider` on top of your new widget tree to provide
+the created form :
+
+```dart
+showBottomSheet(
+  context: context,
+  builder: (context) {
+    return HookedFormProvider(
+      form: form,
+      child: const MySubForm(),
+    );
+  },
+);
+```
+
 ### Use schema without code generation
 
 If you prefer not to use code generation, you can define your form schema manually:
@@ -527,29 +576,29 @@ If you prefer not to use code generation, you can define your form schema manual
 import 'package:flutter_hook_form/flutter_hook_form.dart';
 
 class SignInFormSchema extends FormSchema {
-  SignInFormSchema()
-      : super(
-          fields: {
-            const FormFieldScheme<String>(
-              email,
-              validators: [
-                RequiredValidator(),
-                EmailValidator(),
-              ],
-            ),
-            const FormFieldScheme<String>(
-              password,
-              validators: [
-                RequiredValidator<String>(),
-                MinLengthValidator(8),
-              ],
-            ),
-          },
-        );
+  SignInFormSchema();
 
-  // The form schema type is included in the field ID
-  static const HookedFieldId<SignInFormSchema, String> email = HookedFieldId('email');
-  static const HookedFieldId<SignInFormSchema, String> password = HookedFieldId('password');
+  // The form schema type is included in the HookField
+  static const HookedFieldId email = HookedField<SignInFormSchema, String>(
+    'email',
+    validators: [
+      RequiredValidator(),
+      EmailValidator(),
+    ]
+  );
+  static const password = HookedField<SignInFormSchema, String>(
+    'password',
+    validators: [
+      RequiredValidator<String>(),
+      MinLengthValidator(8),
+    ],
+  );
+
+    @override
+  Set<HookField<FormSchema, dynamic>> get fields => {
+    email,
+    password,
+  };
 }
 ```
 
@@ -587,7 +636,6 @@ class CustomCheckboxField<F extends FormSchema> extends HookWidget {
     return FormField<bool>(
       // Connect the field to the form using the fieldHook
       key: form.getFieldKey(fieldHook),
-      initialValue: initialValue,
       validator: (_) => form.getFieldError(fieldHook),
       builder: (field) {
         return Row(
@@ -636,19 +684,19 @@ One of the main pain points in Flutter forms is handling form values and convert
 ```dart
 @HookFormSchema()
 class SignInFormSchema extends _SignInFormSchema {
-  SignInFormSchema() : super(email: email, password: password);
+  SignInFormSchema();
 
   @HookFormField<String>(validators: [
     RequiredValidator<String>(),
     EmailValidator(),
   ])
-  static const email = _EmailFieldSchema();
+  static const email = _SignInFormSchema.email;
 
   @HookFormField<String>(validators: [
     RequiredValidator<String>(),
     MinLengthValidator(8),
   ])
-  static const password = _PasswordFieldSchema();
+  static const password = _SignInFormSchema.password;
 
   // Static method to validate and convert form values to API payload
   static SignInPayload toPayload(FormFieldsController form) {
