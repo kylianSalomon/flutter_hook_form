@@ -13,7 +13,7 @@ void main() {
       formKey = GlobalKey<FormState>();
       controller = FormFieldsController(
         formKey,
-        TestFormSchema(),
+        const TestFormSchema(),
       );
     });
 

@@ -15,14 +15,18 @@ import '../models/form_schema.dart';
 /// refer to the [flutter_hooks documentation](https://pub.dev/packages/flutter_hooks).
 FormFieldsController<F> useForm<F extends FormSchema>({
   required F formSchema,
+  Set<InitializedField<F, dynamic>>? initialValues,
+  List<Object?> keys = const <Object>[],
 }) {
   final controller = useMemoized(
     () {
       return FormFieldsController<F>(
         GlobalKey<FormState>(debugLabel: 'FormFieldsController'),
         formSchema,
+        initialValues: initialValues,
       );
     },
+    [keys],
   );
 
   return useListenable(controller);

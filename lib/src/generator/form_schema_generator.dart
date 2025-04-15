@@ -25,7 +25,7 @@ class FormSchemaGenerator extends GeneratorForAnnotation<HookFormSchema> {
 
     final buffer = StringBuffer();
 
-    // Add necessary imports
+    // Add necessary imports and part directive
     buffer.writeln('// ignore_for_file: type=lint');
     buffer.writeln();
     buffer.writeln(
@@ -34,73 +34,74 @@ class FormSchemaGenerator extends GeneratorForAnnotation<HookFormSchema> {
 
     // Generate the base class
     buffer.writeln('abstract class _$className extends FormSchema {');
-
-    // Add constructor parameters for each field
-    if (fields.isNotEmpty) {
-      buffer.write('  _$className({');
-      for (final field in fields) {
-        final fieldName = field.name;
-        final fieldSchemaName = '_${fieldName._capitalize()}FieldSchema';
-        buffer.write('required $fieldSchemaName $fieldName, ');
-      }
-      buffer.writeln('}) : super(');
-    } else {
-      buffer.writeln('  _$className() : super(');
-    }
-    buffer.writeln('    fields: {');
-
-    // Add field schemas
-    for (final field in fields) {
-      final fieldName = field.name;
-      final fieldType = _getFieldType(field);
-
-      // Get the field annotation
-      final annotation = field.metadata.firstWhere((meta) {
-        try {
-          final source = meta.toSource();
-          return source.startsWith('@HookFormField');
-        } catch (e) {
-          return false;
-        }
-      });
-
-      final source = annotation.toSource();
-      String? validatorsSource;
-
-      if (source.contains('validators:')) {
-        final start = source.indexOf('[');
-        final end = source.lastIndexOf(']');
-        if (start != -1 && end != -1) {
-          validatorsSource = source.substring(start, end + 1);
-        }
-      }
-
-      buffer.writeln('      FormFieldScheme<$fieldType>(');
-      buffer.writeln('        $fieldName,');
-      if (validatorsSource != null) {
-        buffer.writeln('        validators: $validatorsSource,');
-      }
-      buffer.writeln('      ),');
-    }
-
-    buffer.writeln('    },');
-    buffer.writeln('  );');
-    buffer.writeln('}');
+    buffer.writeln('  const _$className();');
     buffer.writeln();
 
-    // Generate field schema classes
+    // Generate static HookField constants
     for (final field in fields) {
       final fieldName = field.name;
       final fieldType = _getFieldType(field);
+      final validatorsSource = _getValidatorsSource(field);
+
       buffer.writeln(
-          'class _${fieldName._capitalize()}FieldSchema extends HookedFieldId<$className, $fieldType> {');
-      buffer.writeln(
-          '  const _${fieldName._capitalize()}FieldSchema() : super(\'$fieldName\');');
-      buffer.writeln('}');
-      buffer.writeln();
+          '  static const $fieldName = HookField<$className, $fieldType>(');
+      buffer.writeln('    \'$fieldName\',');
+      if (validatorsSource != null) {
+        buffer.writeln('    validators: $validatorsSource,');
+      }
+      buffer.writeln('  );');
     }
+    buffer.writeln();
+
+    // Generate fields getter
+    buffer.writeln('  @override');
+    buffer.writeln('  Set<HookField<FormSchema, dynamic>> get fields => {');
+    for (final field in fields) {
+      buffer.writeln('    ${field.name},');
+    }
+    buffer.writeln('  };');
+    buffer.writeln();
+
+    // Generate initialValues function
+    buffer.writeln(
+        '  static Set<InitializedField<$className, dynamic>> initializeWith({');
+    // Add parameters
+    for (final field in fields) {
+      final fieldType = _getFieldType(field);
+      buffer.writeln('    $fieldType? ${field.name},');
+    }
+    buffer.writeln('  }) {');
+    buffer.writeln('    return {');
+    // Add field initializations
+    for (final field in fields) {
+      buffer.writeln(
+          '      _$className.${field.name}.withInitialValue(${field.name}),');
+    }
+    buffer.writeln('    };');
+    buffer.writeln('  }');
+
+    buffer.writeln('}');
 
     return buffer.toString();
+  }
+
+  String? _getValidatorsSource(FieldElement field) {
+    final annotation = field.metadata.firstWhere(
+      (meta) => meta.toSource().startsWith('@HookFormField'),
+      orElse: () => throw InvalidGenerationSourceError(
+        'Field ${field.name} must have @HookFormField annotation',
+      ),
+    );
+
+    final source = annotation.toSource();
+    if (source.contains('validators:')) {
+      final start = source.indexOf('[');
+      final end = source.lastIndexOf(']');
+      if (start != -1 && end != -1) {
+        return source.substring(start, end + 1);
+      }
+    }
+    return null;
   }
 
   List<FieldElement> _getAnnotatedFields(ClassElement element) {
@@ -171,11 +172,5 @@ class FormSchemaGenerator extends GeneratorForAnnotation<HookFormSchema> {
     }
 
     return 'dynamic';
-  }
-}
-
-extension on String {
-  String _capitalize() {
-    return '${this[0].toUpperCase()}${substring(1)}';
   }
 }

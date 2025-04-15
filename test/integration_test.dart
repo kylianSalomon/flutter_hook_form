@@ -14,35 +14,38 @@ void main() {
         MaterialApp(
           home: HookBuilder(
             builder: (context) {
-              final form = useForm(formSchema: TestFormSchema());
+              final form = useForm(
+                formSchema: const TestFormSchema(),
+                initialValues: {
+                  TestFormSchema.email.withInitialValue('test@example.com'),
+                  TestFormSchema.password.withInitialValue('password123'),
+                },
+              );
 
               return Scaffold(
-                body: FormProvider<TestFormSchema>(
-                  notifier: form,
-                  child: Form(
-                    key: form.key,
-                    child: SingleChildScrollView(
-                      child: Column(
-                        children: [
-                          const HookedTextFormField<TestFormSchema>(
-                            fieldHook: TestFormSchema.email,
-                            decoration: InputDecoration(labelText: 'Email'),
-                          ),
-                          const HookedTextFormField<TestFormSchema>(
-                            fieldHook: TestFormSchema.password,
-                            decoration: InputDecoration(labelText: 'Password'),
-                            obscureText: true,
-                          ),
-                          ElevatedButton(
-                            onPressed: () {
-                              if (form.validate()) {
-                                formSubmitted = true;
-                              }
-                            },
-                            child: const Text('Submit'),
-                          ),
-                        ],
-                      ),
+                body: HookedForm<TestFormSchema>(
+                  form: form,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        const HookedTextFormField<TestFormSchema>(
+                          fieldHook: TestFormSchema.email,
+                          decoration: InputDecoration(labelText: 'Email'),
+                        ),
+                        const HookedTextFormField<TestFormSchema>(
+                          fieldHook: TestFormSchema.password,
+                          decoration: InputDecoration(labelText: 'Password'),
+                          obscureText: true,
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            if (form.validate()) {
+                              formSubmitted = true;
+                            }
+                          },
+                          child: const Text('Submit'),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -86,30 +89,29 @@ void main() {
         MaterialApp(
           home: HookBuilder(
             builder: (context) {
-              final form = useForm(formSchema: TestFormSchema());
+              final form = useForm(
+                formSchema: const TestFormSchema(),
+              );
 
               return Scaffold(
-                body: FormProvider<TestFormSchema>(
-                  notifier: form,
-                  child: Form(
-                    key: form.key,
-                    child: SingleChildScrollView(
-                      child: Column(
-                        children: [
-                          const HookedTextFormField<TestFormSchema>(
-                            fieldHook: TestFormSchema.email,
-                            decoration: InputDecoration(labelText: 'Email'),
-                          ),
-                          const HookedTextFormField<TestFormSchema>(
-                            fieldHook: TestFormSchema.password,
-                            decoration: InputDecoration(labelText: 'Password'),
-                          ),
-                          ElevatedButton(
-                            onPressed: () => form.reset(),
-                            child: const Text('Reset'),
-                          ),
-                        ],
-                      ),
+                body: HookedForm<TestFormSchema>(
+                  form: form,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        const HookedTextFormField<TestFormSchema>(
+                          fieldHook: TestFormSchema.email,
+                          decoration: InputDecoration(labelText: 'Email'),
+                        ),
+                        const HookedTextFormField<TestFormSchema>(
+                          fieldHook: TestFormSchema.password,
+                          decoration: InputDecoration(labelText: 'Password'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () => form.reset(),
+                          child: const Text('Reset'),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -143,23 +145,22 @@ void main() {
         MaterialApp(
           home: HookBuilder(
             builder: (context) {
-              final form = useForm(formSchema: TestFormSchema());
+              final form = useForm(
+                formSchema: const TestFormSchema(),
+              );
 
               return Scaffold(
-                body: FormProvider<TestFormSchema>(
-                  notifier: form,
-                  child: Form(
-                    key: form.key,
-                    autovalidateMode: AutovalidateMode.onUserInteraction,
-                    child: const SingleChildScrollView(
-                      child: Column(
-                        children: [
-                          HookedTextFormField<TestFormSchema>(
-                            fieldHook: TestFormSchema.email,
-                            decoration: InputDecoration(labelText: 'Email'),
-                          ),
-                        ],
-                      ),
+                body: HookedForm<TestFormSchema>(
+                  form: form,
+                  child: const SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        HookedTextFormField<TestFormSchema>(
+                          autovalidateMode: AutovalidateMode.onUserInteraction,
+                          fieldHook: TestFormSchema.email,
+                          decoration: InputDecoration(labelText: 'Email'),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -185,28 +186,30 @@ void main() {
         MaterialApp(
           home: HookBuilder(
             builder: (context) {
-              final form = useForm(formSchema: TestFormSchema());
+              final form = useForm(
+                formSchema: const TestFormSchema(),
+                initialValues: {
+                  TestFormSchema.email.withInitialValue('test@example.com'),
+                  TestFormSchema.password.withInitialValue('password123'),
+                },
+              );
 
               return Scaffold(
-                body: FormProvider<TestFormSchema>(
-                  notifier: form,
-                  child: Form(
-                    key: form.key,
-                    child: SingleChildScrollView(
-                      child: Column(
-                        children: [
-                          HookedTextFormField<TestFormSchema>(
-                            fieldHook: TestFormSchema.email,
-                            decoration:
-                                const InputDecoration(labelText: 'Email'),
-                            validator: (_) => 'Custom error message',
-                          ),
-                          ElevatedButton(
-                            onPressed: () => form.validate(),
-                            child: const Text('Validate'),
-                          ),
-                        ],
-                      ),
+                body: HookedForm<TestFormSchema>(
+                  form: form,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        HookedTextFormField<TestFormSchema>(
+                          fieldHook: TestFormSchema.email,
+                          decoration: const InputDecoration(labelText: 'Email'),
+                          validator: (_) => 'Custom error message',
+                        ),
+                        ElevatedButton(
+                          onPressed: () => form.validate(),
+                          child: const Text('Validate'),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -232,27 +235,30 @@ void main() {
         MaterialApp(
           home: HookBuilder(
             builder: (context) {
-              final form = useForm(formSchema: TestFormSchema());
+              final form = useForm(
+                formSchema: const TestFormSchema(),
+                initialValues: {
+                  TestFormSchema.email.withInitialValue('test@example.com'),
+                  TestFormSchema.password.withInitialValue('password123'),
+                },
+              );
               formController = form;
 
               return Scaffold(
-                body: FormProvider<TestFormSchema>(
-                  notifier: form,
-                  child: Form(
-                    key: form.key,
-                    child: const SingleChildScrollView(
-                      child: Column(
-                        children: [
-                          HookedTextFormField<TestFormSchema>(
-                            fieldHook: TestFormSchema.email,
-                            decoration: InputDecoration(labelText: 'Email'),
-                          ),
-                          HookedTextFormField<TestFormSchema>(
-                            fieldHook: TestFormSchema.password,
-                            decoration: InputDecoration(labelText: 'Password'),
-                          ),
-                        ],
-                      ),
+                body: HookedForm<TestFormSchema>(
+                  form: form,
+                  child: const SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        HookedTextFormField<TestFormSchema>(
+                          fieldHook: TestFormSchema.email,
+                          decoration: InputDecoration(labelText: 'Email'),
+                        ),
+                        HookedTextFormField<TestFormSchema>(
+                          fieldHook: TestFormSchema.password,
+                          decoration: InputDecoration(labelText: 'Password'),
+                        ),
+                      ],
                     ),
                   ),
                 ),

@@ -22,25 +22,15 @@ class MyCustomMessages extends FormErrorMessages {
 }
 
 class SignInFormSchema extends FormSchema {
-  SignInFormSchema()
-      : super(fields: {
-          const FormFieldScheme<String>(
-            email,
-            validators: [RequiredValidator(), EmailValidator()],
-          ),
-          const FormFieldScheme<String>(
-            password,
-            validators: [RequiredValidator()],
-          ),
-          const FormFieldScheme<bool>(rememberMe),
-        });
+  SignInFormSchema();
 
-  static const HookedFieldId<SignInFormSchema, String> email =
-      HookedFieldId('email');
-  static const HookedFieldId<SignInFormSchema, String> password =
-      HookedFieldId('password');
-  static const HookedFieldId<SignInFormSchema, bool> rememberMe =
-      HookedFieldId('rememberMe');
+  static const email = HookField<SignInFormSchema, String>('email');
+  static const password = HookField<SignInFormSchema, String>('password');
+  static const rememberMe = HookField<SignInFormSchema, bool>('rememberMe');
+
+  @override
+  Set<HookField<FormSchema, dynamic>> get fields =>
+      {email, password, rememberMe};
 }
 
 class MyApp extends StatelessWidget {
@@ -81,7 +71,7 @@ class SignInPage extends HookWidget {
             HookedFormField<SignInFormSchema, bool>(
               fieldHook: SignInFormSchema.rememberMe,
               initialValue: false,
-              builder: ({value, onChanged, error}) {
+              builder: (value, onChanged, error) {
                 return Checkbox(
                   value: value,
                   onChanged: onChanged,

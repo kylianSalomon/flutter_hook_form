@@ -9,8 +9,15 @@ class FormFieldsController<F extends FormSchema> extends ChangeNotifier {
   /// Creates a [FormFieldsController].
   FormFieldsController(
     this.key,
-    F formSchema,
-  ) : _formSchema = formSchema;
+    F formSchema, {
+    Set<InitializedField<F, dynamic>>? initialValues,
+  })  : _formSchema = formSchema,
+        _values = {
+          ...?initialValues?.fold<Map<String, dynamic>>({}, (map, e) {
+            map[e.fieldId.toString()] = e.initialValue;
+            return map;
+          })
+        };
 
   /// The form key.
   final FormKey key;
@@ -24,28 +31,44 @@ class FormFieldsController<F extends FormSchema> extends ChangeNotifier {
   /// The forced errors.
   final _forcedErrors = <String, String>{};
 
+  /// The field values.
+  final Map<String, dynamic> _values;
+
   /// Get or create a GlobalKey for a form field
-  GlobalKey<FormFieldState<T>> fieldKey<T>(HookedFieldId<F, T> fieldId) {
-    return _fieldKeys.putIfAbsent(fieldId.toString(),
-            () => GlobalKey<FormFieldState<T>>(debugLabel: fieldId.toString()))
+  GlobalKey<FormFieldState<T>> fieldKey<T>(HookField<F, T> hookField) {
+    return _fieldKeys.putIfAbsent(
+            hookField.toString(),
+            () =>
+                GlobalKey<FormFieldState<T>>(debugLabel: hookField.toString()))
         as GlobalKey<FormFieldState<T>>;
   }
 
   /// Get the value of a form field.
-  T? getValue<T>(HookedFieldId<F, T> fieldId) {
-    return _fieldKeys[fieldId.toString()]?.currentState?.value as T?;
+  T? getValue<T>(HookField<F, T> hookField) {
+    final fieldKey = hookField.toString();
+    // First try to get from widget state if available
+    final widgetValue = _fieldKeys[fieldKey]?.currentState?.value as T?;
+    if (widgetValue != null) {
+      _values[fieldKey] = widgetValue;
+      return widgetValue;
+    }
+    // Fallback to stored value
+    return _values[fieldKey] as T?;
   }
 
   /// Update the value of a form field.
   T? updateValue<T>(
-    HookedFieldId<F, T> fieldId,
+    HookField<F, T> hookField,
     T? value, {
     bool notify = true,
   }) {
-    _fieldKeys[fieldId.toString()]?.currentState?.didChange(value);
+    final fieldKey = hookField.toString();
+    _values[fieldKey] = value;
+
+    // Update widget state if available
+    _fieldKeys[fieldKey]?.currentState?.didChange(value);
 
     if (notify) {
-      // Notify listeners when a field value changes
       notifyListeners();
     }
 
@@ -53,37 +76,37 @@ class FormFieldsController<F extends FormSchema> extends ChangeNotifier {
   }
 
   /// Get the error of a form field.
-  String? getFieldError<T>(HookedFieldId<F, T> fieldId) {
-    return getFieldForcedError(fieldId) ??
-        _fieldKeys[fieldId.toString()]?.currentState?.errorText;
+  String? getFieldError<T>(HookField<F, T> hookField) {
+    return getFieldForcedError(hookField) ??
+        _fieldKeys[hookField.toString()]?.currentState?.errorText;
   }
 
   /// Get the forced error of a form field.
-  String? getFieldForcedError<T>(HookedFieldId<F, T> fieldId) {
-    return _forcedErrors[fieldId.toString()];
+  String? getFieldForcedError<T>(HookField<F, T> hookField) {
+    return _forcedErrors[hookField.toString()];
   }
 
   /// Set the error of a form field.
   void setError<T>(
-    HookedFieldId<F, T> fieldId,
+    HookField<F, T> hookField,
     String error, {
     bool notify = true,
   }) {
-    _forcedErrors[fieldId.toString()] = error;
+    _forcedErrors[hookField.toString()] = error;
     if (notify) {
       notifyListeners();
     }
   }
 
   /// Check if a form field has an error.
-  bool hasFieldError<T>(HookedFieldId<F, T> fieldId) {
-    return getFieldError(fieldId) != null;
+  bool hasFieldError<T>(HookField<F, T> hookField) {
+    return getFieldError(hookField) != null;
   }
 
   /// Get the validators of a form field. Use `localize` to localize the
   /// validators.
-  List<Validator<T>>? validators<T>(HookedFieldId<F, T> fieldId) {
-    return _formSchema.field<T, F>(fieldId)?.validators;
+  List<Validator<T>>? validators<T>(HookField<F, T> hookField) {
+    return _formSchema.field(hookField)?.validators;
   }
 
   /// Validate the form.
@@ -123,17 +146,18 @@ class FormFieldsController<F extends FormSchema> extends ChangeNotifier {
   }
 
   /// Validate the form field.
-  bool validateField<T>(HookedFieldId<F, T> fieldId) {
-    final isValid = fieldKey(fieldId).currentState?.validate();
+  bool validateField<T>(HookField<F, T> hookField) {
+    final isValid = fieldKey(hookField).currentState?.validate();
 
     notifyListeners();
     return isValid ?? false;
   }
 
   /// Check if the form fields have been interacted with.
-  bool isDirty<T>(Set<HookedFieldId<F, T>> fieldIds) {
-    return fieldIds.every(
-      (fieldId) => fieldKey(fieldId).currentState?.hasInteractedByUser ?? false,
+  bool isDirty<T>(Set<HookField<F, T>> hookFields) {
+    return hookFields.every(
+      (hookField) =>
+          fieldKey(hookField).currentState?.hasInteractedByUser ?? false,
     );
   }
 
