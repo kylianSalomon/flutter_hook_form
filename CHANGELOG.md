@@ -1,3 +1,22 @@
+## 2.0.0
+
+### Breaking changes
+
+* 💥 `FormProvider` has been renamed to `HookedFormProvider`
+* 💥 `FormFieldScheme` and `HookedFieldId` have been merged into `HookField`
+* 💥 `FormSchema` now declare a `fields` property to setup form fiels instead of using `super` constructor
+* 💥 `builder` syntax has changed on `HookedFormField` allowing to declare anonymous parameters.
+
+### Improvements
+
+* 🐛 Fix `PatternValidator` for failing on empty strings. Now fails only on non-empty values.
+
+### New Features
+
+* ✨ `FormController` can now be initialized
+  * Generated `FormSchema` declare a static to initialized each `HookField`
+  * `withInitialValue` method has been added to `HookField` to initialized a hook field with a given value.
+
 ## 1.1.1
 
 ### Improvements
