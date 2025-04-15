@@ -80,11 +80,11 @@ class HookedFormField<F extends FormSchema, T> extends StatelessWidget {
   /// - `value`: The current value of the field.
   /// - `onChanged`: A function to update the value of the field.
   /// - `error`: The error message of the field.
-  final Widget Function({
+  final Widget Function(
     T? value,
     void Function(T?)? onChanged,
     String? error,
-  }) builder;
+  ) builder;
 
   /// Optional error text to force the field into an error state.
   final String? forceErrorText;
@@ -130,13 +130,13 @@ class HookedFormField<F extends FormSchema, T> extends StatelessWidget {
       restorationId: restorationId,
       builder: (_) {
         return builder(
-          value: form.getValue(fieldHook),
-          onChanged: (value) => form.updateValue<T>(
+          form.getValue(fieldHook),
+          (value) => form.updateValue<T>(
             fieldHook,
             value,
             notify: notifyOnChange,
           ),
-          error: form.getFieldForcedError(fieldHook),
+          form.getFieldError(fieldHook),
         );
       },
     );
