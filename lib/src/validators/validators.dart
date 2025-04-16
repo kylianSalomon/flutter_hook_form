@@ -1,6 +1,5 @@
 import 'package:cross_file/cross_file.dart';
 import 'package:flutter/widgets.dart';
-import 'package:mime/mime.dart';
 
 import '../messages/form_messages.dart';
 import '../models/validator.dart';
@@ -155,9 +154,7 @@ class MimeTypeValidator extends Validator<XFile> {
   @override
   ValidatorFn<XFile> get validator {
     return (XFile? value) {
-      final fileType = lookupMimeType(value?.path ?? '');
-
-      if (value != null && !mimeType.contains(fileType)) {
+      if (value != null && !mimeType.contains(value.mimeType)) {
         return message ?? errorCode;
       }
 
