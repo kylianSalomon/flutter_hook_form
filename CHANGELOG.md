@@ -1,3 +1,9 @@
+## 2.0.1
+
+### Improvements
+
+* 🐛 Fix `MimeTypeValidator` for failing on valid files.
+
 ## 2.0.0
 
 ### Breaking changes
