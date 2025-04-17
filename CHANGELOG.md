@@ -1,3 +1,9 @@
+## 2.0.2
+
+### Improvements
+
+* ♻️ Update initialization business logic to avoid loosing initial value state on rebuild.
+
 ## 2.0.1
 
 ### Improvements
