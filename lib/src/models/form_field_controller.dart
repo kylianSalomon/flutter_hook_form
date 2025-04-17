@@ -4,13 +4,17 @@ import 'form_schema.dart';
 import 'types.dart';
 import 'validator.dart';
 
+/// A type that represents the initial values of a form field.
+typedef InitialFieldValues<F extends FormSchema>
+    = Set<InitializedField<F, dynamic>>;
+
 /// A controller that manages form field states and validation
 class FormFieldsController<F extends FormSchema> extends ChangeNotifier {
   /// Creates a [FormFieldsController].
   FormFieldsController(
     this.key,
     F formSchema, {
-    Set<InitializedField<F, dynamic>>? initialValues,
+    InitialFieldValues<F>? initialValues,
   })  : _formSchema = formSchema,
         _values = {
           ...?initialValues?.fold<Map<String, dynamic>>({}, (map, e) {
