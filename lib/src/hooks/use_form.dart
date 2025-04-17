@@ -26,7 +26,7 @@ FormFieldsController<F> useForm<F extends FormSchema>({
         initialValues: initialValues,
       );
     },
-    [keys],
+    keys,
   );
 
   return useListenable(controller);
