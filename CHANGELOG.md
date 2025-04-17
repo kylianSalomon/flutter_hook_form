@@ -1,3 +1,9 @@
+## 2.0.3
+
+### Improvements
+
+* 🐛 Fix unnecessary array creation in useForm hook keys parameter.
+
 ## 2.0.2
 
 ### Improvements
