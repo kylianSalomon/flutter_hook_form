@@ -481,7 +481,7 @@ class HookedTextFormField<F extends FormSchema> extends StatelessWidget {
               .localize(context, form.getValue(fieldHook)),
       autovalidateMode: autovalidateMode,
       enabled: enabled,
-      initialValue: form.getValue(fieldHook) ?? initialValue,
+      initialValue: form.getInitialValue(fieldHook) ?? initialValue,
       onSaved: onSaved,
       restorationId: restorationId,
       toolbarOptions: toolbarOptions,

@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/widgets.dart';
 
 import 'form_schema.dart';
@@ -16,6 +17,7 @@ class FormFieldsController<F extends FormSchema> extends ChangeNotifier {
     F formSchema, {
     InitialFieldValues<F>? initialValues,
   })  : _formSchema = formSchema,
+        _initialValues = initialValues,
         _values = {
           ...?initialValues?.fold<Map<String, dynamic>>({}, (map, e) {
             map[e.fieldId.toString()] = e.initialValue;
@@ -31,6 +33,9 @@ class FormFieldsController<F extends FormSchema> extends ChangeNotifier {
 
   /// The field keys.
   final _fieldKeys = <String, GlobalKey<FormFieldState>>{};
+
+  /// The initial values.
+  final InitialFieldValues<F>? _initialValues;
 
   /// The forced errors.
   final _forcedErrors = <String, String>{};
@@ -58,6 +63,13 @@ class FormFieldsController<F extends FormSchema> extends ChangeNotifier {
     }
     // Fallback to stored value
     return _values[fieldKey] as T?;
+  }
+
+  /// Get the initial value of a form field.
+  T? getInitialValue<T>(HookField<F, T> hookField) {
+    return _initialValues
+        ?.firstWhereOrNull((e) => e.fieldId.id == hookField.id)
+        ?.initialValue as T?;
   }
 
   /// Update the value of a form field.
