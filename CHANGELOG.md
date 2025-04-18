@@ -1,3 +1,9 @@
+## 2.0.4
+
+### Improvements
+
+* Update path dependency version constraint to allow for minor updates
+
 ## 2.0.3
 
 ### Improvements
