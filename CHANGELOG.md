@@ -1,3 +1,9 @@
+## 2.0.5
+
+### Fix
+
+* 🐛 Missing default return when localizing forced error code.
+
 ## 2.0.4
 
 ### Improvements

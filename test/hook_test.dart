@@ -52,5 +52,39 @@ void main() {
       expect(capturedController, isNotNull);
       expect(capturedController, equals(controller));
     });
+
+    testWidgets('HookFormField show error on custom errors', (tester) async {
+      final controller = FormFieldsController<TestFormSchema>(
+        GlobalKey<FormState>(),
+        const TestFormSchema(),
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: HookedForm<TestFormSchema>(
+            form: controller,
+            child: HookBuilder(
+              builder: (context) {
+                return const Material(
+                  child: HookedTextFormField<TestFormSchema>(
+                    fieldHook: TestFormSchema.email,
+                    decoration: InputDecoration(labelText: 'Email'),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+
+      controller.setError(TestFormSchema.email, 'Custom error');
+
+      await tester.pump();
+
+      final hookFormFieldState =
+          controller.fieldKey(TestFormSchema.email).currentState;
+
+      expect(hookFormFieldState?.errorText, 'Custom error');
+    });
   });
 }
