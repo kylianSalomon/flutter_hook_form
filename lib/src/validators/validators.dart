@@ -319,9 +319,10 @@ extension LocalizeError on String? {
   String? localize(BuildContext context, dynamic value) {
     return switch (this) {
       final String errorCode => HookFormScope.of(context).parseErrorCode(
+            errorCode,
+            value,
+          ) ??
           errorCode,
-          value,
-        ),
       _ => null,
     };
   }
