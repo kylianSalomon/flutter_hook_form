@@ -5,7 +5,7 @@ repository: https://github.com/kylianSalomon/flutter_hook_form
 issue_tracker: https://github.com/kylianSalomon/flutter_hook_form/issues
 
 environment:
-  sdk: ^3.6.1
+  sdk: ^3.8.0
   flutter: ">=1.17.0"
 
 dependencies:
