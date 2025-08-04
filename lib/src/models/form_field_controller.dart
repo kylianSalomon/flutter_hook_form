@@ -167,18 +167,20 @@ class FormFieldsController<F extends FormSchema> extends ChangeNotifier {
 
   /// Validate the form field.
   bool validateField<T>(HookField<F, T> hookField) {
-    final isValid = fieldKey(hookField).currentState?.validate();
+    final isValid = fieldKey<T>(hookField).currentState?.validate();
 
     notifyListeners();
     return isValid ?? false;
   }
 
   /// Check if the form fields have been interacted with.
-  bool isDirty<T>(Set<HookField<F, T>> hookFields) {
-    return hookFields.every(
-      (hookField) =>
-          fieldKey(hookField).currentState?.hasInteractedByUser ?? false,
-    );
+  bool isDirty(Set<HookField> hookFields) {
+    return hookFields.every((hookField) {
+      return _fieldKeys[hookField.toString()]
+              ?.currentState
+              ?.hasInteractedByUser ??
+          false;
+    });
   }
 
   /// Check if all form fields have been interacted with.
