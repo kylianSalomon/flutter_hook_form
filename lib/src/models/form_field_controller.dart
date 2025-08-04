@@ -6,8 +6,8 @@ import 'types.dart';
 import 'validator.dart';
 
 /// A type that represents the initial values of a form field.
-typedef InitialFieldValues<F extends FormSchema>
-    = Set<InitializedField<F, dynamic>>;
+typedef InitialFieldValues<F extends FormSchema> =
+    Set<InitializedField<F, dynamic>>;
 
 /// A controller that manages form field states and validation
 class FormFieldsController<F extends FormSchema> extends ChangeNotifier {
@@ -16,14 +16,14 @@ class FormFieldsController<F extends FormSchema> extends ChangeNotifier {
     this.key,
     F formSchema, {
     InitialFieldValues<F>? initialValues,
-  })  : _formSchema = formSchema,
-        _initialValues = initialValues,
-        _values = {
-          ...?initialValues?.fold<Map<String, dynamic>>({}, (map, e) {
-            map[e.fieldId.toString()] = e.initialValue;
-            return map;
-          })
-        };
+  }) : _formSchema = formSchema,
+       _initialValues = initialValues,
+       _values = {
+         ...?initialValues?.fold<Map<String, dynamic>>({}, (map, e) {
+           map[e.fieldId.toString()] = e.initialValue;
+           return map;
+         }),
+       };
 
   /// The form key.
   final FormKey key;
@@ -32,7 +32,7 @@ class FormFieldsController<F extends FormSchema> extends ChangeNotifier {
   final F _formSchema;
 
   /// The field keys.
-  final _fieldKeys = <String, GlobalKey<FormFieldState>>{};
+  final Map<String, GlobalKey<FormFieldState<dynamic>>> _fieldKeys = {};
 
   /// The initial values.
   final InitialFieldValues<F>? _initialValues;
@@ -45,11 +45,18 @@ class FormFieldsController<F extends FormSchema> extends ChangeNotifier {
 
   /// Get or create a GlobalKey for a form field
   GlobalKey<FormFieldState<T>> fieldKey<T>(HookField<F, T> hookField) {
-    return _fieldKeys.putIfAbsent(
-            hookField.toString(),
-            () =>
-                GlobalKey<FormFieldState<T>>(debugLabel: hookField.toString()))
-        as GlobalKey<FormFieldState<T>>;
+    final key = _fieldKeys.putIfAbsent(
+      hookField.toString(),
+      () => GlobalKey<FormFieldState<T>>(debugLabel: hookField.toString()),
+    );
+
+    if (key is! GlobalKey<FormFieldState<T>>) {
+      throw Exception(
+        'Cannot return $key as a GlobalKey<FormFieldState<$T>>, key is of type ${key.runtimeType}',
+      );
+    }
+
+    return key;
   }
 
   /// Get the value of a form field.
@@ -68,16 +75,13 @@ class FormFieldsController<F extends FormSchema> extends ChangeNotifier {
   /// Get the initial value of a form field.
   T? getInitialValue<T>(HookField<F, T> hookField) {
     return _initialValues
-        ?.firstWhereOrNull((e) => e.fieldId.id == hookField.id)
-        ?.initialValue as T?;
+            ?.firstWhereOrNull((e) => e.fieldId.id == hookField.id)
+            ?.initialValue
+        as T?;
   }
 
   /// Update the value of a form field.
-  T? updateValue<T>(
-    HookField<F, T> hookField,
-    T? value, {
-    bool notify = true,
-  }) {
+  T? updateValue<T>(HookField<F, T> hookField, T? value, {bool notify = true}) {
     final fieldKey = hookField.toString();
     _values[fieldKey] = value;
 
@@ -186,19 +190,17 @@ class FormFieldsController<F extends FormSchema> extends ChangeNotifier {
 
   /// Check if the form has been interacted with.
   bool get hasBeenInteracted => _fieldKeys.values.any(
-        (field) => field.currentState?.hasInteractedByUser ?? false,
-      );
+    (field) => field.currentState?.hasInteractedByUser ?? false,
+  );
 
   /// Check if the form has changed.
-  bool get hasChanged => _fieldKeys.values.any(
-        (field) {
-          if (field.currentWidget case final FormField formField) {
-            return field.currentState?.value != formField.initialValue;
-          }
+  bool get hasChanged => _fieldKeys.values.any((field) {
+    if (field.currentWidget case final FormField formField) {
+      return field.currentState?.value != formField.initialValue;
+    }
 
-          return false;
-        },
-      );
+    return false;
+  });
 
   /// Save the form.
   void save() {
