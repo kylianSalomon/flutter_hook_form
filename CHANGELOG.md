@@ -1,3 +1,9 @@
+## 2.0.7
+
+### Fix
+
+* 🐛 Fix "_type 'LabeledGlobalKey<T>' is not a subtype of type 'GlobalKey<R>_" error that occured when using `isDirty` function.
+
 ## 2.0.6
 
 * 🔧 Upgrade dart SDK to ^3.8.0
