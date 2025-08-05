@@ -29,8 +29,11 @@ class SignInFormSchema extends FormSchema {
   static const rememberMe = HookField<SignInFormSchema, bool>('rememberMe');
 
   @override
-  Set<HookField<FormSchema, dynamic>> get fields =>
-      {email, password, rememberMe};
+  Set<HookField<FormSchema, dynamic>> get fields => {
+    email,
+    password,
+    rememberMe,
+  };
 }
 
 class MyApp extends StatelessWidget {
@@ -55,9 +58,7 @@ class SignInPage extends HookWidget {
     final form = useForm(formSchema: SignInFormSchema());
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Sign In'),
-      ),
+      appBar: AppBar(title: const Text('Sign In')),
       body: HookedForm(
         form: form,
         child: Column(
@@ -72,10 +73,7 @@ class SignInPage extends HookWidget {
               fieldHook: SignInFormSchema.rememberMe,
               initialValue: false,
               builder: (value, onChanged, error) {
-                return Checkbox(
-                  value: value,
-                  onChanged: onChanged,
-                );
+                return Checkbox(value: value, onChanged: onChanged);
               },
             ),
             const SignUpCheckBox(),
@@ -98,7 +96,7 @@ class SignUpCheckBox extends HookWidget {
     /// Don't use useForm<SignInFormSchema>() here,
     /// because it will create a new form instance.
     /// We want to use the same form instance as the parent provided by
-    /// the [FormProvider] widget.
+    /// the [HookedFormProvider] widget.
     final form = useFormContext<SignInFormSchema>(context);
 
     return FormField(

@@ -127,7 +127,7 @@ class HookedTextFormField<F extends FormSchema> extends StatelessWidget {
   /// Creates a [HookedTextFormField] with an explicitly provided form.
   ///
   /// Consider using [HookedTextFormField.explicit] if you did not use [HookedForm] to
-  /// wrap your form or use [FormProvider] to provide the form.
+  /// wrap your form or use [HookedFormProvider] to provide the form.
   ///
   /// If you want to notify the form when the field value changes, set
   /// [notifyOnChange] to `true`.
@@ -355,10 +355,13 @@ class HookedTextFormField<F extends FormSchema> extends StatelessWidget {
   final TextSelectionControls? selectionControls;
 
   /// The counter for the text form field.
-  final Widget? Function(BuildContext,
-      {required int currentLength,
-      required bool isFocused,
-      required int? maxLength})? buildCounter;
+  final Widget? Function(
+    BuildContext, {
+    required int currentLength,
+    required bool isFocused,
+    required int? maxLength,
+  })?
+  buildCounter;
 
   /// The scroll physics for the text form field.
   final ScrollPhysics? scrollPhysics;
@@ -474,7 +477,8 @@ class HookedTextFormField<F extends FormSchema> extends StatelessWidget {
     return TextFormField(
       key: form.fieldKey(fieldHook),
       validator: validator ?? form.validators(fieldHook)?.localize(context),
-      forceErrorText: forceErrorText ??
+      forceErrorText:
+          forceErrorText ??
           form
               .getFieldForcedError(fieldHook)
               .localize(context, form.getValue(fieldHook)),
