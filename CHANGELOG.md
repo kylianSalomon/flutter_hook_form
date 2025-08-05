@@ -1,3 +1,9 @@
+## 2.0.8
+
+### Improvements
+
+* 📝 : update code comments to pass static analysis.
+
 ## 2.0.7
 
 ### Fix

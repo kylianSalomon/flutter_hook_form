@@ -5,7 +5,7 @@ import '../models/form_schema.dart';
 
 /// A provider that provides a [FormFieldsController] to the form fields.
 ///
-/// Wrap your widget with a [FormProvider] to access the [FormFieldsController].
+/// Wrap your widget with a [HookedFormProvider] to access the [FormFieldsController].
 /// Be careful to use [useFormContext] to access a provided [FormFieldsController]
 /// and not the [useForm] that is used to create the [FormFieldsController].
 ///
@@ -14,7 +14,7 @@ import '../models/form_schema.dart';
 /// a [HookedFormProvider].
 class HookedFormProvider<F extends FormSchema>
     extends InheritedNotifier<FormFieldsController<F>> {
-  /// Creates a [FormProvider].
+  /// Creates a [HookedFormProvider].
   const HookedFormProvider({
     super.key,
     required super.child,
@@ -32,7 +32,7 @@ class HookedFormProvider<F extends FormSchema>
 
 /// A hook that provides a [FormFieldsController] to the form fields.
 ///
-/// Use this hook to access the [FormFieldsController] from the [FormProvider].
+/// Use this hook to access the [FormFieldsController] from the [HookedFormProvider].
 /// DO NOT use this hook to create a [FormFieldsController], please see
 /// [useForm] instead.
 FormFieldsController<F> useFormContext<F extends FormSchema>(

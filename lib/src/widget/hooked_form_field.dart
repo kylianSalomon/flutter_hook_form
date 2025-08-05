@@ -52,7 +52,7 @@ class HookedFormField<F extends FormSchema, T> extends StatelessWidget {
   /// Creates a [HookedFormField] with an explicitly provided form.
   ///
   /// Consider using [HookedFormField.explicit] if you did not use [HookedForm] to
-  /// wrap your form or use [FormProvider] to provide the form.
+  /// wrap your form or use [HookedFormProvider] to provide the form.
   const HookedFormField.explicit({
     super.key,
     required this.fieldHook,
@@ -80,11 +80,8 @@ class HookedFormField<F extends FormSchema, T> extends StatelessWidget {
   /// - `value`: The current value of the field.
   /// - `onChanged`: A function to update the value of the field.
   /// - `error`: The error message of the field.
-  final Widget Function(
-    T? value,
-    void Function(T?)? onChanged,
-    String? error,
-  ) builder;
+  final Widget Function(T? value, void Function(T?)? onChanged, String? error)
+  builder;
 
   /// Optional error text to force the field into an error state.
   final String? forceErrorText;
@@ -119,7 +116,8 @@ class HookedFormField<F extends FormSchema, T> extends StatelessWidget {
     return FormField<T>(
       key: form.fieldKey(fieldHook),
       validator: validator ?? form.validators(fieldHook)?.localize(context),
-      forceErrorText: forceErrorText ??
+      forceErrorText:
+          forceErrorText ??
           form
               .getFieldForcedError(fieldHook)
               .localize(context, form.getValue(fieldHook)),
@@ -131,11 +129,8 @@ class HookedFormField<F extends FormSchema, T> extends StatelessWidget {
       builder: (_) {
         return builder(
           form.getValue(fieldHook),
-          (value) => form.updateValue<T>(
-            fieldHook,
-            value,
-            notify: notifyOnChange,
-          ),
+          (value) =>
+              form.updateValue<T>(fieldHook, value, notify: notifyOnChange),
           form.getFieldError(fieldHook),
         );
       },
