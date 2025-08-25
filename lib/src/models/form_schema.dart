@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:collection/collection.dart';
 import 'package:flutter_hook_form/flutter_hook_form.dart';
 
@@ -45,10 +47,11 @@ abstract class FormSchema {
 /// A class that defines a form field.
 class HookField<F extends FormSchema, T> {
   /// Creates a [HookField] instance.
-  const HookField(
-    this.id, {
-    this.validators,
-  });
+  HookField({this.validators})
+    : id = Object.hash(Random().nextInt(1000000), validators).toString();
+
+  /// Creates a [HookField] instance with explicit id.
+  const HookField.explicit(this.id, {this.validators});
 
   /// The form field id.
   final String id;
@@ -62,7 +65,8 @@ class HookField<F extends FormSchema, T> {
 
 /// An extension type that represents an initialized form field.
 extension type InitializedField<F extends FormSchema, T>(
-    (HookField<F, T>, T?) pair) {
+  (HookField<F, T>, T?) pair
+) {
   /// The field id.
   HookField<F, T> get fieldId => pair.$1;
 

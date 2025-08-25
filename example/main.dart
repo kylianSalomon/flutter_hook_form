@@ -24,9 +24,9 @@ class MyCustomMessages extends FormErrorMessages {
 class SignInFormSchema extends FormSchema {
   SignInFormSchema();
 
-  static const email = HookField<SignInFormSchema, String>('email');
-  static const password = HookField<SignInFormSchema, String>('password');
-  static const rememberMe = HookField<SignInFormSchema, bool>('rememberMe');
+  static final email = HookField<SignInFormSchema, String>();
+  static final password = HookField<SignInFormSchema, String>();
+  static final rememberMe = HookField<SignInFormSchema, bool>();
 
   @override
   Set<HookField<FormSchema, dynamic>> get fields => {
@@ -63,10 +63,10 @@ class SignInPage extends HookWidget {
         form: form,
         child: Column(
           children: [
-            const HookedTextFormField<SignInFormSchema>(
+            HookedTextFormField<SignInFormSchema>(
               fieldHook: SignInFormSchema.email,
             ),
-            const HookedTextFormField<SignInFormSchema>(
+            HookedTextFormField<SignInFormSchema>(
               fieldHook: SignInFormSchema.password,
             ),
             HookedFormField<SignInFormSchema, bool>(
