@@ -70,6 +70,11 @@ dependencies:
 
 ### Create your Schema
 
+To create a schema, simply extends your own class with a `FormSchema` class. Define the needed fields with the `HookField` class and specify any needed validators. Here `initWith` function has been added to show how you could use
+the form.
+
+Don't forget to override the `fields` getter by specify the declared form fields.
+
 ```dart
 import 'package:flutter_hook_form/flutter_hook_form.dart';
 
@@ -95,6 +100,12 @@ class SignInFormSchema extends FormSchema {
       password: password,
     );
   }
+
+  @override
+  Set<HookField<FormSchema, dynamic>> get fields => { // <-- don't forget to override fields and specify your own form field
+    email,
+    password,
+  };
 }
 ```
 
