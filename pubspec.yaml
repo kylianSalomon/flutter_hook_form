@@ -1,6 +1,6 @@
 name: flutter_hook_form
 description: "A Flutter package that provides a hook to manage form fields."
-version: 2.0.8
+version: 3.0.0
 repository: https://github.com/kylianSalomon/flutter_hook_form
 issue_tracker: https://github.com/kylianSalomon/flutter_hook_form/issues
 
@@ -9,18 +9,13 @@ environment:
   flutter: ">=1.17.0"
 
 dependencies:
-  analyzer: ">=6.4.1 <9.0.0"
-  build: ">=2.4.1 <4.0.0"
   collection: ">=1.19.0 <2.0.0"
   cross_file: ">=0.3.4+2 <1.0.0"
   flutter:
     sdk: flutter
   flutter_hooks: ">=0.18.4 <1.0.0"
-  path: ">=1.9.0 <2.0.0"
-  source_gen: ">=1.2.0 <4.0.0"
 
 dev_dependencies:
-  build_runner: ^2.4.8
   flutter_lints: ^5.0.0
   flutter_test:
     sdk: flutter

@@ -7,8 +7,9 @@ import 'fixtures/test_form_schema.dart';
 
 void main() {
   group('Form Hooks Tests', () {
-    testWidgets('useForm creates and returns a FormFieldsController',
-        (tester) async {
+    testWidgets('useForm creates and returns a FormFieldsController', (
+      tester,
+    ) async {
       FormFieldsController<TestFormSchema>? capturedController;
 
       await tester.pumpWidget(
@@ -26,8 +27,9 @@ void main() {
       expect(capturedController!.key, isA<GlobalKey<FormState>>());
     });
 
-    testWidgets('useFormContext retrieves controller from context',
-        (tester) async {
+    testWidgets('useFormContext retrieves controller from context', (
+      tester,
+    ) async {
       final controller = FormFieldsController<TestFormSchema>(
         GlobalKey<FormState>(),
         const TestFormSchema(),
@@ -65,10 +67,10 @@ void main() {
             form: controller,
             child: HookBuilder(
               builder: (context) {
-                return const Material(
+                return Material(
                   child: HookedTextFormField<TestFormSchema>(
                     fieldHook: TestFormSchema.email,
-                    decoration: InputDecoration(labelText: 'Email'),
+                    decoration: const InputDecoration(labelText: 'Email'),
                   ),
                 );
               },
@@ -81,8 +83,9 @@ void main() {
 
       await tester.pump();
 
-      final hookFormFieldState =
-          controller.fieldKey(TestFormSchema.email).currentState;
+      final hookFormFieldState = controller
+          .fieldKey(TestFormSchema.email)
+          .currentState;
 
       expect(hookFormFieldState?.errorText, 'Custom error');
     });

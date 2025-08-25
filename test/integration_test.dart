@@ -28,13 +28,15 @@ void main() {
                   child: SingleChildScrollView(
                     child: Column(
                       children: [
-                        const HookedTextFormField<TestFormSchema>(
+                        HookedTextFormField<TestFormSchema>(
                           fieldHook: TestFormSchema.email,
-                          decoration: InputDecoration(labelText: 'Email'),
+                          decoration: const InputDecoration(labelText: 'Email'),
                         ),
-                        const HookedTextFormField<TestFormSchema>(
+                        HookedTextFormField<TestFormSchema>(
                           fieldHook: TestFormSchema.password,
-                          decoration: InputDecoration(labelText: 'Password'),
+                          decoration: const InputDecoration(
+                            labelText: 'Password',
+                          ),
                           obscureText: true,
                         ),
                         ElevatedButton(
@@ -57,7 +59,9 @@ void main() {
 
       // Enter valid data
       await tester.enterText(
-          find.byType(TextFormField).at(0), 'test@example.com');
+        find.byType(TextFormField).at(0),
+        'test@example.com',
+      );
       await tester.enterText(find.byType(TextFormField).at(1), 'password123');
 
       // Submit form
@@ -89,9 +93,7 @@ void main() {
         MaterialApp(
           home: HookBuilder(
             builder: (context) {
-              final form = useForm(
-                formSchema: const TestFormSchema(),
-              );
+              final form = useForm(formSchema: const TestFormSchema());
 
               return Scaffold(
                 body: HookedForm<TestFormSchema>(
@@ -99,13 +101,15 @@ void main() {
                   child: SingleChildScrollView(
                     child: Column(
                       children: [
-                        const HookedTextFormField<TestFormSchema>(
+                        HookedTextFormField<TestFormSchema>(
                           fieldHook: TestFormSchema.email,
-                          decoration: InputDecoration(labelText: 'Email'),
+                          decoration: const InputDecoration(labelText: 'Email'),
                         ),
-                        const HookedTextFormField<TestFormSchema>(
+                        HookedTextFormField<TestFormSchema>(
                           fieldHook: TestFormSchema.password,
-                          decoration: InputDecoration(labelText: 'Password'),
+                          decoration: const InputDecoration(
+                            labelText: 'Password',
+                          ),
                         ),
                         ElevatedButton(
                           onPressed: () => form.reset(),
@@ -123,7 +127,9 @@ void main() {
 
       // Enter data
       await tester.enterText(
-          find.byType(TextFormField).at(0), 'test@example.com');
+        find.byType(TextFormField).at(0),
+        'test@example.com',
+      );
       await tester.enterText(find.byType(TextFormField).at(1), 'password123');
       await tester.pump();
 
@@ -145,20 +151,18 @@ void main() {
         MaterialApp(
           home: HookBuilder(
             builder: (context) {
-              final form = useForm(
-                formSchema: const TestFormSchema(),
-              );
+              final form = useForm(formSchema: const TestFormSchema());
 
               return Scaffold(
                 body: HookedForm<TestFormSchema>(
                   form: form,
-                  child: const SingleChildScrollView(
+                  child: SingleChildScrollView(
                     child: Column(
                       children: [
                         HookedTextFormField<TestFormSchema>(
                           autovalidateMode: AutovalidateMode.onUserInteraction,
                           fieldHook: TestFormSchema.email,
-                          decoration: InputDecoration(labelText: 'Email'),
+                          decoration: const InputDecoration(labelText: 'Email'),
                         ),
                       ],
                     ),
@@ -247,16 +251,18 @@ void main() {
               return Scaffold(
                 body: HookedForm<TestFormSchema>(
                   form: form,
-                  child: const SingleChildScrollView(
+                  child: SingleChildScrollView(
                     child: Column(
                       children: [
                         HookedTextFormField<TestFormSchema>(
                           fieldHook: TestFormSchema.email,
-                          decoration: InputDecoration(labelText: 'Email'),
+                          decoration: const InputDecoration(labelText: 'Email'),
                         ),
                         HookedTextFormField<TestFormSchema>(
                           fieldHook: TestFormSchema.password,
-                          decoration: InputDecoration(labelText: 'Password'),
+                          decoration: const InputDecoration(
+                            labelText: 'Password',
+                          ),
                         ),
                       ],
                     ),
@@ -270,15 +276,21 @@ void main() {
 
       // Enter data
       await tester.enterText(
-          find.byType(TextFormField).at(0), 'test@example.com');
+        find.byType(TextFormField).at(0),
+        'test@example.com',
+      );
       await tester.enterText(find.byType(TextFormField).at(1), 'password123');
       await tester.pump();
 
       // Verify values are accessible via controller
-      expect(formController.getValue(TestFormSchema.email),
-          equals('test@example.com'));
-      expect(formController.getValue(TestFormSchema.password),
-          equals('password123'));
+      expect(
+        formController.getValue(TestFormSchema.email),
+        equals('test@example.com'),
+      );
+      expect(
+        formController.getValue(TestFormSchema.password),
+        equals('password123'),
+      );
     });
   });
 }

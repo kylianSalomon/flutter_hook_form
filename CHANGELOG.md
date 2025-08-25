@@ -1,3 +1,11 @@
+## 3.0.0
+
+### Breaking changes
+
+* 💥 **FormSchema** generator has been removed as the generated code did not justify keeping the generator. Indeed, the only perk of the generator was to avoid having to write by hand the id of each hook field.
+
+Migration guide: Simply expose the generated form schema and remove the file that was used for generation.
+
 ## 2.0.8
 
 ### Improvements

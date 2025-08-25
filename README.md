@@ -33,7 +33,6 @@ The benefits of using `flutter_hook_form` are clear:
   - [Custom Validation Messages & Internationalization](#custom-validation-messages--internationalization)
   - [Alternative Injection Methods](#alternative-injection-methods)
   - [Form Injection and Context Access](#form-injection-and-context-access)
-  - [Use schema without code generation](#use-schema-without-code-generation)
   - [Write your own Form field](#write-your-own-form-field)
 - [Use Cases](#use-cases)
   - [Form Value Handling and Payload Conversion](#form-value-handling-and-payload-conversion)
@@ -69,38 +68,23 @@ dependencies:
   flutter_hooks: ^0.20.0
 ```
 
-If you plan to use code generation (recommended), also add:
-
-```yaml
-dev_dependencies:
-  build_runner: ^2.4.0
-```
-
 ### Create your Schema
-
-The package includes a code generator that helps you define form schemas using annotations. This approach reduces boilerplate and provides better type safety.
-
-Define the schema with the `@HookFormSchema()` annotation and each fields with a `@HookFormField()` annotation:
 
 ```dart
 import 'package:flutter_hook_form/flutter_hook_form.dart';
 
 part 'signin_form.schema.dart';
 
-@HookFormSchema()
-class SignInFormSchema extends _SignInFormSchema {
-  SignInFormSchema(); //<- don't forget to pass fields to super constructor
-  @HookFormField<String>(validators: [
-    RequiredValidator<String>(),
-    EmailValidator(),
-  ])
-  static const email = _SignInFormSchema.email;
+class SignInFormSchema extends FormSchema {
+  SignInFormSchema();
+  
+  static const email = HookField<SignInFormSchema, String>(
+    validators: [RequiredValidator(), EmailValidator()],
+  );
 
-  @HookFormField<String>(validators: [
-    RequiredValidator<String>(),
-    MinLengthValidator(8),
-  ])
-  static const password = _SignInFormSchema.password;
+  static const password = HookField<SignInFormSchema, String>(
+    validators: [RequiredValidator(),  MinLengthValidator(8)],
+  );
 
   static Set<InitializedField<SignInFormSchema, dynamic>> initWith(
       String? email,
@@ -113,12 +97,6 @@ class SignInFormSchema extends _SignInFormSchema {
   }
 }
 ```
-
-After defining your schema:
-
-1. Run `flutter pub run build_runner build` to generate the code
-2. The generator will create the `_SignInFormSchema` class and field schema classes
-3. Make sure to pass all static fields to the super constructor as shown above
 
 #### Available Validators
 
@@ -159,11 +137,10 @@ class UsernameValidator extends Validator<String> {
 }
 
 // Use in your form schema
-@HookFormField<String>(validators: [
-  RequiredValidator<String>(),
-  UsernameValidator(),
-])
-static const username = _UsernameFieldSchema();
+static const username = HookField<ProfileFormSchema, String>(
+    'username',
+    validators: [ RequiredValidator<String>(),UsernameValidator(),],
+  );
 ```
 
 Custom validators can also include additional parameters:
@@ -330,22 +307,9 @@ class SignInForm extends HookWidget {
 
 #### Form initialization
 
-When you want to initialized your form with a value, you can either use the generated method from the .schema.dart
-or assign to each `HookField` of your choice a value :
+When you want to initialized your form with a value, you can assign a value to each `HookField` of your choice:
 
 ```dart
-// If you use generated schema
-final form = useForm(
-  formSchema: SignInFormSchema()
-  // You can define initial values here if needed. This function is from the generated class _SignInFormSchema and the
-  // SignInFormSchema just redirect to this function
-  initialValues: SignInFormSchema.initializeWith(
-    email: 'user@example.com',
-    password: '',
-  )
-);
-
-// If you don't use generated schema, simply use the extension method on HookField `withInitialValue`.
 final form = useForm(
   formSchema: SignInFormSchema()
   initialValues: {
@@ -568,40 +532,6 @@ showBottomSheet(
 );
 ```
 
-### Use schema without code generation
-
-If you prefer not to use code generation, you can define your form schema manually:
-
-```dart
-import 'package:flutter_hook_form/flutter_hook_form.dart';
-
-class SignInFormSchema extends FormSchema {
-  SignInFormSchema();
-
-  // The form schema type is included in the HookField
-  static const HookedFieldId email = HookedField<SignInFormSchema, String>(
-    'email',
-    validators: [
-      RequiredValidator(),
-      EmailValidator(),
-    ]
-  );
-  static const password = HookedField<SignInFormSchema, String>(
-    'password',
-    validators: [
-      RequiredValidator<String>(),
-      MinLengthValidator(8),
-    ],
-  );
-
-    @override
-  Set<HookField<FormSchema, dynamic>> get fields => {
-    email,
-    password,
-  };
-}
-```
-
 ### Write your own Form field
 
 "Hooked" widgets are here to facilitate form development, but you can write your own form fields to fit your specific needs. Behind the scenes, `HookedFormField` and `HookedTextFormField` are simply wrappers around Flutter's standard `FormField` and `TextFormField` that connect them to the form controller.
@@ -682,21 +612,16 @@ The key aspects to remember when creating custom form fields:
 One of the main pain points in Flutter forms is handling form values and converting them to the correct payload format. _flutter_hook_form_ makes this process much easier by allowing you to define static methods in your form schema for validation and payload conversion.
 
 ```dart
-@HookFormSchema()
-class SignInFormSchema extends _SignInFormSchema {
+class SignInFormSchema extends FomSchema {
   SignInFormSchema();
 
-  @HookFormField<String>(validators: [
-    RequiredValidator<String>(),
-    EmailValidator(),
-  ])
-  static const email = _SignInFormSchema.email;
+  static const email = HookField<SignInFormSchema, String>(
+    validators: [RequiredValidator(), EmailValidator()],
+  );
 
-  @HookFormField<String>(validators: [
-    RequiredValidator<String>(),
-    MinLengthValidator(8),
-  ])
-  static const password = _SignInFormSchema.password;
+  static const password = HookField<SignInFormSchema, String>(
+    validators:[ RequiredValidator<String>(),MinLengthValidator(8)]
+  )
 
   // Static method to validate and convert form values to API payload
   static SignInPayload toPayload(FormFieldsController form) {
