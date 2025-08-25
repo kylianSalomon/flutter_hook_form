@@ -1,3 +1,7 @@
+## 3.0.1
+
+* 📝: Update README.md to include instructions for creating a schema and overriding fields in FormSchema
+
 ## 3.0.0
 
 ### Breaking changes
