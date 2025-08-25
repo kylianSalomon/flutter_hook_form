@@ -50,7 +50,8 @@ class HookField<F extends FormSchema, T> {
   HookField({this.validators})
     : id = Object.hash(Random().nextInt(1000000), validators).toString();
 
-  /// Creates a [HookField] instance with explicit id.
+  /// Creates a [HookField] instance with explicit id. Consider using
+  /// [HookField.explicit] for debugging purposes.
   const HookField.explicit(this.id, {this.validators});
 
   /// The form field id.

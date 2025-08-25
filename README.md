@@ -79,12 +79,10 @@ class SignInFormSchema extends FormSchema {
   SignInFormSchema();
   
   static const email = HookField<SignInFormSchema, String>(
-    'email',
     validators: [RequiredValidator(), EmailValidator()],
   );
 
   static const password = HookField<SignInFormSchema, String>(
-    'password',
     validators: [RequiredValidator(),  MinLengthValidator(8)],
   );
 
@@ -618,12 +616,10 @@ class SignInFormSchema extends FomSchema {
   SignInFormSchema();
 
   static const email = HookField<SignInFormSchema, String>(
-    'email',
     validators: [RequiredValidator(), EmailValidator()],
   );
 
   static const password = HookField<SignInFormSchema, String>(
-    'password',
     validators:[ RequiredValidator<String>(),MinLengthValidator(8)]
   )
 
