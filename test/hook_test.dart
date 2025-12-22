@@ -34,7 +34,7 @@ void main() {
         GlobalKey<FormState>(),
       );
 
-      FormFieldsController<TestFormSchema>? capturedController;
+      late FormFieldsController<TestFormSchema> capturedController;
 
       await tester.pumpWidget(
         MaterialApp(
