@@ -282,9 +282,11 @@ class ListMaxItemsValidator<T> extends Validator<List<T>> {
 }
 
 /// Validator list extension.
-extension ValidatorListExtension on List<Validator<dynamic>>? {
-  /// Localizes the error messages.
-  ValidatorFn? localize(BuildContext context) {
+extension MessageResolver on List<Validator<dynamic>>? {
+  /// Resolves the message error for the validators (can be null if no errors
+  /// or validators). If [FormErrorMessages] has been overriden via the
+  /// [HookFormScope] widget, the custom messages will be used.
+  ValidatorFn? resolveMessage(BuildContext context) {
     return this?.reversed.fold<ValidatorFn>((value) => null, (
       previous,
       validator,

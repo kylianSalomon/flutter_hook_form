@@ -118,7 +118,8 @@ class HookedFormField<F extends FieldSchema, T> extends StatelessWidget {
 
     return FormField<T>(
       key: form.fieldKey(fieldHook),
-      validator: validator ?? form.validators(fieldHook)?.localize(context),
+      validator:
+          validator ?? form.validators(fieldHook)?.resolveMessage(context),
       forceErrorText:
           forceErrorText ??
           form

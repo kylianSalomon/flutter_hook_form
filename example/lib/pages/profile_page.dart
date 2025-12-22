@@ -110,7 +110,7 @@ class ProfilePage extends HookWidget {
               ),
               const SizedBox(height: 16),
               // Bio field with character counter
-              HookedFormField(
+              HookedFormField<ProfileFields<String>, String>(
                 fieldHook: ProfileFields.bio,
                 notifyOnChange: true,
                 builder: (value, onChanged, error) {

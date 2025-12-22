@@ -126,20 +126,18 @@ class RegistrationPage extends HookWidget {
                 autovalidateMode: .onUserInteraction,
                 // Custom validator that checks password match
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'This field is required';
-                  }
-                  final password = form.getValue(.password);
-                  if (value != password) {
-                    return 'Passwords do not match';
+                  final messageResolver = RegistrationFields.confirmPassword
+                      .resolveMessage(context);
+                  if (messageResolver?.call(value) case final message?) {
+                    return message;
                   }
                   return null;
                 },
               ),
               const SizedBox(height: 16),
               // Birth date picker using HookedFormField
-              HookedFormField(
-                fieldHook: RegistrationFields.birthDate,
+              HookedFormField<RegistrationFields, DateTime>(
+                fieldHook: .birthDate,
                 builder: (value, onChanged, error) {
                   return Column(
                     crossAxisAlignment: .start,
@@ -184,8 +182,8 @@ class RegistrationPage extends HookWidget {
               ),
               const SizedBox(height: 16),
               // Country dropdown using HookedFormField
-              HookedFormField(
-                fieldHook: RegistrationFields.country,
+              HookedFormField<RegistrationFields, String>(
+                fieldHook: .country,
                 builder: (value, onChanged, error) {
                   return DropdownButtonFormField<String>(
                     initialValue: value?.isEmpty == true ? null : value,
@@ -207,8 +205,8 @@ class RegistrationPage extends HookWidget {
               ),
               const SizedBox(height: 16),
               // Terms and conditions checkbox
-              HookedFormField(
-                fieldHook: RegistrationFields.agreeToTerms,
+              HookedFormField<RegistrationFields, bool>(
+                fieldHook: .agreeToTerms,
                 builder: (value, onChanged, error) {
                   return Column(
                     crossAxisAlignment: .start,
