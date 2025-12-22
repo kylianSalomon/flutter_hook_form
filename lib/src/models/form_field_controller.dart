@@ -5,7 +5,7 @@ import 'types.dart';
 import 'validator.dart';
 
 /// A type that represents the initial values of a form field.
-typedef InitialFieldValues<F extends FieldSchema<T>, T> = Map<F, T>;
+typedef InitialFieldValues<F extends FieldSchema, T> = Map<F, T>;
 
 /// A controller that manages form field states and validation
 class FormFieldsController<F extends FieldSchema> extends ChangeNotifier {

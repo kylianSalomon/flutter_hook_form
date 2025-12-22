@@ -27,12 +27,12 @@ void main() {
                   child: SingleChildScrollView(
                     child: Column(
                       children: [
-                        const HookedTextFormField<TestFormSchema>(
-                          fieldHook: .email,
+                        const HookedTextFormField(
+                          fieldHook: TestFormSchema.email,
                           decoration: InputDecoration(labelText: 'Email'),
                         ),
-                        const HookedTextFormField<TestFormSchema>(
-                          fieldHook: .password,
+                        const HookedTextFormField(
+                          fieldHook: TestFormSchema.password,
                           decoration: InputDecoration(labelText: 'Password'),
                           obscureText: true,
                         ),

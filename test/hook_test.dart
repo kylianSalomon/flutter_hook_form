@@ -81,9 +81,7 @@ void main() {
 
       await tester.pump();
 
-      final hookFormFieldState = controller
-          .fieldKey(.email)
-          .currentState;
+      final hookFormFieldState = controller.fieldKey(.email).currentState;
 
       expect(hookFormFieldState?.errorText, 'Custom error');
     });

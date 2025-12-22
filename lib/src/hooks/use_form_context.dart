@@ -43,7 +43,7 @@ class HookedFormProvider<F extends FieldSchema> extends StatelessWidget {
 /// Use this hook to access the [FormFieldsController] from the [HookedFormProvider].
 /// DO NOT use this hook to create a [FormFieldsController], please see
 /// [useForm] instead.
-FormFieldsController<F> useFormContext<F extends FieldSchema<dynamic>>(
+FormFieldsController<F> useFormContext<F extends FieldSchema>(
   BuildContext context,
 ) {
   return _HookedFormProviderBase.of(context) as FormFieldsController<F>;

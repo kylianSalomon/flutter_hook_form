@@ -472,7 +472,7 @@ class HookedTextFormField<F extends FieldSchema> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final form = _form ?? useFormContext<F>(context);
+    final form = _form ?? useFormContext<FieldSchema>(context);
 
     return TextFormField(
       key: form.fieldKey(fieldHook),
