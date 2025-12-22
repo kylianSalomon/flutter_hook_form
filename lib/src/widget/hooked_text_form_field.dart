@@ -3,15 +3,15 @@ import 'dart:ui';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_hook_form/src/models/field_schema.dart';
 
 import '../hooks/use_form_context.dart';
 import '../models/form_field_controller.dart';
-import '../models/form_schema.dart';
 import '../validators/validators.dart';
 import 'hooked_form.dart';
 
 /// A text form field that integrates with flutter_hook_form.
-class HookedTextFormField<F extends FormSchema> extends StatelessWidget {
+class HookedTextFormField<F extends FieldSchema> extends StatelessWidget {
   /// Creates a [HookedTextFormField] that gets the form from context.
   ///
   /// This widget wraps a standard [TextFormField] and connects it to a [FormFieldsController].
@@ -153,7 +153,7 @@ class HookedTextFormField<F extends FormSchema> extends StatelessWidget {
   const HookedTextFormField.explicit({
     super.key,
     required this.fieldHook,
-    required FormFieldsController<F> form,
+    required FormFieldsController form,
     this.forceErrorText,
     this.validator,
     this.autovalidateMode,
@@ -234,10 +234,10 @@ class HookedTextFormField<F extends FormSchema> extends StatelessWidget {
   }) : _form = form;
 
   /// The form controller, if provided directly.
-  final FormFieldsController<F>? _form;
+  final FormFieldsController? _form;
 
   /// The field identifier from the form schema.
-  final HookField<F, String> fieldHook;
+  final F fieldHook;
 
   /// Optional error text to force the field into an error state.
   final String? forceErrorText;

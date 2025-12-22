@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_hook_form/flutter_hook_form.dart';
+import 'package:flutter_hook_form/src/hooks/use_form_context.dart';
+import 'package:flutter_hook_form/src/models/field_schema.dart';
+import 'package:flutter_hook_form/src/models/form_field_controller.dart';
+import 'package:flutter_hook_form/src/validators/validators.dart';
 
 /// A form field that integrates with flutter_hook_form.
-class HookedFormField<F extends FormSchema, T> extends StatelessWidget {
+class HookedFormField<T> extends StatelessWidget {
   /// Creates a [HookedFormField] that gets the form from context.
   ///
   /// This widget wraps a standard [FormField] and connects it to a [FormFieldsController].
@@ -57,7 +60,7 @@ class HookedFormField<F extends FormSchema, T> extends StatelessWidget {
     super.key,
     required this.fieldHook,
     required this.builder,
-    required FormFieldsController<F> form,
+    required FormFieldsController form,
     this.forceErrorText,
     this.validator,
     this.autovalidateMode,
@@ -69,10 +72,10 @@ class HookedFormField<F extends FormSchema, T> extends StatelessWidget {
   }) : _form = form;
 
   /// The form controller, if provided directly.
-  final FormFieldsController<F>? _form;
+  final FormFieldsController? _form;
 
   /// The field identifier from the form schema.
-  final HookField<F, T> fieldHook;
+  final FieldSchema<T> fieldHook;
 
   /// Builder function to create the form field widget.
   ///
@@ -111,7 +114,7 @@ class HookedFormField<F extends FormSchema, T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final form = _form ?? useFormContext<F>(context);
+    final form = _form ?? useFormContext<FieldSchema<T>>(context);
 
     return FormField<T>(
       key: form.fieldKey(fieldHook),

@@ -1,22 +1,20 @@
 import 'package:cross_file/cross_file.dart';
 import 'package:flutter/widgets.dart';
-
-import '../messages/form_messages.dart';
-import '../models/validator.dart';
+import 'package:flutter_hook_form/src/messages/form_messages.dart';
+import 'package:flutter_hook_form/src/models/validator.dart';
 
 final _emailPattern = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
 final _phonePattern = RegExp(r'^\+?[0-9]{9,14}$');
 
+
 /// Required field validator.
 class RequiredValidator<T> extends Validator<T> {
   /// Creates a [RequiredValidator].
-  const RequiredValidator({
-    super.message,
-  }) : super(errorCode: 'required');
+  const RequiredValidator({super.message}) : super(errorCode: 'required');
 
   @override
   ValidatorFn<T> get validator {
-    return (T? value) {
+    return (value) {
       final isEmpty = switch (value) {
         final String s => s.isEmpty,
         final Iterable l => l.isEmpty,
@@ -36,13 +34,15 @@ class RequiredValidator<T> extends Validator<T> {
 /// Email validator.
 class EmailValidator extends Validator<String> {
   /// Creates a [EmailValidator].
-  const EmailValidator({
-    super.message,
-  }) : super(errorCode: 'invalid_email');
+  const EmailValidator({super.message}) : super(errorCode: 'invalid_email');
 
   @override
   ValidatorFn<String> get validator {
-    return (String? value) {
+    return (value) {
+      if (value is! String?) {
+        return null;
+      }
+
       if (value == null || value.isEmpty) {
         return null;
       }
@@ -60,14 +60,18 @@ class EmailValidator extends Validator<String> {
 class MinLengthValidator extends Validator<String> {
   /// Creates a [MinLengthValidator].
   const MinLengthValidator(this.length, {super.message})
-      : super(errorCode: 'min_length');
+    : super(errorCode: 'min_length');
 
   /// The minimum length.
   final int length;
 
   @override
   ValidatorFn<String> get validator {
-    return (String? value) {
+    return (value) {
+      if (value is! String?) {
+        return null;
+      }
+
       if (value != null && value.length < length) {
         return message ?? errorCode;
       }
@@ -81,14 +85,18 @@ class MinLengthValidator extends Validator<String> {
 class PatternValidator extends Validator<String> {
   /// Creates a [PatternValidator].
   const PatternValidator(this.pattern, {super.message})
-      : super(errorCode: 'invalid_pattern');
+    : super(errorCode: 'invalid_pattern');
 
   /// The pattern to validate against.
   final RegExp pattern;
 
   @override
   ValidatorFn<String> get validator {
-    return (String? value) {
+    return (value) {
+      if (value is! String?) {
+        return null;
+      }
+
       if (value != null && value.isNotEmpty && !pattern.hasMatch(value)) {
         return message ?? errorCode;
       }
@@ -102,14 +110,18 @@ class PatternValidator extends Validator<String> {
 class MaxLengthValidator extends Validator<String> {
   /// Creates a [MaxLengthValidator].
   const MaxLengthValidator(this.length, {super.message})
-      : super(errorCode: 'max_length');
+    : super(errorCode: 'max_length');
 
   /// The maximum length.
   final int length;
 
   @override
   ValidatorFn<String> get validator {
-    return (String? value) {
+    return (value) {
+      if (value is! String?) {
+        return null;
+      }
+
       if (value != null && value.length > length) {
         return message ?? errorCode;
       }
@@ -122,13 +134,15 @@ class MaxLengthValidator extends Validator<String> {
 /// Phone validator.
 class PhoneValidator extends Validator<String> {
   /// Creates a [PhoneValidator].
-  const PhoneValidator({
-    super.message,
-  }) : super(errorCode: 'invalid_phone');
+  const PhoneValidator({super.message}) : super(errorCode: 'invalid_phone');
 
   @override
   ValidatorFn<String> get validator {
-    return (String? value) {
+    return (value) {
+      if (value is! String?) {
+        return null;
+      }
+
       if (value == null || value.isEmpty) {
         return null;
       }
@@ -146,14 +160,18 @@ class PhoneValidator extends Validator<String> {
 class MimeTypeValidator extends Validator<XFile> {
   /// Creates a [MimeTypeValidator].
   const MimeTypeValidator(this.mimeType, {super.message})
-      : super(errorCode: 'invalid_file_format');
+    : super(errorCode: 'invalid_file_format');
 
   /// The mime type to validate against.
   final Set<String> mimeType;
 
   @override
   ValidatorFn<XFile> get validator {
-    return (XFile? value) {
+    return (value) {
+      if (value is! XFile?) {
+        return null;
+      }
+
       if (value != null && !mimeType.contains(value.mimeType)) {
         return message ?? errorCode;
       }
@@ -166,17 +184,19 @@ class MimeTypeValidator extends Validator<XFile> {
 /// Date after validator.
 class IsAfterValidator extends Validator<DateTime> {
   /// Creates a [IsAfterValidator].
-  const IsAfterValidator(
-    this.min, {
-    super.message,
-  }) : super(errorCode: 'date_after');
+  const IsAfterValidator(this.min, {super.message})
+    : super(errorCode: 'date_after');
 
   /// The minimum date.
   final DateTime min;
 
   @override
   ValidatorFn<DateTime> get validator {
-    return (DateTime? value) {
+    return (value) {
+      if (value is! DateTime?) {
+        return null;
+      }
+
       if (value != null && value.isBefore(min)) {
         return message ?? errorCode;
       }
@@ -189,17 +209,19 @@ class IsAfterValidator extends Validator<DateTime> {
 /// Date before validator.
 class IsBeforeValidator extends Validator<DateTime> {
   /// Creates a [IsBeforeValidator].
-  const IsBeforeValidator(
-    this.max, {
-    super.message,
-  }) : super(errorCode: 'date_before');
+  const IsBeforeValidator(this.max, {super.message})
+    : super(errorCode: 'date_before');
 
   /// The maximum date.
   final DateTime max;
 
   @override
   ValidatorFn<DateTime> get validator {
-    return (DateTime? value) {
+    return (value) {
+      if (value is! DateTime?) {
+        return null;
+      }
+
       if (value != null && value.isAfter(max)) {
         return message ?? errorCode;
       }
@@ -212,17 +234,19 @@ class IsBeforeValidator extends Validator<DateTime> {
 /// Minimum items validator.
 class ListMinItemsValidator<T> extends Validator<List<T>> {
   /// Creates a [ListMinItemsValidator].
-  const ListMinItemsValidator(
-    this.length, {
-    super.message,
-  }) : super(errorCode: 'min_items');
+  const ListMinItemsValidator(this.length, {super.message})
+    : super(errorCode: 'min_items');
 
   /// The minimum length.
   final int length;
 
   @override
   ValidatorFn<List<T>> get validator {
-    return (List<T>? value) {
+    return (value) {
+      if (value is! List<T>?) {
+        return null;
+      }
+
       if (value != null && value.length < length) {
         return message ?? errorCode;
       }
@@ -235,17 +259,19 @@ class ListMinItemsValidator<T> extends Validator<List<T>> {
 /// Maximum items validator.
 class ListMaxItemsValidator<T> extends Validator<List<T>> {
   /// Creates a [ListMaxItemsValidator].
-  const ListMaxItemsValidator(
-    this.length, {
-    super.message,
-  }) : super(errorCode: 'max_items');
+  const ListMaxItemsValidator(this.length, {super.message})
+    : super(errorCode: 'max_items');
 
   /// The maximum length.
   final int length;
 
   @override
   ValidatorFn<List<T>> get validator {
-    return (List<T>? value) {
+    return (value) {
+      if (value is! List<T>?) {
+        return null;
+      }
+
       if (value != null && value.length > length) {
         return message ?? errorCode;
       }
@@ -256,24 +282,24 @@ class ListMaxItemsValidator<T> extends Validator<List<T>> {
 }
 
 /// Validator list extension.
-extension ValidatorListExtension<T> on List<Validator<T>>? {
+extension ValidatorListExtension on List<Validator<dynamic>>? {
   /// Localizes the error messages.
-  ValidatorFn<T>? localize(BuildContext context) {
-    return this?.reversed.fold<ValidatorFn<T>>(
-      (value) => null,
-      (previous, validator) {
-        return (value) {
-          return _localizeError(context, validator, value) ??
-              previous.call(value);
-        };
-      },
-    );
+  ValidatorFn? localize(BuildContext context) {
+    return this?.reversed.fold<ValidatorFn>((value) => null, (
+      previous,
+      validator,
+    ) {
+      return (value) {
+        return _localizeError(context, validator, value) ??
+            previous.call(value);
+      };
+    });
   }
 
   String? _localizeError(
     BuildContext context,
-    Validator<T> validator,
-    T? value,
+    Validator<dynamic> validator,
+    dynamic value,
   ) {
     final error = validator.validator(value);
 
@@ -291,21 +317,28 @@ extension ValidatorListExtension<T> on List<Validator<T>>? {
       RequiredValidator() => HookFormScope.of(context).required,
       EmailValidator() => HookFormScope.of(context).invalidEmail,
       PatternValidator() => HookFormScope.of(context).invalidPattern,
-      MinLengthValidator(length: final length) =>
-        HookFormScope.of(context).minLength(length),
-      MaxLengthValidator(length: final length) =>
-        HookFormScope.of(context).maxLength(length),
+      MinLengthValidator(length: final length) => HookFormScope.of(
+        context,
+      ).minLength(length),
+      MaxLengthValidator(length: final length) => HookFormScope.of(
+        context,
+      ).maxLength(length),
       PhoneValidator() => HookFormScope.of(context).invalidPhone,
-      MimeTypeValidator(mimeType: final mimeType) =>
-        HookFormScope.of(context).invalidFileFormat(mimeType),
-      IsAfterValidator(min: final min) =>
-        HookFormScope.of(context).dateAfter(min),
-      IsBeforeValidator(max: final max) =>
-        HookFormScope.of(context).dateBefore(max),
-      ListMinItemsValidator(length: final length) =>
-        HookFormScope.of(context).minItems(length),
-      ListMaxItemsValidator(length: final length) =>
-        HookFormScope.of(context).maxItems(length),
+      MimeTypeValidator(mimeType: final mimeType) => HookFormScope.of(
+        context,
+      ).invalidFileFormat(mimeType),
+      IsAfterValidator(min: final min) => HookFormScope.of(
+        context,
+      ).dateAfter(min),
+      IsBeforeValidator(max: final max) => HookFormScope.of(
+        context,
+      ).dateBefore(max),
+      ListMinItemsValidator(length: final length) => HookFormScope.of(
+        context,
+      ).minItems(length),
+      ListMaxItemsValidator(length: final length) => HookFormScope.of(
+        context,
+      ).maxItems(length),
       _ =>
         HookFormScope.of(context).parseErrorCode(validator.errorCode, value) ??
             error,
@@ -318,11 +351,8 @@ extension LocalizeError on String? {
   /// Localizes the error. Useful to translate the forced error messages.
   String? localize(BuildContext context, dynamic value) {
     return switch (this) {
-      final String errorCode => HookFormScope.of(context).parseErrorCode(
-            errorCode,
-            value,
-          ) ??
-          errorCode,
+      final String errorCode =>
+        HookFormScope.of(context).parseErrorCode(errorCode, value) ?? errorCode,
       _ => null,
     };
   }
