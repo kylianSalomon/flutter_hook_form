@@ -1,13 +1,10 @@
 /// A type alias for a validator function.
-typedef ValidatorFn<T> = String? Function(T? value);
+typedef ValidatorFn<T> = String? Function(dynamic value);
 
 /// Base class for all validators.
 abstract class Validator<T> {
   /// Creates a [Validator].
-  const Validator({
-    required this.errorCode,
-    this.message,
-  });
+  const Validator({required this.errorCode, this.message});
 
   /// The error message to display if the validation fails.
   final String? message;

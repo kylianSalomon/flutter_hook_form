@@ -16,7 +16,7 @@ void main() {
         MaterialApp(
           home: HookBuilder(
             builder: (context) {
-              capturedController = useForm(formSchema: const TestFormSchema());
+              capturedController = useForm<TestFormSchema>();
               return Container();
             },
           ),
@@ -32,7 +32,6 @@ void main() {
     ) async {
       final controller = FormFieldsController<TestFormSchema>(
         GlobalKey<FormState>(),
-        const TestFormSchema(),
       );
 
       FormFieldsController<TestFormSchema>? capturedController;
@@ -58,7 +57,6 @@ void main() {
     testWidgets('HookFormField show error on custom errors', (tester) async {
       final controller = FormFieldsController<TestFormSchema>(
         GlobalKey<FormState>(),
-        const TestFormSchema(),
       );
 
       await tester.pumpWidget(
@@ -67,10 +65,10 @@ void main() {
             form: controller,
             child: HookBuilder(
               builder: (context) {
-                return Material(
+                return const Material(
                   child: HookedTextFormField<TestFormSchema>(
-                    fieldHook: TestFormSchema.email,
-                    decoration: const InputDecoration(labelText: 'Email'),
+                    fieldHook: .email,
+                    decoration: InputDecoration(labelText: 'Email'),
                   ),
                 );
               },
@@ -79,12 +77,12 @@ void main() {
         ),
       );
 
-      controller.setError(TestFormSchema.email, 'Custom error');
+      controller.setError(.email, 'Custom error');
 
       await tester.pump();
 
       final hookFormFieldState = controller
-          .fieldKey(TestFormSchema.email)
+          .fieldKey(.email)
           .currentState;
 
       expect(hookFormFieldState?.errorText, 'Custom error');

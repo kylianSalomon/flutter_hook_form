@@ -1,53 +1,38 @@
-import 'package:collection/collection.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_hook_form/src/models/field_schema.dart';
 
-import 'form_schema.dart';
 import 'types.dart';
 import 'validator.dart';
 
 /// A type that represents the initial values of a form field.
-typedef InitialFieldValues<F extends FormSchema> =
-    Set<InitializedField<F, dynamic>>;
+typedef InitialFieldValues<F extends FieldSchema<T>, T> = Map<F, T>;
 
 /// A controller that manages form field states and validation
-class FormFieldsController<F extends FormSchema> extends ChangeNotifier {
+class FormFieldsController<F extends FieldSchema> extends ChangeNotifier {
   /// Creates a [FormFieldsController].
-  FormFieldsController(
-    this.key,
-    F formSchema, {
-    InitialFieldValues<F>? initialValues,
-  }) : _formSchema = formSchema,
-       _initialValues = initialValues,
-       _values = {
-         ...?initialValues?.fold<Map<String, dynamic>>({}, (map, e) {
-           map[e.fieldId.toString()] = e.initialValue;
-           return map;
-         }),
-       };
+  FormFieldsController(this.key, {InitialFieldValues? initialValues})
+    : _values = {...?initialValues};
 
   /// The form key.
   final FormKey key;
 
-  /// The form schema.
-  final F _formSchema;
-
   /// The field keys.
-  final Map<String, GlobalKey<FormFieldState<dynamic>>> _fieldKeys = {};
+  final Map<FieldSchema, GlobalKey<FormFieldState<dynamic>>> _fieldKeys = {};
 
   /// The initial values.
-  final InitialFieldValues<F>? _initialValues;
+  // final InitialFieldValues<F>? _initialValues;
 
   /// The forced errors.
   final _forcedErrors = <String, String>{};
 
   /// The field values.
-  final Map<String, dynamic> _values;
+  final InitialFieldValues _values;
 
   /// Get or create a GlobalKey for a form field
-  GlobalKey<FormFieldState<T>> fieldKey<T>(HookField<F, T> hookField) {
+  GlobalKey<FormFieldState<T>> fieldKey<T>(F field) {
     final key = _fieldKeys.putIfAbsent(
-      hookField.toString(),
-      () => GlobalKey<FormFieldState<T>>(debugLabel: hookField.toString()),
+      field,
+      () => GlobalKey<FormFieldState<T>>(debugLabel: field.name),
     );
 
     if (key is! GlobalKey<FormFieldState<T>>) {
@@ -60,33 +45,28 @@ class FormFieldsController<F extends FormSchema> extends ChangeNotifier {
   }
 
   /// Get the value of a form field.
-  T? getValue<T>(HookField<F, T> hookField) {
-    final fieldKey = hookField.toString();
+  T? getValue<T>(F field) {
     // First try to get from widget state if available
-    final widgetValue = _fieldKeys[fieldKey]?.currentState?.value as T?;
+    final widgetValue = _fieldKeys[field]?.currentState?.value as T?;
     if (widgetValue != null) {
-      _values[fieldKey] = widgetValue;
+      _values[field] = widgetValue;
       return widgetValue;
     }
     // Fallback to stored value
-    return _values[fieldKey] as T?;
+    return _values[field] as T?;
   }
 
   /// Get the initial value of a form field.
-  T? getInitialValue<T>(HookField<F, T> hookField) {
-    return _initialValues
-            ?.firstWhereOrNull((e) => e.fieldId.id == hookField.id)
-            ?.initialValue
-        as T?;
+  T? getInitialValue<T>(F field) {
+    return _values[field];
   }
 
   /// Update the value of a form field.
-  T? updateValue<T>(HookField<F, T> hookField, T? value, {bool notify = true}) {
-    final fieldKey = hookField.toString();
-    _values[fieldKey] = value;
+  T? updateValue<T>(F field, T? value, {bool notify = true}) {
+    _values[field] = value;
 
     // Update widget state if available
-    _fieldKeys[fieldKey]?.currentState?.didChange(value);
+    _fieldKeys[field]?.currentState?.didChange(value);
 
     if (notify) {
       notifyListeners();
@@ -96,37 +76,33 @@ class FormFieldsController<F extends FormSchema> extends ChangeNotifier {
   }
 
   /// Get the error of a form field.
-  String? getFieldError<T>(HookField<F, T> hookField) {
-    return getFieldForcedError(hookField) ??
-        _fieldKeys[hookField.toString()]?.currentState?.errorText;
+  String? getFieldError(F field) {
+    return getFieldForcedError(field) ??
+        _fieldKeys[field]?.currentState?.errorText;
   }
 
   /// Get the forced error of a form field.
-  String? getFieldForcedError<T>(HookField<F, T> hookField) {
-    return _forcedErrors[hookField.toString()];
+  String? getFieldForcedError(F field) {
+    return _forcedErrors[field.name];
   }
 
   /// Set the error of a form field.
-  void setError<T>(
-    HookField<F, T> hookField,
-    String error, {
-    bool notify = true,
-  }) {
-    _forcedErrors[hookField.toString()] = error;
+  void setError(F field, String error, {bool notify = true}) {
+    _forcedErrors[field.name] = error;
     if (notify) {
       notifyListeners();
     }
   }
 
   /// Check if a form field has an error.
-  bool hasFieldError<T>(HookField<F, T> hookField) {
-    return getFieldError(hookField) != null;
+  bool hasFieldError(F field) {
+    return getFieldError(field) != null;
   }
 
   /// Get the validators of a form field. Use `localize` to localize the
   /// validators.
-  List<Validator<T>>? validators<T>(HookField<F, T> hookField) {
-    return _formSchema.field(hookField)?.validators;
+  List<Validator>? validators(F field) {
+    return field.validators;
   }
 
   /// Validate the form.
@@ -166,20 +142,17 @@ class FormFieldsController<F extends FormSchema> extends ChangeNotifier {
   }
 
   /// Validate the form field.
-  bool validateField<T>(HookField<F, T> hookField) {
-    final isValid = fieldKey<T>(hookField).currentState?.validate();
+  bool validateField(F field) {
+    final isValid = fieldKey(field).currentState?.validate();
 
     notifyListeners();
     return isValid ?? false;
   }
 
   /// Check if the form fields have been interacted with.
-  bool isDirty(Set<HookField> hookFields) {
-    return hookFields.every((hookField) {
-      return _fieldKeys[hookField.toString()]
-              ?.currentState
-              ?.hasInteractedByUser ??
-          false;
+  bool isDirty(Set<F> fields) {
+    return fields.every((field) {
+      return _fieldKeys[field]?.currentState?.hasInteractedByUser ?? false;
     });
   }
 
@@ -211,9 +184,9 @@ class FormFieldsController<F extends FormSchema> extends ChangeNotifier {
   }
 
   /// Get the values of the form fields.
-  Map<String, dynamic> getValues() {
+  Map<F, dynamic> getValues() {
     return _fieldKeys.map(
-      (key, field) => MapEntry(key, field.currentState?.value),
+      (key, field) => MapEntry(key as F, field.currentState?.value),
     );
   }
 }

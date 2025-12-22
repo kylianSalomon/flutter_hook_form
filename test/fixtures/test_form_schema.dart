@@ -1,16 +1,17 @@
-import 'package:flutter_hook_form/flutter_hook_form.dart';
 
-class TestFormSchema extends FormSchema {
-  const TestFormSchema();
+import 'package:flutter_hook_form/src/models/field_schema.dart';
+import 'package:flutter_hook_form/src/models/validator.dart';
+import 'package:flutter_hook_form/src/validators/validators.dart';
 
-  static final email = HookField<TestFormSchema, String>(
-    validators: [const RequiredValidator<String>(), const EmailValidator()],
-  );
+enum TestFormSchema<T> implements FieldSchema<T> {
+  email<String>(validators: [RequiredValidator<String>(), EmailValidator()]),
+  password<String>(validators: [RequiredValidator<String>()]);
 
-  static final password = HookField<TestFormSchema, String>(
-    validators: [const RequiredValidator<String>()],
-  );
+  const TestFormSchema({this.validators, this.initialValue});
 
   @override
-  Set<HookField<FormSchema, dynamic>> get fields => {email, password};
+  final T? initialValue;
+
+  @override
+  final List<Validator<T>>? validators;
 }
