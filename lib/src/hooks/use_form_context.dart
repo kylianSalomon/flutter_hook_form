@@ -17,14 +17,19 @@ class _HookedFormProviderBase extends InheritedNotifier<FormFieldsController> {
   }
 }
 
-// Typed provider wraps the base
+/// Typed provider wraps the base provider to provide a [FormFieldsController] to the form fields.
 class HookedFormProvider<F extends FieldSchema> extends StatelessWidget {
+  /// Creates a [HookedFormProvider] that provides a [FormFieldsController] to the form fields.
   const HookedFormProvider({
     super.key,
     required this.form,
     required this.child,
   });
+
+  /// The form controller.
   final FormFieldsController<F> form;
+
+  /// The child of the form.
   final Widget child;
 
   @override
@@ -33,15 +38,13 @@ class HookedFormProvider<F extends FieldSchema> extends StatelessWidget {
   }
 }
 
-
-
 /// A hook that provides a [FormFieldsController] to the form fields.
 ///
 /// Use this hook to access the [FormFieldsController] from the [HookedFormProvider].
 /// DO NOT use this hook to create a [FormFieldsController], please see
 /// [useForm] instead.
-FormFieldsController useFormContext<F extends FieldSchema<dynamic>>(
+FormFieldsController<F> useFormContext<F extends FieldSchema>(
   BuildContext context,
 ) {
-  return _HookedFormProviderBase.of(context);
+  return _HookedFormProviderBase.of(context) as FormFieldsController<F>;
 }

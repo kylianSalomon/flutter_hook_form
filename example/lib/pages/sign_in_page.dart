@@ -47,7 +47,7 @@ class SignInPage extends HookWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Email field using HookedTextFormField
-                  const HookedTextFormField<SignInFields>(
+                  const HookedTextFormField<SignInFields<String>>(
                     fieldHook: .email,
                     decoration: InputDecoration(
                       labelText: 'Email',
@@ -60,7 +60,7 @@ class SignInPage extends HookWidget {
                   ),
                   const SizedBox(height: 16),
                   // Password field with visibility toggle
-                  HookedTextFormField<SignInFields>(
+                  HookedTextFormField<SignInFields<String>>(
                     fieldHook: .password,
                     decoration: InputDecoration(
                       labelText: 'Password',
@@ -82,7 +82,7 @@ class SignInPage extends HookWidget {
                   ),
                   const SizedBox(height: 8),
                   // Remember me checkbox using HookedFormField
-                  HookedFormField(
+                  HookedFormField<SignInFields<bool>, bool>(
                     fieldHook: SignInFields.rememberMe,
                     builder: (value, onChanged, error) {
                       return CheckboxListTile(

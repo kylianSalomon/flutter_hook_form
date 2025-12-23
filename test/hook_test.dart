@@ -34,7 +34,7 @@ void main() {
         GlobalKey<FormState>(),
       );
 
-      FormFieldsController<TestFormSchema>? capturedController;
+      late FormFieldsController<TestFormSchema> capturedController;
 
       await tester.pumpWidget(
         MaterialApp(
@@ -81,9 +81,7 @@ void main() {
 
       await tester.pump();
 
-      final hookFormFieldState = controller
-          .fieldKey(.email)
-          .currentState;
+      final hookFormFieldState = controller.fieldKey(.email).currentState;
 
       expect(hookFormFieldState?.errorText, 'Custom error');
     });

@@ -99,9 +99,12 @@ void main() {
     final tomorrow = now.add(const Duration(days: 1));
 
     test('isAfter validator', () {
-      final validator = IsAfterValidator(now).validator;
+      final validator = IsAfterValidator(now.toIso8601String()).validator;
       final validator2 =
-          IsAfterValidator(now, message: 'Custom message').validator;
+          IsAfterValidator(
+        now.toIso8601String(),
+        message: 'Custom message',
+      ).validator;
 
       _expectNullOnNullValue(validator, context);
       expect(validator(yesterday), isNotNull);
@@ -110,9 +113,12 @@ void main() {
     });
 
     test('isBefore validator', () {
-      final validator = IsBeforeValidator(now).validator;
+      final validator = IsBeforeValidator(now.toIso8601String()).validator;
       final validator2 =
-          IsBeforeValidator(now, message: 'Custom message').validator;
+          IsBeforeValidator(
+        now.toIso8601String(),
+        message: 'Custom message',
+      ).validator;
 
       _expectNullOnNullValue(validator, context);
       expect(validator(tomorrow), isNotNull);
@@ -168,7 +174,10 @@ void main() {
 }
 
 /// Helper function to expect no errors on null value
-void _expectNullOnNullValue<T>(ValidatorFn<T> validator, BuildContext context) {
+void _expectNullOnNullValue<T>(
+  FieldValidatorFn<T> validator,
+  BuildContext context,
+) {
   expect(validator(null), isNull);
 }
 
