@@ -124,15 +124,6 @@ class RegistrationPage extends HookWidget {
                 obscureText: obscureConfirmPassword.value,
                 textInputAction: .next,
                 autovalidateMode: .onUserInteraction,
-                // Custom validator that checks password match
-                validator: (value) {
-                  final messageResolver = RegistrationFields.confirmPassword
-                      .resolveMessage(context);
-                  if (messageResolver?.call(value) case final message?) {
-                    return message;
-                  }
-                  return null;
-                },
               ),
               const SizedBox(height: 16),
               // Birth date picker using HookedFormField

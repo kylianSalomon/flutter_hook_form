@@ -1,8 +1,8 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_hook_form/src/models/field_schema.dart';
+import 'package:flutter_hook_form/src/models/validator.dart';
 
 import 'types.dart';
-import 'validator.dart';
 
 /// A type that represents the initial values of a form field.
 typedef InitialFieldValues<F extends FieldSchema, T> = Map<F, T>;
@@ -10,8 +10,11 @@ typedef InitialFieldValues<F extends FieldSchema, T> = Map<F, T>;
 /// A controller that manages form field states and validation
 class FormFieldsController<F extends FieldSchema> extends ChangeNotifier {
   /// Creates a [FormFieldsController].
-  FormFieldsController(this.key, {InitialFieldValues? initialValues})
-    : _values = {...?initialValues};
+  FormFieldsController(
+    this.key, {
+    InitialFieldValues<F, dynamic>? initialValues,
+  }) : _initialValues = initialValues,
+       _values = {...?initialValues?.map((key, value) => MapEntry(key, value))};
 
   /// The form key.
   final FormKey key;
@@ -22,11 +25,14 @@ class FormFieldsController<F extends FieldSchema> extends ChangeNotifier {
   /// The initial values.
   // final InitialFieldValues<F>? _initialValues;
 
+  /// The initial values.
+  final InitialFieldValues<F, dynamic>? _initialValues;
+
   /// The forced errors.
   final _forcedErrors = <String, String>{};
 
   /// The field values.
-  final InitialFieldValues _values;
+  final Map<F, dynamic> _values;
 
   /// Get or create a GlobalKey for a form field
   GlobalKey<FormFieldState<T>> fieldKey<T>(F field) {
@@ -58,7 +64,7 @@ class FormFieldsController<F extends FieldSchema> extends ChangeNotifier {
 
   /// Get the initial value of a form field.
   T? getInitialValue<T>(F field) {
-    return _values[field];
+    return _initialValues?[field];
   }
 
   /// Update the value of a form field.

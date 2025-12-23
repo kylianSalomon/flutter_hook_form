@@ -9,16 +9,15 @@ enum SignInFields<T> implements FieldSchema {
   password<String>(
     validators: [RequiredValidator<String>(), MinLengthValidator(8)],
   ),
-  rememberMe<bool>(initialValue: false);
+  rememberMe<bool>(validators: [RequiredValidator()]);
 
-  const SignInFields({this.validators, this.initialValue});
-
-  @override
-  final T? initialValue;
+  const SignInFields({this.validators});
 
   @override
   final List<Validator<T>>? validators;
 }
+
+const maxBirthDate = '2023-01-01';
 
 /// Registration form field schema with more field types.
 enum RegistrationFields<T> implements FieldSchema {
@@ -32,15 +31,19 @@ enum RegistrationFields<T> implements FieldSchema {
   email<String>(validators: [RequiredValidator(), EmailValidator()]),
   phone<String>(validators: [PhoneValidator()]),
   password<String>(validators: [RequiredValidator(), MinLengthValidator(8)]),
-  confirmPassword<String>(validators: [RequiredValidator()]),
-  birthDate<DateTime>(),
+  confirmPassword<String>(
+    validators: [
+      RequiredValidator(),
+      MatchesValidator(field: password),
+    ],
+  ),
+  birthDate<DateTime>(validators: [IsBeforeValidator(maxBirthDate)]),
+  firstJobDate<DateTime>(validators: [DateAfterValidator(field: birthDate)]),
   country<String>(validators: [RequiredValidator()]),
-  agreeToTerms<bool>(validators: [RequiredValidator()], initialValue: false);
+  agreeToTerms<bool>(validators: [RequiredValidator()]);
 
-  const RegistrationFields({this.validators, this.initialValue});
+  const RegistrationFields({this.validators});
 
-  @override
-  final T? initialValue;
 
   @override
   final List<Validator<T>>? validators;
@@ -52,13 +55,10 @@ enum ProfileFields<T> implements FieldSchema {
   lastName<String>(validators: [RequiredValidator()]),
   bio<String>(validators: [MaxLengthValidator(500)]),
   website<String>(),
-  notificationsEnabled<bool>(initialValue: true),
-  theme<String>(initialValue: 'system');
+  notificationsEnabled<bool>(validators: [RequiredValidator()]),
+  theme<String>(validators: [RequiredValidator()]);
 
-  const ProfileFields({this.validators, this.initialValue});
-
-  @override
-  final T? initialValue;
+  const ProfileFields({this.validators});
 
   @override
   final List<Validator<T>>? validators;

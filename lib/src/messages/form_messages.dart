@@ -22,6 +22,12 @@ class FormErrorMessages {
   /// The default invalid pattern message.
   String get invalidPattern => 'Invalid pattern';
 
+  /// The default field does not match message.
+  String get fieldDoesNotMatch => 'Field does not match';
+
+  /// The default field is not after message.
+  String get fieldIsNotAfter => 'Field is not after';
+
   // String validation messages
 
   /// The default minimum length message.

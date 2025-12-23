@@ -24,16 +24,13 @@ import 'validator.dart';
 abstract interface class FieldSchema implements Enum {
   /// The validators for the field.
   List<Validator<dynamic>>? get validators;
-
-  /// The initial value for the field.
-  dynamic get initialValue;
 }
 
 /// Extension methods for [FieldSchema].
 extension FieldSchemaExtension on FieldSchema {
   /// Resolves the message error for the field. A shortcut for
   /// [MessageResolver.resolveMessage].
-  ValidatorFn<dynamic>? resolveMessage(BuildContext context) {
-    return validators?.resolveMessage(context);
+  FieldValidatorFn<T>? resolveMessage<T>(BuildContext context) {
+    return validators?.resolveMessage<T>(context);
   }
 }

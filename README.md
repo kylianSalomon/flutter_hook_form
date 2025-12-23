@@ -20,6 +20,7 @@ Managing forms in Flutter often requires creating multiple `TextEditingControlle
   - [Install](#install)
   - [Create your Schema](#create-your-schema)
     - [Available Validators](#available-validators)
+    - [Cross-Field Validators](#cross-field-validators)
     - [Create validators](#create-validators)
   - [Use "hooked" widgets](#use-hooked-widgets)
     - [Use form controller](#use-form-controller)
@@ -72,12 +73,9 @@ import 'package:flutter_hook_form/flutter_hook_form.dart';
 enum SignInFormFields<T> implements FieldSchema<T> {
   email<String>(validators: [RequiredValidator(), EmailValidator()]),
   password<String>(validators: [RequiredValidator(), MinLengthValidator(8)]),
-  rememberMe<bool>(initialValue: false);
+  rememberMe<bool>();
 
-  const SignInFormFields({this.validators, this.initialValue});
-
-  @override
-  final T? initialValue;
+  const SignInFormFields({this.validators});
 
   @override
   final List<Validator<T>>? validators;
@@ -101,8 +99,75 @@ The package comes with several built-in validators:
 | **List** | `ListMinItemsValidator` | Checks minimum items | `ListMinItemsValidator<T>(2)` |
 | | `ListMaxItemsValidator` | Checks maximum items | `ListMaxItemsValidator<T>(5)` |
 | **File** | `MimeTypeValidator` | Validates file type | `MimeTypeValidator({'image/jpeg', 'image/png'})` |
+| **Cross-Field** | `DateAfterValidator` | Validates date is after another field | `DateAfterValidator(field: .startDate)` |
+| | `MatchesValidator<T>` | Validates value matches another field | `MatchesValidator<String>(field: .password)` |
 
 When using multiple validators, they are executed in the order they are defined in the list.
+
+#### Cross-Field Validators
+
+Cross-field validators allow you to validate a field based on the value of another field. They require access to `BuildContext` to retrieve the other field's value from the form.
+
+```dart
+enum RegistrationFormFields<T> implements FieldSchema<T> {
+  password<String>(validators: [RequiredValidator(), MinLengthValidator(8)]),
+  confirmPassword<String>(validators: [
+    RequiredValidator(),
+    MatchesValidator<String>(field: password, message: 'Passwords must match'),
+  ]),
+  startDate<DateTime>(validators: [RequiredValidator()]),
+  endDate<DateTime>(validators: [
+    RequiredValidator(),
+    DateAfterValidator(field: startDate, message: 'End date must be after start date'),
+  ]);
+
+  const RegistrationFormFields({this.validators, this.initialValue});
+
+  @override
+  final List<Validator<T>>? validators;
+}
+```
+
+##### Creating Custom Cross-Field Validators
+
+You can create custom cross-field validators by extending the `CrossFieldValidator` class:
+
+```dart
+class PasswordStrengthValidator extends CrossFieldValidator<String> {
+  const PasswordStrengthValidator({required super.field, super.message})
+    : super(errorCode: 'password_too_similar');
+
+  @override
+  CrossFieldValidatorFn<String> get validator {
+    return (value, context) {
+      if (value == null) return null;
+
+      final form = useFormContext<FieldSchema>(context);
+      final usernameValue = form.getValue<String>(field);
+
+      if (usernameValue != null && value.contains(usernameValue)) {
+        return message ?? errorCode;
+      }
+
+      return null;
+    };
+  }
+}
+
+// Usage
+enum SecurityFormFields<T> implements FieldSchema<T> {
+  username<String>(validators: [RequiredValidator()]),
+  password<String>(validators: [
+    RequiredValidator(),
+    PasswordStrengthValidator(
+      field: username,
+      message: 'Password cannot contain your username',
+    ),
+  ]);
+
+  // ...
+}
+```
 
 #### Create validators
 
@@ -526,10 +591,7 @@ enum SignInFormFields<T> implements FieldSchema<T> {
   email<String>(validators: [RequiredValidator(), EmailValidator()]),
   password<String>(validators: [RequiredValidator(), MinLengthValidator(8)]);
 
-  const SignInFormFields({this.validators, this.initialValue});
-
-  @override
-  final T? initialValue;
+  const SignInFormFields({this.validators});
 
   @override
   final List<Validator<T>>? validators;
