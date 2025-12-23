@@ -1,3 +1,47 @@
+## 4.0.0-rc.1
+
+### Breaking Changes
+
+* 💥 **New `FieldSchema` interface**: Form schemas now use an `enum` implementing the `FieldSchema` interface instead of a class with `static final HookField` declarations. This reduces boilerplate and improves type safety.
+
+  **Before (3.x):**
+  ```dart
+  class MyFormSchema extends FormSchema {
+    static final email = HookField<String>(validators: [RequiredValidator()]);
+    static final password = HookField<String>(validators: [MinLengthValidator(8)]);
+
+    @override
+    List<HookField> get fields => [email, password];
+  }
+  ```
+
+  **After (4.x):**
+  ```dart
+  enum MyFormSchema<T> implements FieldSchema<T> {
+    email<String>(validators: [RequiredValidator(), EmailValidator()]),
+    password<String>(validators: [RequiredValidator(), MinLengthValidator(8)]);
+
+    const MyFormSchema({this.validators});
+
+    @override
+    final List<Validator<T>>? validators;
+  }
+  ```
+
+* 💥 **`HookedFormField` type parameters updated**: Now requires `<F extends FieldSchema, T>` for improved type inference across form field widgets.
+
+* 💥 **Dart SDK requirement upgraded**: Minimum Dart SDK version is now `^3.10.4`.
+
+### New Features
+
+* ✨ **Cross-field validation support**: New `CrossFieldValidator<T>` base class enables validation that depends on other field values in the form.
+
+* ✨ **New cross-field validators**:
+  * `MatchesValidator<T>` - Validates that a field value matches another field (e.g., password confirmation)
+  * `DateAfterValidator` - Validates that a date field is after another date field
+
+* ✨ **New example project**: Added a comprehensive example project demonstrating form schemas, validation, and cross-field validation.
+
 ## 3.0.1
 
 * 📝: Update README.md to include instructions for creating a schema and overriding fields in FormSchema
