@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hook_form/flutter_hook_form.dart';
 import 'package:flutter_hook_form/src/hooks/use_form_context.dart';
 import 'package:flutter_hook_form/src/models/field_schema.dart';
 import 'package:flutter_hook_form/src/models/form_field_controller.dart';
@@ -60,7 +61,7 @@ class HookedFormField<F extends FieldSchema, T> extends StatelessWidget {
     super.key,
     required this.fieldHook,
     required this.builder,
-    required FormFieldsController form,
+    required FormFieldsController<F> form,
     this.forceErrorText,
     this.validator,
     this.autovalidateMode,
@@ -72,7 +73,7 @@ class HookedFormField<F extends FieldSchema, T> extends StatelessWidget {
   }) : _form = form;
 
   /// The form controller, if provided directly.
-  final FormFieldsController? _form;
+  final FormFieldsController<F>? _form;
 
   /// The field identifier from the form schema.
   final F fieldHook;
@@ -114,7 +115,7 @@ class HookedFormField<F extends FieldSchema, T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final form = _form ?? useFormContext<FieldSchema>(context);
+    final form = _form ?? useFormContext<F>(context);
 
     return FormField<T>(
       key: form.fieldKey(fieldHook),
@@ -124,7 +125,7 @@ class HookedFormField<F extends FieldSchema, T> extends StatelessWidget {
           forceErrorText ??
           form
               .getFieldForcedError(fieldHook)
-              .localize(context, form.getValue(fieldHook)),
+              .localize(context, form.getNotifier<T>(fieldHook)),
       autovalidateMode: autovalidateMode,
       enabled: enabled,
       initialValue: form.getInitialValue(fieldHook) ?? initialValue,
@@ -132,9 +133,10 @@ class HookedFormField<F extends FieldSchema, T> extends StatelessWidget {
       restorationId: restorationId,
       builder: (_) {
         return builder(
-          form.getValue(fieldHook),
-          (value) =>
-              form.updateValue<T>(fieldHook, value, notify: notifyOnChange),
+          form.getNotifier<T>(fieldHook).value,
+          (value) {
+            form.updateValue<T>(fieldHook, value, notify: notifyOnChange);
+          },
           form.getFieldError(fieldHook),
         );
       },

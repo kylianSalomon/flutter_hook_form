@@ -549,46 +549,5 @@ void main() {
       expect(values[TestFormSchema.email], equals('test@example.com'));
       expect(values[TestFormSchema.password], equals('secret123'));
     });
-
-    testWidgets('notifyListeners is called after setError', (tester) async {
-      late FormFieldsController<TestFormSchema> formController;
-      int notifyCount = 0;
-
-      await tester.pumpWidget(
-        MaterialApp(
-          home: HookBuilder(
-            builder: (context) {
-              final form = useForm<TestFormSchema>();
-              formController = form;
-              form.addListener(() {
-                notifyCount++;
-              });
-
-              return Scaffold(
-                body: HookedForm<TestFormSchema>(
-                  form: form,
-                  child: const Column(
-                    children: [
-                      HookedTextFormField<TestFormSchema>(
-                        fieldHook: .email,
-                        decoration: InputDecoration(labelText: 'Email'),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      );
-
-      final initialNotifyCount = notifyCount;
-
-      // Set error should trigger notification
-      formController.setError(.email, 'Server error');
-      await tester.pump();
-
-      expect(notifyCount, greaterThan(initialNotifyCount));
-    });
   });
 }

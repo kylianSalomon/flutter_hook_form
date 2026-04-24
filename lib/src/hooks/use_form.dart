@@ -3,7 +3,6 @@ import 'package:flutter_hook_form/src/models/field_schema.dart';
 import 'package:flutter_hook_form/src/models/form_field_controller.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 
-
 /// A hook that provides a [FormFieldsController] to manage form field states.
 ///
 ///
@@ -17,12 +16,14 @@ FormFieldsController<F> useForm<F extends FieldSchema>({
   InitialFieldValues<F, dynamic>? initialValues,
   List<Object?> keys = const <Object>[],
 }) {
-  final controller = useMemoized(() {
+  final form = useMemoized(() {
     return FormFieldsController<F>(
       GlobalKey<FormState>(debugLabel: 'FormFieldsController'),
       initialValues: initialValues,
     );
   }, keys);
 
-  return useListenable(controller);
+  useEffect(() => form.dispose, [form]);
+
+  return form;
 }

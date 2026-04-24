@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'field_listener_page.dart';
 import 'profile_page.dart';
 import 'registration_page.dart';
 import 'sign_in_page.dart';
@@ -43,6 +44,16 @@ class HomePage extends StatelessWidget {
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const ProfilePage()),
+            ),
+          ),
+          const SizedBox(height: 12),
+          _ExampleCard(
+            title: 'Field Listener Demo',
+            description:
+                'Granular field listening with useFieldValue - see rebuild counts per field',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const FieldListenerPage()),
             ),
           ),
         ],

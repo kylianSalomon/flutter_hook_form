@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_hook_form/src/hooks/use_field_value.dart';
 import 'package:flutter_hook_form/src/models/field_schema.dart';
 
 import '../hooks/use_form_context.dart';
@@ -153,7 +154,7 @@ class HookedTextFormField<F extends FieldSchema> extends StatelessWidget {
   const HookedTextFormField.explicit({
     super.key,
     required this.fieldHook,
-    required FormFieldsController form,
+    required FormFieldsController<F> form,
     this.forceErrorText,
     this.validator,
     this.autovalidateMode,
@@ -234,7 +235,7 @@ class HookedTextFormField<F extends FieldSchema> extends StatelessWidget {
   }) : _form = form;
 
   /// The form controller, if provided directly.
-  final FormFieldsController? _form;
+  final FormFieldsController<F>? _form;
 
   /// The field identifier from the form schema.
   final F fieldHook;
@@ -472,7 +473,7 @@ class HookedTextFormField<F extends FieldSchema> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final form = _form ?? useFormContext<FieldSchema>(context);
+    final form = _form ?? useFormContext<F>(context);
 
     return TextFormField(
       key: form.fieldKey(fieldHook),
@@ -482,7 +483,7 @@ class HookedTextFormField<F extends FieldSchema> extends StatelessWidget {
           forceErrorText ??
           form
               .getFieldForcedError(fieldHook)
-              .localize(context, form.getValue(fieldHook)),
+              .localize(context, form.getNotifier<String>(fieldHook)),
       autovalidateMode: autovalidateMode,
       enabled: enabled,
       initialValue: form.getInitialValue(fieldHook) ?? initialValue,
