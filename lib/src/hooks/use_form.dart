@@ -12,7 +12,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 /// **Careful !**: this hook is a `flutter_hooks` hook and needs to be used
 /// inside a [HookWidget]. For more information about `flutter_hooks`, please
 /// refer to the [flutter_hooks documentation](https://pub.dev/packages/flutter_hooks).
-FormFieldsController<F> useForm<F extends FieldSchema>({
+FormFieldsController<F> useForm<F extends FieldSchema<dynamic>>({
   InitialFieldValues<F, dynamic>? initialValues,
   List<Object?> keys = const <Object>[],
 }) {

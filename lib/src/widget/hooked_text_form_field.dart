@@ -3,7 +3,6 @@ import 'dart:ui';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_hook_form/src/hooks/use_field_value.dart';
 import 'package:flutter_hook_form/src/models/field_schema.dart';
 
 import '../hooks/use_form_context.dart';
@@ -12,7 +11,8 @@ import '../validators/validators.dart';
 import 'hooked_form.dart';
 
 /// A text form field that integrates with flutter_hook_form.
-class HookedTextFormField<F extends FieldSchema> extends StatelessWidget {
+class HookedTextFormField<F extends FieldSchema<String>>
+    extends StatelessWidget {
   /// Creates a [HookedTextFormField] that gets the form from context.
   ///
   /// This widget wraps a standard [TextFormField] and connects it to a [FormFieldsController].
@@ -122,7 +122,7 @@ class HookedTextFormField<F extends FieldSchema> extends StatelessWidget {
     this.textStyle,
     this.magnifierConfiguration,
     this.scrollController,
-    this.notifyOnChange = false,
+    this.notifyOnChange = true,
   }) : _form = null;
 
   /// Creates a [HookedTextFormField] with an explicitly provided form.
@@ -154,7 +154,7 @@ class HookedTextFormField<F extends FieldSchema> extends StatelessWidget {
   const HookedTextFormField.explicit({
     super.key,
     required this.fieldHook,
-    required FormFieldsController<F> form,
+    required FormFieldsController<FieldSchema<dynamic>> form,
     this.forceErrorText,
     this.validator,
     this.autovalidateMode,
@@ -231,11 +231,11 @@ class HookedTextFormField<F extends FieldSchema> extends StatelessWidget {
     this.textStyle,
     this.magnifierConfiguration,
     this.scrollController,
-    this.notifyOnChange = false,
+    this.notifyOnChange = true,
   }) : _form = form;
 
   /// The form controller, if provided directly.
-  final FormFieldsController<F>? _form;
+  final FormFieldsController<FieldSchema<dynamic>>? _form;
 
   /// The field identifier from the form schema.
   final F fieldHook;
@@ -468,28 +468,41 @@ class HookedTextFormField<F extends FieldSchema> extends StatelessWidget {
 
   /// Whether to notify form listeners when the field value changes.
   ///
-  /// Default to `false` to avoid any unwanted rebuilds.
+  /// Defaults to `true`. Required for [FormFieldsController.listen] to react
+  /// to this field's changes. Set to `false` only if you need to suppress
+  /// reactive updates for performance reasons.
   final bool notifyOnChange;
 
   @override
   Widget build(BuildContext context) {
-    final form = _form ?? useFormContext<F>(context);
+    final FormFieldsController<FieldSchema<dynamic>> form =
+        _form ?? useFormContext<FieldSchema<dynamic>>(context);
+    final typedField = fieldHook as FieldSchema<String>;
 
     return TextFormField(
-      key: form.fieldKey(fieldHook),
+      key: form.fieldKey(typedField),
       validator:
-          validator ?? form.validators(fieldHook)?.resolveMessage(context),
+          validator ??
+          (value) {
+            final forcedError = form.getFieldForcedError(fieldHook);
+            if (forcedError != null) {
+              return forcedError.localize(context, form.getNotifier(typedField));
+            }
+            return form
+                .validators(fieldHook)
+                ?.resolveMessage<String>(context)
+                ?.call(value);
+          },
       forceErrorText:
           forceErrorText ??
           form
               .getFieldForcedError(fieldHook)
-              .localize(context, form.getNotifier<String>(fieldHook)),
+              .localize(context, form.getNotifier(typedField)),
       autovalidateMode: autovalidateMode,
       enabled: enabled,
-      initialValue: form.getInitialValue(fieldHook) ?? initialValue,
+      initialValue: form.getInitialValue(typedField) ?? initialValue,
       onSaved: onSaved,
       restorationId: restorationId,
-      toolbarOptions: toolbarOptions,
       showCursor: showCursor,
       obscuringCharacter: obscuringCharacter ?? '•',
       obscureText: obscureText ?? false,
@@ -504,7 +517,7 @@ class HookedTextFormField<F extends FieldSchema> extends StatelessWidget {
       maxLength: maxLength,
       onChanged: (value) {
         onChanged?.call(value);
-        form.updateValue(fieldHook, value, notify: notifyOnChange);
+        form.updateValue(typedField, value, notify: notifyOnChange);
       },
       onTap: onTap,
       onTapAlwaysCalled: onTapAlwaysCalled ?? false,
@@ -540,7 +553,7 @@ class HookedTextFormField<F extends FieldSchema> extends StatelessWidget {
       contentInsertionConfiguration: contentInsertionConfiguration,
       statesController: statesController,
       clipBehavior: clipBehavior ?? Clip.hardEdge,
-      scribbleEnabled: scribbleEnabled ?? true,
+      stylusHandwritingEnabled: scribbleEnabled ?? true,
       canRequestFocus: canRequestFocus ?? true,
       autofocus: autofocus ?? false,
       controller: controller,

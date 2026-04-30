@@ -22,7 +22,7 @@ void main() {
               );
 
               return Scaffold(
-                body: HookedForm<TestFormSchema>(
+                body: HookedForm(
                   form: form,
                   child: SingleChildScrollView(
                     child: Column(
@@ -93,17 +93,17 @@ void main() {
               final form = useForm<TestFormSchema>();
 
               return Scaffold(
-                body: HookedForm<TestFormSchema>(
+                body: HookedForm(
                   form: form,
                   child: SingleChildScrollView(
                     child: Column(
                       children: [
-                        const HookedTextFormField<TestFormSchema>(
-                          fieldHook: .email,
+                        const HookedTextFormField(
+                          fieldHook: TestFormSchema.email,
                           decoration: InputDecoration(labelText: 'Email'),
                         ),
-                        const HookedTextFormField<TestFormSchema>(
-                          fieldHook: .password,
+                        const HookedTextFormField(
+                          fieldHook: TestFormSchema.password,
                           decoration: InputDecoration(labelText: 'Password'),
                         ),
                         ElevatedButton(
@@ -149,14 +149,14 @@ void main() {
               final form = useForm<TestFormSchema>();
 
               return Scaffold(
-                body: HookedForm<TestFormSchema>(
+                body: HookedForm(
                   form: form,
                   child: const SingleChildScrollView(
                     child: Column(
                       children: [
-                        HookedTextFormField<TestFormSchema>(
+                        HookedTextFormField(
                           autovalidateMode: .onUserInteraction,
-                          fieldHook: .email,
+                          fieldHook: TestFormSchema.email,
                           decoration: InputDecoration(labelText: 'Email'),
                         ),
                       ],
@@ -193,13 +193,13 @@ void main() {
               );
 
               return Scaffold(
-                body: HookedForm<TestFormSchema>(
+                body: HookedForm(
                   form: form,
                   child: SingleChildScrollView(
                     child: Column(
                       children: [
-                        HookedTextFormField<TestFormSchema>(
-                          fieldHook: .email,
+                        HookedTextFormField(
+                          fieldHook: TestFormSchema.email,
                           decoration: const InputDecoration(labelText: 'Email'),
                           validator: (_) => 'Custom error message',
                         ),
@@ -242,17 +242,17 @@ void main() {
               formController = form;
 
               return Scaffold(
-                body: HookedForm<TestFormSchema>(
+                body: HookedForm(
                   form: form,
                   child: const SingleChildScrollView(
                     child: Column(
                       children: [
-                        HookedTextFormField<TestFormSchema>(
-                          fieldHook: .email,
+                        HookedTextFormField(
+                          fieldHook: TestFormSchema.email,
                           decoration: InputDecoration(labelText: 'Email'),
                         ),
-                        HookedTextFormField<TestFormSchema>(
-                          fieldHook: .password,
+                        HookedTextFormField(
+                          fieldHook: TestFormSchema.password,
                           decoration: InputDecoration(labelText: 'Password'),
                         ),
                       ],
@@ -274,8 +274,14 @@ void main() {
       await tester.pump();
 
       // Verify values are accessible via controller
-      expect(formController.getValue(.email), equals('test@example.com'));
-      expect(formController.getValue(.password), equals('password123'));
+      expect(
+        formController.getValue(TestFormSchema.email),
+        equals('test@example.com'),
+      );
+      expect(
+        formController.getValue(TestFormSchema.password),
+        equals('password123'),
+      );
     });
 
     testWidgets('updateValue programmatically updates form values', (
@@ -291,17 +297,20 @@ void main() {
               formController = form;
 
               return Scaffold(
-                body: HookedForm<TestFormSchema>(
+                body: HookedForm(
                   form: form,
                   child: Column(
                     children: [
-                      const HookedTextFormField<TestFormSchema>(
-                        fieldHook: .email,
+                      const HookedTextFormField(
+                        fieldHook: TestFormSchema.email,
                         decoration: InputDecoration(labelText: 'Email'),
                       ),
                       ElevatedButton(
                         onPressed: () {
-                          form.updateValue(.email, 'programmatic@example.com');
+                          form.updateValue(
+                            TestFormSchema.email,
+                            'programmatic@example.com',
+                          );
                         },
                         child: const Text('Set Value'),
                       ),
@@ -316,7 +325,9 @@ void main() {
 
       // Initially empty (TextFormField shows empty string, not null)
       expect(
-        formController.getValue(.email), anyOf(isNull, isEmpty));
+        formController.getValue(TestFormSchema.email),
+        anyOf(isNull, isEmpty),
+      );
 
       // Set value programmatically
       await tester.tap(find.byType(ElevatedButton));
@@ -324,7 +335,7 @@ void main() {
 
       // Check value is updated
       expect(
-        formController.getValue(.email),
+        formController.getValue(TestFormSchema.email),
         equals('programmatic@example.com'),
       );
     });
@@ -342,12 +353,12 @@ void main() {
               formController = form;
 
               return Scaffold(
-                body: HookedForm<TestFormSchema>(
+                body: HookedForm(
                   form: form,
                   child: const Column(
                     children: [
-                      HookedTextFormField<TestFormSchema>(
-                        fieldHook: .email,
+                      HookedTextFormField(
+                        fieldHook: TestFormSchema.email,
                         decoration: InputDecoration(labelText: 'Email'),
                       ),
                     ],
@@ -381,16 +392,16 @@ void main() {
               formController = form;
 
               return Scaffold(
-                body: HookedForm<TestFormSchema>(
+                body: HookedForm(
                   form: form,
                   child: const Column(
                     children: [
-                      HookedTextFormField<TestFormSchema>(
-                        fieldHook: .email,
+                      HookedTextFormField(
+                        fieldHook: TestFormSchema.email,
                         decoration: InputDecoration(labelText: 'Email'),
                       ),
-                      HookedTextFormField<TestFormSchema>(
-                        fieldHook: .password,
+                      HookedTextFormField(
+                        fieldHook: TestFormSchema.password,
                         decoration: InputDecoration(labelText: 'Password'),
                       ),
                     ],
@@ -429,12 +440,12 @@ void main() {
               formController = form;
 
               return Scaffold(
-                body: HookedForm<TestFormSchema>(
+                body: HookedForm(
                   form: form,
                   child: Column(
                     children: [
-                      const HookedTextFormField<TestFormSchema>(
-                        fieldHook: .email,
+                      const HookedTextFormField(
+                        fieldHook: TestFormSchema.email,
                         decoration: InputDecoration(labelText: 'Email'),
                       ),
                       ElevatedButton(
@@ -474,16 +485,16 @@ void main() {
           home: HookBuilder(
             builder: (context) {
               final form = useForm<TestFormSchema>(
-                initialValues: {.email: 'prefilled@example.com'},
+                initialValues: {TestFormSchema.email: 'prefilled@example.com'},
               );
 
               return Scaffold(
-                body: HookedForm<TestFormSchema>(
+                body: HookedForm(
                   form: form,
                   child: const Column(
                     children: [
-                      HookedTextFormField<TestFormSchema>(
-                        fieldHook: .email,
+                      HookedTextFormField(
+                        fieldHook: TestFormSchema.email,
                         decoration: InputDecoration(labelText: 'Email'),
                       ),
                     ],
@@ -512,17 +523,17 @@ void main() {
               formController = form;
 
               return Scaffold(
-                body: HookedForm<TestFormSchema>(
+                body: HookedForm(
                   form: form,
                   child: const SingleChildScrollView(
                     child: Column(
                       children: [
-                        HookedTextFormField<TestFormSchema>(
-                          fieldHook: .email,
+                        HookedTextFormField(
+                          fieldHook: TestFormSchema.email,
                           decoration: InputDecoration(labelText: 'Email'),
                         ),
-                        HookedTextFormField<TestFormSchema>(
-                          fieldHook: .password,
+                        HookedTextFormField(
+                          fieldHook: TestFormSchema.password,
                           decoration: InputDecoration(labelText: 'Password'),
                         ),
                       ],

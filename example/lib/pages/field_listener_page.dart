@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hook_form/flutter_hook_form.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 
-/// Demonstrates granular field listening with [useFieldValue].
+/// Demonstrates granular field listening with [FormFieldsController.listen].
 ///
 /// This example shows how widgets can listen to specific fields and only
 /// rebuild when those fields change, improving performance.
@@ -45,7 +45,7 @@ class FieldListenerPage extends HookWidget {
                     ),
                     const SizedBox(height: 8),
                     const Text(
-                      'Each card below listens to a specific field using useFieldValue. '
+                      'Each card below listens to a specific field using form.listen. '
                       'The rebuild counter shows how many times each widget has rebuilt. '
                       'Notice that only the relevant card rebuilds when you type!',
                     ),
@@ -56,7 +56,7 @@ class FieldListenerPage extends HookWidget {
             const SizedBox(height: 24),
 
             // Form fields
-            HookedForm<DemoFields>(
+            HookedForm(
               form: form,
               child: Column(
                 children: [
@@ -66,7 +66,6 @@ class FieldListenerPage extends HookWidget {
                       labelText: 'First Name',
                       border: OutlineInputBorder(),
                     ),
-                    notifyOnChange: true, // Important: enables ValueNotifier updates
                   ),
                   const SizedBox(height: 16),
                   HookedTextFormField<DemoFields<String>>(
@@ -75,7 +74,6 @@ class FieldListenerPage extends HookWidget {
                       labelText: 'Last Name',
                       border: OutlineInputBorder(),
                     ),
-                    notifyOnChange: true,
                   ),
                   const SizedBox(height: 16),
                   HookedTextFormField<DemoFields<String>>(
@@ -85,7 +83,6 @@ class FieldListenerPage extends HookWidget {
                       border: OutlineInputBorder(),
                     ),
                     keyboardType: TextInputType.number,
-                    notifyOnChange: true,
                   ),
                 ],
               ),
@@ -134,7 +131,9 @@ class _FirstNameListener extends HookWidget {
     rebuildCount.value++;
 
     // Listen to firstName only
-    final firstName = useFieldValue<DemoFields, String>(form, DemoFields.firstName);
+    final firstName = form.listen({
+      DemoFields.firstName,
+    }, (get) => get<String>(DemoFields.firstName));
 
     return _ListenerCard(
       title: 'First Name Listener',
@@ -156,7 +155,9 @@ class _LastNameListener extends HookWidget {
     final rebuildCount = useRef(0);
     rebuildCount.value++;
 
-    final lastName = useFieldValue<DemoFields, String>(form, DemoFields.lastName);
+    final lastName = form.listen({
+      DemoFields.lastName,
+    }, (get) => get<String>(DemoFields.lastName));
 
     return _ListenerCard(
       title: 'Last Name Listener',
@@ -178,7 +179,9 @@ class _AgeListener extends HookWidget {
     final rebuildCount = useRef(0);
     rebuildCount.value++;
 
-    final age = useFieldValue<DemoFields, String>(form, DemoFields.age);
+    final age = form.listen({
+      DemoFields.age,
+    }, (get) => get<String>(DemoFields.age));
 
     return _ListenerCard(
       title: 'Age Listener',
@@ -200,13 +203,15 @@ class _FullNameListener extends HookWidget {
     final rebuildCount = useRef(0);
     rebuildCount.value++;
 
-    // Listen to multiple fields
-    final firstName = useFieldValue<DemoFields, String>(form, DemoFields.firstName);
-    final lastName = useFieldValue<DemoFields, String>(form, DemoFields.lastName);
-
-    final fullName = [firstName, lastName]
-        .where((s) => s != null && s.isNotEmpty)
-        .join(' ');
+    // Listen to multiple fields and combine into a single derived value
+    final fullName = form.listen(
+      {DemoFields.firstName, DemoFields.lastName},
+      (get) => [
+        get<String>(DemoFields.firstName),
+        get<String>(DemoFields.lastName),
+      ].where((s) => s != null && s.isNotEmpty)
+          .join(' '),
+    );
 
     return _ListenerCard(
       title: 'Full Name Listener',
@@ -297,7 +302,7 @@ class _ListenerCard extends StatelessWidget {
 }
 
 /// Demo form fields schema
-enum DemoFields<T> implements FieldSchema {
+enum DemoFields<T> implements FieldSchema<T> {
   firstName<String>(),
   lastName<String>(),
   age<String>();

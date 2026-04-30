@@ -14,7 +14,7 @@ void main() {
           },
         );
 
-        final validator = DateAfterValidator(
+        final validator = const DateAfterValidator(
           field: _DateFormSchema.startDate,
         ).validator;
 
@@ -22,7 +22,7 @@ void main() {
 
         await tester.pumpWidget(
           MaterialApp(
-            home: HookedForm<_DateFormSchema>(
+            home: HookedForm(
               form: controller,
               child: HookBuilder(
                 builder: (context) {
@@ -48,7 +48,7 @@ void main() {
           initialValues: {_DateFormSchema.startDate: startDate},
         );
 
-        final validator = DateAfterValidator(
+        final validator = const DateAfterValidator(
           field: _DateFormSchema.startDate,
         ).validator;
 
@@ -56,7 +56,7 @@ void main() {
 
         await tester.pumpWidget(
           MaterialApp(
-            home: HookedForm<_DateFormSchema>(
+            home: HookedForm(
               form: controller,
               child: HookBuilder(
                 builder: (context) {
@@ -77,12 +77,12 @@ void main() {
         final startDate = DateTime(2024, 1, 15);
         final endDate = DateTime(2024, 1, 1);
 
-        final controller = FormFieldsController<_DateFormSchema>(
+        final controller = FormFieldsController<_DateFormSchema<DateTime>>(
           GlobalKey<FormState>(),
           initialValues: {_DateFormSchema.startDate: startDate},
         );
 
-        final validator = DateAfterValidator(
+        final validator = const DateAfterValidator(
           field: _DateFormSchema.startDate,
         ).validator;
 
@@ -90,7 +90,7 @@ void main() {
 
         await tester.pumpWidget(
           MaterialApp(
-            home: HookedForm<_DateFormSchema>(
+            home: HookedForm(
               form: controller,
               child: HookBuilder(
                 builder: (context) {
@@ -114,7 +114,7 @@ void main() {
           initialValues: {_DateFormSchema.startDate: startDate},
         );
 
-        final validator = DateAfterValidator(
+        final validator = const DateAfterValidator(
           field: _DateFormSchema.startDate,
           message: 'End date must be after start date',
         ).validator;
@@ -123,7 +123,7 @@ void main() {
 
         await tester.pumpWidget(
           MaterialApp(
-            home: HookedForm<_DateFormSchema>(
+            home: HookedForm(
               form: controller,
               child: HookBuilder(
                 builder: (context) {
@@ -147,7 +147,7 @@ void main() {
           GlobalKey<FormState>(),
         );
 
-        final validator = DateAfterValidator(
+        final validator = const DateAfterValidator(
           field: _DateFormSchema.startDate,
         ).validator;
 
@@ -155,7 +155,7 @@ void main() {
 
         await tester.pumpWidget(
           MaterialApp(
-            home: HookedForm<_DateFormSchema>(
+            home: HookedForm(
               form: controller,
               child: HookBuilder(
                 builder: (context) {
@@ -178,7 +178,7 @@ void main() {
           initialValues: {_PasswordFormSchema.password: 'secret123'},
         );
 
-        final validator = MatchesValidator<String>(
+        final validator = const MatchesValidator<String>(
           field: _PasswordFormSchema.password,
         ).validator;
 
@@ -186,7 +186,7 @@ void main() {
 
         await tester.pumpWidget(
           MaterialApp(
-            home: HookedForm<_PasswordFormSchema>(
+            home: HookedForm(
               form: controller,
               child: HookBuilder(
                 builder: (context) {
@@ -207,7 +207,7 @@ void main() {
           initialValues: {_PasswordFormSchema.password: 'secret123'},
         );
 
-        final validator = MatchesValidator<String>(
+        final validator = const MatchesValidator<String>(
           field: _PasswordFormSchema.password,
         ).validator;
 
@@ -215,7 +215,7 @@ void main() {
 
         await tester.pumpWidget(
           MaterialApp(
-            home: HookedForm<_PasswordFormSchema>(
+            home: HookedForm(
               form: controller,
               child: HookBuilder(
                 builder: (context) {
@@ -236,7 +236,7 @@ void main() {
           initialValues: {_PasswordFormSchema.password: 'secret123'},
         );
 
-        final validator = MatchesValidator<String>(
+        final validator = const MatchesValidator<String>(
           field: _PasswordFormSchema.password,
           message: 'Passwords must match',
         ).validator;
@@ -245,7 +245,7 @@ void main() {
 
         await tester.pumpWidget(
           MaterialApp(
-            home: HookedForm<_PasswordFormSchema>(
+            home: HookedForm(
               form: controller,
               child: HookBuilder(
                 builder: (context) {
@@ -265,7 +265,7 @@ void main() {
           GlobalKey<FormState>(),
         );
 
-        final validator = MatchesValidator<String>(
+        final validator = const MatchesValidator<String>(
           field: _PasswordFormSchema.password,
         ).validator;
 
@@ -273,7 +273,7 @@ void main() {
 
         await tester.pumpWidget(
           MaterialApp(
-            home: HookedForm<_PasswordFormSchema>(
+            home: HookedForm(
               form: controller,
               child: HookBuilder(
                 builder: (context) {
@@ -295,7 +295,7 @@ void main() {
           initialValues: {_NumberFormSchema.firstNumber: 42},
         );
 
-        final validator = MatchesValidator<int>(
+        final validator = const MatchesValidator<int>(
           field: _NumberFormSchema.firstNumber,
         ).validator;
 
@@ -304,7 +304,7 @@ void main() {
 
         await tester.pumpWidget(
           MaterialApp(
-            home: HookedForm<_NumberFormSchema>(
+            home: HookedForm(
               form: controller,
               child: HookBuilder(
                 builder: (context) {
@@ -324,40 +324,34 @@ void main() {
   });
 }
 
-enum _DateFormSchema<T> implements FieldSchema {
+enum _DateFormSchema<T> implements FieldSchema<T> {
   startDate<DateTime>(),
-  endDate<DateTime>();
+  // ignore: unused_field
+  endDate<DateTime>(validators: [DateAfterValidator(field: startDate)]);
 
-  const _DateFormSchema({this.validators, this.initialValue});
-
-  @override
-  final T? initialValue;
+  const _DateFormSchema({this.validators});
 
   @override
   final List<Validator<T>>? validators;
 }
 
-enum _PasswordFormSchema<T> implements FieldSchema {
+enum _PasswordFormSchema<T> implements FieldSchema<T> {
   password<String>(),
+  // ignore: unused_field
   confirmPassword<String>();
 
-  const _PasswordFormSchema({this.validators, this.initialValue});
-
-  @override
-  final T? initialValue;
+  const _PasswordFormSchema({this.validators});
 
   @override
   final List<Validator<T>>? validators;
 }
 
-enum _NumberFormSchema<T> implements FieldSchema {
+enum _NumberFormSchema<T> implements FieldSchema<T> {
   firstNumber<int>(),
+  // ignore: unused_field
   secondNumber<int>();
 
-  const _NumberFormSchema({this.validators, this.initialValue});
-
-  @override
-  final T? initialValue;
+  const _NumberFormSchema({this.validators});
 
   @override
   final List<Validator<T>>? validators;

@@ -7,7 +7,7 @@ import 'validator.dart';
 /// Implement this interface to define the schema of a form field.
 ///
 /// ```dart
-///  enum MyFieldSchema<T> implements FieldSchema {
+///  enum MyFieldSchema<T> implements FieldSchema<T> {
 ///    email<String>(validators: [RequiredValidator(), EmailValidator()], initialValue: ''),
 ///    password<String>(validators: [RequiredValidator(), MinLengthValidator(8)], initialValue: '');
 ///
@@ -21,16 +21,16 @@ import 'validator.dart';
 ///    final List<Validator<T>>? validators;
 ///  }
 /// ```
-abstract interface class FieldSchema implements Enum {
+abstract interface class FieldSchema<T> implements Enum {
   /// The validators for the field.
-  List<Validator<dynamic>>? get validators;
+  List<Validator<T>>? get validators;
 }
 
 /// Extension methods for [FieldSchema].
-extension FieldSchemaExtension on FieldSchema {
+extension FieldSchemaExtension<T> on FieldSchema<T> {
   /// Resolves the message error for the field. A shortcut for
   /// [MessageResolver.resolveMessage].
-  FieldValidatorFn<T>? resolveMessage<T>(BuildContext context) {
+  FieldValidatorFn<T>? resolveMessage(BuildContext context) {
     return validators?.resolveMessage<T>(context);
   }
 }

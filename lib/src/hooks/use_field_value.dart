@@ -30,10 +30,14 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 ///
 /// **Note**: This hook requires `flutter_hooks` and must be used inside a
 /// [HookWidget] or a widget that uses [HookBuilder].
-T? useFieldValue<F extends FieldSchema, T>(
+@Deprecated(
+  'Use form.listen({field}, (get) => get<T>(field)) instead. '
+  'Deprecated in 4.0.0.',
+)
+T? useFieldValue<F extends FieldSchema<dynamic>, T>(
   FormFieldsController<F> form,
   F field,
 ) {
-  final notifier = form.getNotifier<T>(field);
+  final notifier = form.getNotifier<T>(field as FieldSchema<T>);
   return useValueListenable(notifier);
 }

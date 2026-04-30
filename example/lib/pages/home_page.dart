@@ -50,7 +50,7 @@ class HomePage extends StatelessWidget {
           _ExampleCard(
             title: 'Field Listener Demo',
             description:
-                'Granular field listening with useFieldValue - see rebuild counts per field',
+                'Granular field listening with form.listen - see rebuild counts per field',
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const FieldListenerPage()),

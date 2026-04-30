@@ -12,7 +12,7 @@ class _HookedFormProviderBase extends InheritedWidget {
 
   final FormFieldsController form;
 
-  static FormFieldsController<F> of<F extends FieldSchema>(
+  static FormFieldsController<F> of<F extends FieldSchema<dynamic>>(
     BuildContext context,
   ) {
     final widget = context
@@ -49,7 +49,7 @@ class _HookedFormProviderBase extends InheritedWidget {
 ///   child: MyFormWidget(),
 /// )
 /// ```
-class HookedFormProvider<F extends FieldSchema> extends StatelessWidget {
+class HookedFormProvider<F extends FieldSchema<dynamic>> extends StatelessWidget {
   /// Creates a [HookedFormProvider] that provides a [FormFieldsController] to the form fields.
   const HookedFormProvider({
     super.key,
@@ -86,7 +86,7 @@ class HookedFormProvider<F extends FieldSchema> extends StatelessWidget {
 ///
 /// DO NOT use this hook to create a [FormFieldsController], please see
 /// [useForm] instead.
-FormFieldsController<F> useFormContext<F extends FieldSchema>(
+FormFieldsController<F> useFormContext<F extends FieldSchema<dynamic>>(
   BuildContext context,
 ) {
   return _HookedFormProviderBase.of<F>(context);

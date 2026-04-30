@@ -22,9 +22,9 @@ class NotificationToggle extends StatelessWidget {
     // DO NOT use useForm here - that would create a new form instance!
     final form = useFormContext<ProfileFields>(context);
 
-    return HookedFormField<ProfileFields, bool>.explicit(
+    return HookedFormField<bool, ProfileFields<bool>>.explicit(
       form: form,
-      fieldHook: .notificationsEnabled,
+      fieldHook: ProfileFields.notificationsEnabled,
       notifyOnChange: true,
       builder: (value, onChanged, error) {
         return SwitchListTile(

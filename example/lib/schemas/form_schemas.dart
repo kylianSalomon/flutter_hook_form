@@ -4,7 +4,7 @@ import 'package:flutter_hook_form/flutter_hook_form.dart';
 ///
 /// Define your form fields as an enum that implements [FieldSchema].
 /// Each field can have validators and an initial value.
-enum SignInFields<T> implements FieldSchema {
+enum SignInFields<T> implements FieldSchema<T> {
   email<String>(validators: [RequiredValidator<String>()]),
   password<String>(
     validators: [RequiredValidator<String>(), MinLengthValidator(8)],
@@ -20,7 +20,7 @@ enum SignInFields<T> implements FieldSchema {
 const maxBirthDate = '2023-01-01';
 
 /// Registration form field schema with more field types.
-enum RegistrationFields<T> implements FieldSchema {
+enum RegistrationFields<T> implements FieldSchema<T> {
   username<String>(
     validators: [
       RequiredValidator(),
@@ -50,7 +50,7 @@ enum RegistrationFields<T> implements FieldSchema {
 }
 
 /// Profile form field schema demonstrating nested widgets and context usage.
-enum ProfileFields<T> implements FieldSchema {
+enum ProfileFields<T> implements FieldSchema<T> {
   firstName<String>(validators: [RequiredValidator()]),
   lastName<String>(validators: [RequiredValidator()]),
   bio<String>(validators: [MaxLengthValidator(500)]),

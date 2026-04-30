@@ -15,11 +15,11 @@ class ThemeSelector extends StatelessWidget {
     // Access the form from the parent context
     final form = useFormContext<ProfileFields>(context);
 
-    return HookedFormField<ProfileFields, String>.explicit(
+    return HookedFormField<String, ProfileFields<String>>.explicit(
       form: form,
-      fieldHook: .theme,
+      fieldHook: ProfileFields.theme,
       notifyOnChange: true,
-      builder: (String? value, onChanged, error) {
+      builder: (value, onChanged, error) {
         return Column(
           crossAxisAlignment: .start,
           children: [

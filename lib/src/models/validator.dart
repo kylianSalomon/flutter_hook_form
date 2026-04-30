@@ -43,12 +43,12 @@ abstract class CrossFieldValidator<T> extends Validator<T> {
   });
 
   /// The field to compare with.
-  final FieldSchema field;
+  final FieldSchema<dynamic> field;
 
   /// Asserts that the value is of the correct type.
   void assertValueIsOfType(BuildContext context) {
-    final form = useFormContext<FieldSchema>(context);
-    final value = form.getValue(field);
+    final form = useFormContext<FieldSchema<dynamic>>(context);
+    final value = form.getValue<dynamic>(field);
 
     assert(
       value is T?,
