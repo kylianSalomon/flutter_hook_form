@@ -34,7 +34,7 @@ void main() {
         GlobalKey<FormState>(),
       );
 
-      late FormFieldsController<TestFormSchema> capturedController;
+      late FormFieldsController capturedController;
 
       await tester.pumpWidget(
         MaterialApp(
@@ -42,7 +42,7 @@ void main() {
             form: controller,
             child: HookBuilder(
               builder: (context) {
-                capturedController = useFormContext<TestFormSchema>(context);
+                capturedController = useFormContext(context);
                 return Container();
               },
             ),

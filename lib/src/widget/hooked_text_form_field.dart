@@ -476,7 +476,7 @@ class HookedTextFormField<F extends FieldSchema<String>>
   @override
   Widget build(BuildContext context) {
     final FormFieldsController<FieldSchema<dynamic>> form =
-        _form ?? useFormContext<FieldSchema<dynamic>>(context);
+        _form ?? useFormContext(context);
     final typedField = fieldHook as FieldSchema<String>;
 
     return TextFormField(

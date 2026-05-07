@@ -114,7 +114,7 @@ class HookedFormField<T, F extends FieldSchema<T>> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final FormFieldsController<FieldSchema<dynamic>> form =
-        _form ?? useFormContext<FieldSchema<dynamic>>(context);
+        _form ?? useFormContext(context);
     final typedField = fieldHook as FieldSchema<T>;
 
     return FormField<T>(

@@ -1,3 +1,28 @@
+## 4.0.0-rc.3
+
+### Breaking Changes
+
+* 💥 **`useFormContext` no longer accepts a type parameter**: The hook is now untyped for simplicity. Update call sites by dropping the generic argument.
+
+  **Before (rc.2):**
+  ```dart
+  final form = useFormContext<SignInFormFields>(context);
+  ```
+
+  **After (rc.3):**
+  ```dart
+  final form = useFormContext(context);
+  ```
+
+* 💥 **`getNotifier` return type narrowed to `ValueListenable<T?>`**: Previously returned `ValueNotifier<T?>`, which allowed external mutation. The value is now read-only from outside the controller; use `updateValue` to change it.
+
+### Improvements
+
+* ♻️ **Unified per-field notifier architecture**: `FormFieldsController` now uses a single `_FieldNotifier` per field (instead of two separate maps — one typed, one untyped). This eliminates a class of double-notify bugs and makes `form.listen`, `getNotifier`, and `updateValue` all share the same reactive source of truth.
+* ♻️ **Simplified `getValue`**: No longer reads widget state as a side channel — the canonical value is always the field's notifier, seeded from `initialValues`.
+* ♻️ **`updateValue(notify: false)` writes silently**: Uses `setSilently` instead of skipping the notifier entirely, so the value is always stored even when listeners are suppressed.
+* ♻️ **`reset` triggers a single notification per field**: Reset no longer requires a separate loop over change-notifiers.
+
 ## 4.0.0-rc.1
 
 ### Breaking Changes

@@ -47,7 +47,7 @@ abstract class CrossFieldValidator<T> extends Validator<T> {
 
   /// Asserts that the value is of the correct type.
   void assertValueIsOfType(BuildContext context) {
-    final form = useFormContext<FieldSchema<dynamic>>(context);
+    final form = useFormContext(context);
     final value = form.getValue<dynamic>(field);
 
     assert(

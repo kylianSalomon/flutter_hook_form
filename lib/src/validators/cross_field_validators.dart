@@ -16,7 +16,7 @@ class DateAfterValidator extends CrossFieldValidator<DateTime> {
 
       assertValueIsOfType(context);
 
-      final form = useFormContext<FieldSchema<dynamic>>(context);
+      final form = useFormContext(context);
       final fieldValue = form.getValue<DateTime>(field as FieldSchema<DateTime>);
 
       if (fieldValue != null && value.isBefore(fieldValue)) {
@@ -40,7 +40,7 @@ class MatchesValidator<T> extends CrossFieldValidator<T> {
     return (value, context) {
       assertValueIsOfType(context);
 
-      final form = useFormContext<FieldSchema<dynamic>>(context);
+      final form = useFormContext(context);
       final fieldValue = form.getValue<T>(field as FieldSchema<T>);
 
       if (fieldValue != value) {

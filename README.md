@@ -142,7 +142,7 @@ class PasswordStrengthValidator extends CrossFieldValidator<String> {
     return (value, context) {
       if (value == null) return null;
 
-      final form = useFormContext<FieldSchema>(context);
+      final form = useFormContext(context);
       final usernameValue = form.getValue<String>(field);
 
       if (usernameValue != null && value.contains(usernameValue)) {
@@ -452,7 +452,7 @@ class ParentWidget extends HookWidget {
 class ChildWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final form = useFormContext<SignInFormFields>(context);
+    final form = useFormContext(context);
 
     return // ... child widget
   }
