@@ -41,7 +41,7 @@ class SignInPage extends HookWidget {
             const SizedBox(height: 32),
             // Wrap form fields with HookedForm to provide the form controller
             // to all child HookedTextFormField and HookedFormField widgets.
-            HookedForm<SignInFields>(
+            HookedForm(
               form: form,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -82,8 +82,8 @@ class SignInPage extends HookWidget {
                   ),
                   const SizedBox(height: 8),
                   // Remember me checkbox using HookedFormField
-                  HookedFormField<SignInFields<bool>, bool>(
-                    fieldHook: SignInFields.rememberMe,
+                  HookedFormField<bool, SignInFields<bool>>(
+                    fieldHook: .rememberMe,
                     builder: (value, onChanged, error) {
                       return CheckboxListTile(
                         title: const Text('Remember me'),

@@ -19,6 +19,9 @@ analyzer:
     - "lib/scan_pigeon.dart"
     - "lib/reply_channel.dart"
 
+formatter:
+  trailing_commas: preserve
+
 linter:
   rules:
     # these rules are documented on and in the same order as

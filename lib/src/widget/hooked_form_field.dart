@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_hook_form/src/hooks/use_form_context.dart';
-import 'package:flutter_hook_form/src/models/field_schema.dart';
-import 'package:flutter_hook_form/src/models/form_field_controller.dart';
-import 'package:flutter_hook_form/src/validators/validators.dart';
+import 'package:flutter_hook_form/flutter_hook_form.dart';
 
 /// A form field that integrates with flutter_hook_form.
-class HookedFormField<F extends FieldSchema, T> extends StatelessWidget {
+class HookedFormField<T, F extends FieldSchema<T>> extends StatelessWidget {
   /// Creates a [HookedFormField] that gets the form from context.
   ///
   /// This widget wraps a standard [FormField] and connects it to a [FormFieldsController].
@@ -49,7 +46,7 @@ class HookedFormField<F extends FieldSchema, T> extends StatelessWidget {
     this.initialValue,
     this.onSaved,
     this.restorationId,
-    this.notifyOnChange = false,
+    this.notifyOnChange = true,
   }) : _form = null;
 
   /// Creates a [HookedFormField] with an explicitly provided form.
@@ -60,7 +57,7 @@ class HookedFormField<F extends FieldSchema, T> extends StatelessWidget {
     super.key,
     required this.fieldHook,
     required this.builder,
-    required FormFieldsController form,
+    required FormFieldsController<FieldSchema<dynamic>> form,
     this.forceErrorText,
     this.validator,
     this.autovalidateMode,
@@ -68,11 +65,11 @@ class HookedFormField<F extends FieldSchema, T> extends StatelessWidget {
     this.initialValue,
     this.onSaved,
     this.restorationId,
-    this.notifyOnChange = false,
+    this.notifyOnChange = true,
   }) : _form = form;
 
   /// The form controller, if provided directly.
-  final FormFieldsController? _form;
+  final FormFieldsController<FieldSchema<dynamic>>? _form;
 
   /// The field identifier from the form schema.
   final F fieldHook;
@@ -109,34 +106,35 @@ class HookedFormField<F extends FieldSchema, T> extends StatelessWidget {
 
   /// Whether to notify form listeners when the field value changes.
   ///
-  /// Default to `false` to avoid any unwanted rebuilds.
+  /// Defaults to `true`. Required for [FormFieldsController.listen] to react
+  /// to this field's changes. Set to `false` only if you need to suppress
+  /// reactive updates for performance reasons.
   final bool notifyOnChange;
 
   @override
   Widget build(BuildContext context) {
-    final form = _form ?? useFormContext<FieldSchema>(context);
+    final FormFieldsController<FieldSchema<dynamic>> form =
+        _form ?? useFormContext(context);
+    final typedField = fieldHook as FieldSchema<T>;
 
     return FormField<T>(
-      key: form.fieldKey(fieldHook),
+      key: form.fieldKey(typedField),
       validator:
           validator ?? form.validators(fieldHook)?.resolveMessage<T>(context),
       forceErrorText:
           forceErrorText ??
           form
               .getFieldForcedError(fieldHook)
-              .localize(context, form.getValue(fieldHook)),
+              .localize(context, form.getNotifier(typedField)),
       autovalidateMode: autovalidateMode,
       enabled: enabled,
-      initialValue: form.getInitialValue(fieldHook) ?? initialValue,
+      initialValue: form.getInitialValue(typedField) ?? initialValue,
       onSaved: onSaved,
       restorationId: restorationId,
       builder: (_) {
-        return builder(
-          form.getValue(fieldHook),
-          (value) =>
-              form.updateValue<T>(fieldHook, value, notify: notifyOnChange),
-          form.getFieldError(fieldHook),
-        );
+        return builder(form.getNotifier(typedField).value, (value) {
+          form.updateValue(typedField, value, notify: notifyOnChange);
+        }, form.getFieldError(fieldHook));
       },
     );
   }

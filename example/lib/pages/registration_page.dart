@@ -39,7 +39,7 @@ class RegistrationPage extends HookWidget {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
-        child: HookedForm<RegistrationFields>(
+        child: HookedForm(
           form: form,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -127,7 +127,7 @@ class RegistrationPage extends HookWidget {
               ),
               const SizedBox(height: 16),
               // Birth date picker using HookedFormField
-              HookedFormField<RegistrationFields, DateTime>(
+              HookedFormField<DateTime, RegistrationFields<DateTime>>(
                 fieldHook: .birthDate,
                 builder: (value, onChanged, error) {
                   return Column(
@@ -173,7 +173,7 @@ class RegistrationPage extends HookWidget {
               ),
               const SizedBox(height: 16),
               // Country dropdown using HookedFormField
-              HookedFormField<RegistrationFields, String>(
+              HookedFormField<String, RegistrationFields<String>>(
                 fieldHook: .country,
                 builder: (value, onChanged, error) {
                   return DropdownButtonFormField<String>(
@@ -196,7 +196,7 @@ class RegistrationPage extends HookWidget {
               ),
               const SizedBox(height: 16),
               // Terms and conditions checkbox
-              HookedFormField<RegistrationFields, bool>(
+              HookedFormField<bool, RegistrationFields<bool>>(
                 fieldHook: .agreeToTerms,
                 builder: (value, onChanged, error) {
                   return Column(
@@ -310,10 +310,10 @@ class RegistrationPage extends HookWidget {
     await Future.delayed(const Duration(seconds: 2));
 
     // Simulate server-side validation error (e.g., username already taken)
-    final username = form.getValue<String>(.username);
+    final username = form.getValue<String>(RegistrationFields.username);
     if (username == 'admin') {
       // Use setError to show server-side validation errors
-      form.setError(.username, 'username_taken');
+      form.setError(RegistrationFields.username, 'username_taken');
       isSubmitting.value = false;
 
       if (context.mounted) {
@@ -338,7 +338,7 @@ class RegistrationPage extends HookWidget {
             'Username: ${values[RegistrationFields.username]}\n'
             'Email: ${values[RegistrationFields.email]}\n'
             'Country: ${values[RegistrationFields.country]}\n'
-            'date: ${form.getValue<DateTime>(.birthDate)?.toLocal().toString()}',
+            'date: ${form.getValue<DateTime>(RegistrationFields.birthDate)?.toLocal().toString()}',
           ),
           backgroundColor: Colors.green,
         ),

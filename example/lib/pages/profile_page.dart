@@ -47,7 +47,7 @@ class ProfilePage extends HookWidget {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
-        child: HookedForm<ProfileFields>(
+        child: HookedForm(
           form: form,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -110,7 +110,7 @@ class ProfilePage extends HookWidget {
               ),
               const SizedBox(height: 16),
               // Bio field with character counter
-              HookedFormField<ProfileFields<String>, String>(
+              HookedFormField<String, ProfileFields<String>>(
                 fieldHook: ProfileFields.bio,
                 notifyOnChange: true,
                 builder: (value, onChanged, error) {
@@ -198,7 +198,7 @@ class ProfilePage extends HookWidget {
           content: Text(
             'Profile saved!\n'
             'Name: ${values[ProfileFields.firstName]} ${values[ProfileFields.lastName]}\n'
-            'Theme: ${form.getValue(.theme)}',
+            'Theme: ${form.getValue(ProfileFields.theme)}',
           ),
           backgroundColor: Colors.green,
         ),

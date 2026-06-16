@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_hook_form/src/models/field_schema.dart';
 import 'package:flutter_hook_form/src/models/validator.dart';
@@ -5,37 +6,103 @@ import 'package:flutter_hook_form/src/models/validator.dart';
 import 'types.dart';
 
 /// A type that represents the initial values of a form field.
-typedef InitialFieldValues<F extends FieldSchema, T> = Map<F, T>;
+typedef InitialFieldValues<F extends FieldSchema<dynamic>, T> = Map<F, T>;
+
+/// Single per-field value holder. Acts as the canonical store for the field's
+/// value and as the [Listenable] that powers reactive subscribers.
+///
+/// Uses [setSilently] to update the value without firing listeners, which is
+/// what `updateValue(field, value, notify: false)` needs.
+class _FieldNotifier extends ChangeNotifier
+    implements ValueListenable<Object?> {
+  _FieldNotifier(this._value);
+
+  Object? _value;
+
+  @override
+  Object? get value => _value;
+
+  set value(Object? newValue) {
+    if (_value == newValue) {
+      return;
+    }
+    _value = newValue;
+    notifyListeners();
+  }
+
+  // ignore: use_setters_to_change_properties
+  void setSilently(Object? newValue) {
+    _value = newValue;
+  }
+}
+
+/// Read-only typed projection of a [_FieldNotifier].
+///
+/// Returned by [FormFieldsController.getNotifier] so callers can read the
+/// field's value with the right static type and subscribe via
+/// [ValueListenableBuilder] / `useValueListenable`. Mutation goes through
+/// [FormFieldsController.updateValue] only.
+///
+/// Equality delegates to the wrapped notifier so multiple wrappers around the
+/// same field compare equal — keeps `useValueListenable` from re-subscribing
+/// on every rebuild.
+class _TypedFieldListenable<T> extends ValueListenable<T?> {
+  _TypedFieldListenable(this._inner);
+
+  final _FieldNotifier _inner;
+
+  @override
+  T? get value => _inner.value as T?;
+
+  @override
+  void addListener(VoidCallback listener) => _inner.addListener(listener);
+
+  @override
+  void removeListener(VoidCallback listener) => _inner.removeListener(listener);
+
+  @override
+  bool operator ==(Object other) =>
+      other is _TypedFieldListenable<T> && other._inner == _inner;
+
+  @override
+  int get hashCode => Object.hash(_TypedFieldListenable<T>, _inner);
+}
 
 /// A controller that manages form field states and validation
-class FormFieldsController<F extends FieldSchema> extends ChangeNotifier {
+class FormFieldsController<F extends FieldSchema<dynamic>> {
   /// Creates a [FormFieldsController].
   FormFieldsController(
     this.key, {
-    InitialFieldValues<F, dynamic>? initialValues,
-  }) : _initialValues = initialValues,
-       _values = {...?initialValues?.map((key, value) => MapEntry(key, value))};
+    InitialFieldValues<F, Object?>? initialValues,
+  }) : _initialValues = initialValues;
 
   /// The form key.
   final FormKey key;
 
   /// The field keys.
-  final Map<FieldSchema, GlobalKey<FormFieldState<dynamic>>> _fieldKeys = {};
+  final Map<FieldSchema<dynamic>, GlobalKey<FormFieldState<Object?>>> _fieldKeys = {};
 
   /// The initial values.
-  // final InitialFieldValues<F>? _initialValues;
-
-  /// The initial values.
-  final InitialFieldValues<F, dynamic>? _initialValues;
+  final InitialFieldValues<F, Object?>? _initialValues;
 
   /// The forced errors.
   final _forcedErrors = <String, String>{};
 
-  /// The field values.
-  final Map<F, dynamic> _values;
+  /// Single source of truth for field values. One notifier per field, used
+  /// by both [getNotifier] (typed read access) and [fieldListenable]
+  /// (untyped change subscription for `form.listen`).
+  final Map<FieldSchema<dynamic>, _FieldNotifier> _fieldNotifiers = {};
+
+  /// Lazily creates the notifier for [field], seeded with its initial value.
+  _FieldNotifier _notifierFor(FieldSchema<dynamic> field) {
+    return _fieldNotifiers.putIfAbsent(
+      field,
+      () => _FieldNotifier(_initialValues?[field]),
+    );
+  }
 
   /// Get or create a GlobalKey for a form field
-  GlobalKey<FormFieldState<T>> fieldKey<T>(F field) {
+  GlobalKey<FormFieldState<T>> fieldKey<T>(FieldSchema<T> field) {
     final key = _fieldKeys.putIfAbsent(
       field,
       () => GlobalKey<FormFieldState<T>>(debugLabel: field.name),
@@ -50,33 +117,74 @@ class FormFieldsController<F extends FieldSchema> extends ChangeNotifier {
     return key;
   }
 
+  /// Returns a read-only [ValueListenable] for [field].
+  ///
+  /// Prefer [listen] for reactive field access. Use this directly only when
+  /// integrating with [ValueListenableBuilder] outside a [HookWidget].
+  ///
+  /// ```dart
+  /// // Recommended — inside HookWidget
+  /// final email = form.listen({MyFields.email}, (get) => get<String>(MyFields.email));
+  ///
+  /// // With ValueListenableBuilder (works anywhere)
+  /// ValueListenableBuilder<String?>(
+  ///   valueListenable: form.getNotifier<String>(MyFields.email),
+  ///   builder: (context, email, _) => Text('Email: $email'),
+  /// )
+  /// ```
+  ValueListenable<T?> getNotifier<T extends Object?>(FieldSchema<T> field) {
+    return _TypedFieldListenable<T>(_notifierFor(field));
+  }
+
+  /// Returns a [Listenable] that fires when [field]'s value changes.
+  ///
+  /// Used by [FormListenExtension.listen] to subscribe to field changes
+  /// without requiring type information. Backed by the same per-field
+  /// notifier as [getNotifier], so updates fire both subscribers from a
+  /// single source.
+  Listenable fieldListenable(F field) => _notifierFor(field);
+
   /// Get the value of a form field.
-  T? getValue<T>(F field) {
-    // First try to get from widget state if available
-    final widgetValue = _fieldKeys[field]?.currentState?.value as T?;
-    if (widgetValue != null) {
-      _values[field] = widgetValue;
-      return widgetValue;
+  ///
+  /// Reads from the field's notifier (the canonical store). Falls back to
+  /// the initial-values map if no write has occurred yet.
+  T? getValue<T>(FieldSchema<T> field) {
+    if (_fieldNotifiers[field] case final notifier?) {
+      return notifier.value as T?;
     }
-    // Fallback to stored value
-    return _values[field] as T?;
+    if (_initialValues?[field] case final T value) {
+      return value;
+    }
+    return null;
   }
 
   /// Get the initial value of a form field.
-  T? getInitialValue<T>(F field) {
-    return _initialValues?[field];
+  T? getInitialValue<T extends Object?>(FieldSchema<T> field) {
+    if (_initialValues?[field] case final T value) {
+      return value;
+    }
+
+    return null;
   }
 
   /// Update the value of a form field.
-  T? updateValue<T>(F field, T? value, {bool notify = true}) {
-    _values[field] = value;
-
-    // Update widget state if available
-    _fieldKeys[field]?.currentState?.didChange(value);
-
+  ///
+  /// When [notify] is `true` (default), all listeners on this field are
+  /// notified, causing widgets using [FormListenExtension.listen] or
+  /// [ValueListenableBuilder] to rebuild. Setting [notify] to `false`
+  /// writes silently — useful when the caller wants to update the value
+  /// without triggering reactive rebuilds (e.g., during bulk updates).
+  T? updateValue<T>(FieldSchema<T> field, T? value, {bool notify = true}) {
+    final notifier = _notifierFor(field);
     if (notify) {
-      notifyListeners();
+      notifier.value = value;
+    } else {
+      notifier.setSilently(value);
     }
+
+    // Keep the FormField widget in sync with the canonical store so
+    // validators, save(), and the rendered text reflect the same value.
+    _fieldKeys[field]?.currentState?.didChange(value);
 
     return value;
   }
@@ -96,7 +204,7 @@ class FormFieldsController<F extends FieldSchema> extends ChangeNotifier {
   void setError(F field, String error, {bool notify = true}) {
     _forcedErrors[field.name] = error;
     if (notify) {
-      notifyListeners();
+      _fieldKeys[field]?.currentState?.validate();
     }
   }
 
@@ -126,33 +234,43 @@ class FormFieldsController<F extends FieldSchema> extends ChangeNotifier {
     }
 
     final isValid = key.currentState?.validate() ?? false;
-    if (notify) {
-      notifyListeners(); // Notify listeners after validation
-    }
+
     return isValid;
   }
 
   /// Clear the forced errors.
   void clearForcedErrors({bool notify = true}) {
     _forcedErrors.clear();
-    if (notify) {
-      notifyListeners();
-    }
   }
 
   /// Reset the form.
+  ///
+  /// Resets all field values to their initial values and clears forced errors.
   void reset() {
     key.currentState?.reset();
     _forcedErrors.clear();
-    notifyListeners(); // Notify listeners after reset
+
+    // Restore notifiers to initial values (loud notification so subscribers
+    // rebuild). ValueNotifier-style equality means no-op resets don't fire.
+    for (final entry in _fieldNotifiers.entries) {
+      entry.value.value = _initialValues?[entry.key];
+    }
+  }
+
+  /// Dispose of all resources.
+  ///
+  /// Call this method when the form is no longer needed to clean up
+  /// the per-field notifiers.
+  void dispose() {
+    for (final notifier in _fieldNotifiers.values) {
+      notifier.dispose();
+    }
+    _fieldNotifiers.clear();
   }
 
   /// Validate the form field.
   bool validateField(F field) {
-    final isValid = fieldKey(field).currentState?.validate();
-
-    notifyListeners();
-    return isValid ?? false;
+    return _fieldKeys[field]?.currentState?.validate() ?? false;
   }
 
   /// Check if the form fields have been interacted with.
@@ -186,13 +304,12 @@ class FormFieldsController<F extends FieldSchema> extends ChangeNotifier {
   /// Save the form.
   void save() {
     key.currentState?.save();
-    notifyListeners(); // Notify listeners after save
   }
 
   /// Get the values of the form fields.
   Map<F, dynamic> getValues() {
     return _fieldKeys.map(
-      (key, field) => MapEntry(key as F, field.currentState?.value),
+      (key, field) => MapEntry(key as F, _fieldNotifiers[key]?.value),
     );
   }
 }

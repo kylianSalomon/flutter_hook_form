@@ -34,15 +34,15 @@ void main() {
         GlobalKey<FormState>(),
       );
 
-      late FormFieldsController<TestFormSchema> capturedController;
+      late FormFieldsController capturedController;
 
       await tester.pumpWidget(
         MaterialApp(
-          home: HookedForm<TestFormSchema>(
+          home: HookedForm(
             form: controller,
             child: HookBuilder(
               builder: (context) {
-                capturedController = useFormContext<TestFormSchema>(context);
+                capturedController = useFormContext(context);
                 return Container();
               },
             ),
@@ -61,13 +61,13 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: HookedForm<TestFormSchema>(
+          home: HookedForm(
             form: controller,
             child: HookBuilder(
               builder: (context) {
                 return const Material(
-                  child: HookedTextFormField<TestFormSchema>(
-                    fieldHook: .email,
+                  child: HookedTextFormField(
+                    fieldHook: TestFormSchema.email,
                     decoration: InputDecoration(labelText: 'Email'),
                   ),
                 );
@@ -77,11 +77,13 @@ void main() {
         ),
       );
 
-      controller.setError(.email, 'Custom error');
+      controller.setError(TestFormSchema.email, 'Custom error');
 
       await tester.pump();
 
-      final hookFormFieldState = controller.fieldKey(.email).currentState;
+      final hookFormFieldState = controller
+          .fieldKey(TestFormSchema.email)
+          .currentState;
 
       expect(hookFormFieldState?.errorText, 'Custom error');
     });

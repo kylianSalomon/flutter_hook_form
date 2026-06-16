@@ -1,3 +1,142 @@
+## 4.0.0
+
+### Breaking Changes
+
+* 💥 **New `FieldSchema` interface**: Form schemas now use an `enum` implementing the `FieldSchema<T>` interface instead of a class with `static final HookField` declarations.
+
+  ```dart
+  // Before (3.x)
+  class MyFormSchema extends FormSchema {
+    static final email = HookField<String>(validators: [RequiredValidator()]);
+  }
+
+  // After (4.0)
+  enum MyFormSchema<T> implements FieldSchema<T> {
+    email<String>(validators: [RequiredValidator(), EmailValidator()]);
+
+    const MyFormSchema({this.validators});
+
+    @override
+    final List<Validator<T>>? validators;
+  }
+  ```
+
+* 💥 **`useFormContext` no longer accepts a type parameter**: Drop the generic argument at all call sites.
+
+  ```dart
+  // Before
+  final form = useFormContext<SignInFormFields>(context);
+  // After
+  final form = useFormContext(context);
+  ```
+
+* 💥 **`HookedFormField` type parameters updated**: Now requires `<F extends FieldSchema, T>` for improved type inference.
+
+* 💥 **`getNotifier` return type narrowed to `ValueListenable<T?>`**: The value is now read-only from outside the controller; use `updateValue` to change it.
+
+* 💥 **Dart SDK requirement upgraded**: Minimum Dart SDK version is now `^3.10.4`.
+
+### New Features
+
+* ✨ **`form.listen` extension for reactive field listening**: Subscribe to one or more fields and derive state — the widget rebuilds only when the watched fields change.
+
+  ```dart
+  // Single field
+  final email = form.listen({Fields.email}, (get) => get<String>(Fields.email));
+
+  // Derived state across multiple fields
+  final canSubmit = form.listen(
+    {Fields.email, Fields.password},
+    (get) => get<String>(Fields.email) != null && get<String>(Fields.password) != null,
+  );
+  ```
+
+* ✨ **Cross-field validation**: New `CrossFieldValidator<T>` base class plus built-in `MatchesValidator<T>` and `DateAfterValidator`.
+
+* ✨ **New example project**: Comprehensive example demonstrating schemas, validation, and cross-field validation.
+
+### Improvements
+
+* ♻️ **Unified per-field notifier architecture**: `FormFieldsController` now uses a single `_FieldNotifier` per field, eliminating double-notify bugs.
+* ♻️ **Simplified `getValue`**: Reads exclusively from the field's notifier, seeded from `initialValues`.
+* ♻️ **`updateValue(notify: false)` writes silently** via `setSilently` — value is always stored even when listeners are suppressed.
+* ♻️ **`reset` triggers a single notification per field**.
+
+### Deprecated
+
+* ⚠️ **`useFieldValue`**: Use `form.listen({field}, (get) => get<T>(field))` instead.
+
+---
+
+## 4.0.0-rc.3
+
+### Breaking Changes
+
+* 💥 **`useFormContext` no longer accepts a type parameter**: The hook is now untyped for simplicity. Update call sites by dropping the generic argument.
+
+  **Before (rc.2):**
+  ```dart
+  final form = useFormContext<SignInFormFields>(context);
+  ```
+
+  **After (rc.3):**
+  ```dart
+  final form = useFormContext(context);
+  ```
+
+* 💥 **`getNotifier` return type narrowed to `ValueListenable<T?>`**: Previously returned `ValueNotifier<T?>`, which allowed external mutation. The value is now read-only from outside the controller; use `updateValue` to change it.
+
+### Improvements
+
+* ♻️ **Unified per-field notifier architecture**: `FormFieldsController` now uses a single `_FieldNotifier` per field (instead of two separate maps — one typed, one untyped). This eliminates a class of double-notify bugs and makes `form.listen`, `getNotifier`, and `updateValue` all share the same reactive source of truth.
+* ♻️ **Simplified `getValue`**: No longer reads widget state as a side channel — the canonical value is always the field's notifier, seeded from `initialValues`.
+* ♻️ **`updateValue(notify: false)` writes silently**: Uses `setSilently` instead of skipping the notifier entirely, so the value is always stored even when listeners are suppressed.
+* ♻️ **`reset` triggers a single notification per field**: Reset no longer requires a separate loop over change-notifiers.
+
+## 4.0.0-rc.1
+
+### Breaking Changes
+
+* 💥 **New `FieldSchema` interface**: Form schemas now use an `enum` implementing the `FieldSchema` interface instead of a class with `static final HookField` declarations. This reduces boilerplate and improves type safety.
+
+  **Before (3.x):**
+  ```dart
+  class MyFormSchema extends FormSchema {
+    static final email = HookField<String>(validators: [RequiredValidator()]);
+    static final password = HookField<String>(validators: [MinLengthValidator(8)]);
+
+    @override
+    List<HookField> get fields => [email, password];
+  }
+  ```
+
+  **After (4.x):**
+  ```dart
+  enum MyFormSchema<T> implements FieldSchema<T> {
+    email<String>(validators: [RequiredValidator(), EmailValidator()]),
+    password<String>(validators: [RequiredValidator(), MinLengthValidator(8)]);
+
+    const MyFormSchema({this.validators});
+
+    @override
+    final List<Validator<T>>? validators;
+  }
+  ```
+
+* 💥 **`HookedFormField` type parameters updated**: Now requires `<F extends FieldSchema, T>` for improved type inference across form field widgets.
+
+* 💥 **Dart SDK requirement upgraded**: Minimum Dart SDK version is now `^3.10.4`.
+
+### New Features
+
+* ✨ **Cross-field validation support**: New `CrossFieldValidator<T>` base class enables validation that depends on other field values in the form.
+
+* ✨ **New cross-field validators**:
+  * `MatchesValidator<T>` - Validates that a field value matches another field (e.g., password confirmation)
+  * `DateAfterValidator` - Validates that a date field is after another date field
+
+* ✨ **New example project**: Added a comprehensive example project demonstrating form schemas, validation, and cross-field validation.
+
 ## 3.0.1
 
 * 📝: Update README.md to include instructions for creating a schema and overriding fields in FormSchema

@@ -4,7 +4,9 @@ A type-safe form controller for Flutter applications using hooks. Inspired by _r
 
 ## What's New in 4.0.0
 
-Version 4.0.0 introduces a significantly simplified API for defining form schemas. The `FieldSchema<T>` interface now only requires two properties (`validators` and `initialValue`), removing the need for boilerplate field name declarations. This makes your enum-based schemas cleaner and more concise while maintaining full type safety.
+Version 4.0.0 introduces a significantly simplified API for defining form schemas. The `FieldSchema<T>` interface now only requires `validators`, removing the need for boilerplate field name declarations. This makes your enum-based schemas cleaner and more concise while maintaining full type safety.
+
+The release also adds `form.listen` — a hook-friendly extension that lets widgets subscribe to one or more fields and derive reactive state, rebuilding only when the watched fields change. Cross-field validation is now built-in via `MatchesValidator` and `DateAfterValidator`.
 
 ## Motivation
 
@@ -28,6 +30,7 @@ Managing forms in Flutter often requires creating multiple `TextEditingControlle
     - [HookedFormField](#hookedformfield)
     - [Form initialization](#form-initialization)
     - [Form State Management](#form-state-management)
+    - [Reactive Field Listening](#reactive-field-listening)
     - [Form Field State](#form-field-state)
 - [Customizations](#customizations)
   - [Custom Validation Messages & Internationalization](#custom-validation-messages--internationalization)
@@ -142,7 +145,7 @@ class PasswordStrengthValidator extends CrossFieldValidator<String> {
     return (value, context) {
       if (value == null) return null;
 
-      final form = useFormContext<FieldSchema>(context);
+      final form = useFormContext(context);
       final usernameValue = form.getValue<String>(field);
 
       if (usernameValue != null && value.contains(usernameValue)) {
@@ -371,6 +374,50 @@ form.reset();
 final isValid = form.validate();
 ```
 
+#### Reactive Field Listening
+
+Use `form.listen` inside a `HookWidget` to subscribe to one or more fields and derive state. The widget rebuilds only when the watched fields change.
+
+```dart
+class SignInButton extends HookWidget {
+  @override
+  Widget build(BuildContext context) {
+    final form = useFormContext(context);
+
+    // Rebuilds only when email or password changes
+    final canSubmit = form.listen(
+      {SignInFormFields.email, SignInFormFields.password},
+      (get) =>
+          get<String>(SignInFormFields.email) != null &&
+          get<String>(SignInFormFields.password) != null,
+    );
+
+    return ElevatedButton(
+      onPressed: canSubmit ? () => submitForm(form) : null,
+      child: const Text('Sign In'),
+    );
+  }
+}
+```
+
+You can also listen to a single field and read its current value:
+
+```dart
+final email = form.listen(
+  {SignInFormFields.email},
+  (get) => get<String>(SignInFormFields.email),
+);
+```
+
+For use outside a `HookWidget` (e.g. with `ValueListenableBuilder`), use `form.getNotifier` directly:
+
+```dart
+ValueListenableBuilder<String?>(
+  valueListenable: form.getNotifier<String>(SignInFormFields.email),
+  builder: (context, email, _) => Text('Email: ${email ?? '—'}'),
+)
+```
+
 #### Form Field State
 
 You can also access the state of individual form fields:
@@ -452,7 +499,7 @@ class ParentWidget extends HookWidget {
 class ChildWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final form = useFormContext<SignInFormFields>(context);
+    final form = useFormContext(context);
 
     return // ... child widget
   }
