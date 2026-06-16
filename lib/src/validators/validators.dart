@@ -8,9 +8,9 @@ final _emailPattern = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
 final _phonePattern = RegExp(r'^\+?[0-9]{9,14}$');
 
 /// Required field validator.
-class RequiredValidator<T> extends FieldValidator<T> {
+class const RequiredValidator<T>({super.message}) extends FieldValidator<T> {
   /// Creates a [RequiredValidator].
-  const RequiredValidator({super.message}) : super(errorCode: 'required');
+  this : super(errorCode: 'required');
 
   @override
   FieldValidatorFn<T> get validator {
@@ -32,9 +32,9 @@ class RequiredValidator<T> extends FieldValidator<T> {
 }
 
 /// Email validator.
-class EmailValidator extends FieldValidator<String> {
+class const EmailValidator({super.message}) extends FieldValidator<String> {
   /// Creates a [EmailValidator].
-  const EmailValidator({super.message}) : super(errorCode: 'invalid_email');
+  this : super(errorCode: 'invalid_email');
 
   @override
   FieldValidatorFn<String> get validator {
@@ -53,13 +53,13 @@ class EmailValidator extends FieldValidator<String> {
 }
 
 /// Minimum length validator.
-class MinLengthValidator extends FieldValidator<String> {
-  /// Creates a [MinLengthValidator].
-  const MinLengthValidator(this.length, {super.message})
-    : super(errorCode: 'min_length');
-
+class const MinLengthValidator(
   /// The minimum length.
-  final int length;
+  final int length, {
+  super.message,
+}) extends FieldValidator<String> {
+  /// Creates a [MinLengthValidator].
+  this : super(errorCode: 'min_length');
 
   @override
   FieldValidatorFn<String> get validator {
@@ -74,13 +74,13 @@ class MinLengthValidator extends FieldValidator<String> {
 }
 
 /// Pattern validator.
-class PatternValidator extends FieldValidator<String> {
-  /// Creates a [PatternValidator].
-  const PatternValidator(this.pattern, {super.message})
-    : super(errorCode: 'invalid_pattern');
-
+class const PatternValidator(
   /// The pattern to validate against.
-  final RegExp pattern;
+  final RegExp pattern, {
+  super.message,
+}) extends FieldValidator<String> {
+  /// Creates a [PatternValidator].
+  this : super(errorCode: 'invalid_pattern');
 
   @override
   FieldValidatorFn<String> get validator {
@@ -95,13 +95,13 @@ class PatternValidator extends FieldValidator<String> {
 }
 
 /// Maximum length validator.
-class MaxLengthValidator extends FieldValidator<String> {
-  /// Creates a [MaxLengthValidator].
-  const MaxLengthValidator(this.length, {super.message})
-    : super(errorCode: 'max_length');
-
+class const MaxLengthValidator(
   /// The maximum length.
-  final int length;
+  final int length, {
+  super.message,
+}) extends FieldValidator<String> {
+  /// Creates a [MaxLengthValidator].
+  this : super(errorCode: 'max_length');
 
   @override
   FieldValidatorFn<String> get validator {
@@ -116,9 +116,9 @@ class MaxLengthValidator extends FieldValidator<String> {
 }
 
 /// Phone validator.
-class PhoneValidator extends FieldValidator<String> {
+class const PhoneValidator({super.message}) extends FieldValidator<String> {
   /// Creates a [PhoneValidator].
-  const PhoneValidator({super.message}) : super(errorCode: 'invalid_phone');
+  this : super(errorCode: 'invalid_phone');
 
   @override
   FieldValidatorFn<String> get validator {
@@ -137,13 +137,13 @@ class PhoneValidator extends FieldValidator<String> {
 }
 
 /// Mime type validator.
-class MimeTypeValidator extends FieldValidator<XFile> {
+class const MimeTypeValidator(
+  /// The mime types to validate against.
+  final Set<String> mimeType, {
+  super.message,
+}) extends FieldValidator<XFile> {
   /// Creates a [MimeTypeValidator].
-  const MimeTypeValidator(this.mimeType, {super.message})
-    : super(errorCode: 'invalid_file_format');
-
-  /// The mime type to validate against.
-  final Set<String> mimeType;
+  this : super(errorCode: 'invalid_file_format');
 
   @override
   FieldValidatorFn<XFile> get validator {
@@ -158,13 +158,13 @@ class MimeTypeValidator extends FieldValidator<XFile> {
 }
 
 /// Date after validator.
-class IsAfterValidator extends FieldValidator<DateTime> {
-  /// Creates a [IsAfterValidator].
-  const IsAfterValidator(this.min, {super.message})
-    : super(errorCode: 'date_after');
-
+class const IsAfterValidator(
   /// The minimum date.
-  final String min;
+  final String min, {
+  super.message,
+}) extends FieldValidator<DateTime> {
+  /// Creates a [IsAfterValidator].
+  this : super(errorCode: 'date_after');
 
   @override
   FieldValidatorFn<DateTime> get validator {
@@ -179,13 +179,13 @@ class IsAfterValidator extends FieldValidator<DateTime> {
 }
 
 /// Date before validator.
-class IsBeforeValidator extends FieldValidator<DateTime> {
-  /// Creates a [IsBeforeValidator].
-  const IsBeforeValidator(this.max, {super.message})
-    : super(errorCode: 'date_before');
-
+class const IsBeforeValidator(
   /// The maximum date.
-  final String max;
+  final String max, {
+  super.message,
+}) extends FieldValidator<DateTime> {
+  /// Creates a [IsBeforeValidator].
+  this : super(errorCode: 'date_before');
 
   @override
   FieldValidatorFn<DateTime> get validator {
@@ -200,13 +200,13 @@ class IsBeforeValidator extends FieldValidator<DateTime> {
 }
 
 /// Minimum items validator.
-class ListMinItemsValidator<T> extends FieldValidator<List<T>> {
-  /// Creates a [ListMinItemsValidator].
-  const ListMinItemsValidator(this.length, {super.message})
-    : super(errorCode: 'min_items');
-
+class const ListMinItemsValidator<T>(
   /// The minimum length.
-  final int length;
+  final int length, {
+  super.message,
+}) extends FieldValidator<List<T>> {
+  /// Creates a [ListMinItemsValidator].
+  this : super(errorCode: 'min_items');
 
   @override
   FieldValidatorFn<List<T>> get validator {
@@ -221,13 +221,13 @@ class ListMinItemsValidator<T> extends FieldValidator<List<T>> {
 }
 
 /// Maximum items validator.
-class ListMaxItemsValidator<T> extends FieldValidator<List<T>> {
-  /// Creates a [ListMaxItemsValidator].
-  const ListMaxItemsValidator(this.length, {super.message})
-    : super(errorCode: 'max_items');
-
+class const ListMaxItemsValidator<T>(
   /// The maximum length.
-  final int length;
+  final int length, {
+  super.message,
+}) extends FieldValidator<List<T>> {
+  /// Creates a [ListMaxItemsValidator].
+  this : super(errorCode: 'max_items');
 
   @override
   FieldValidatorFn<List<T>> get validator {

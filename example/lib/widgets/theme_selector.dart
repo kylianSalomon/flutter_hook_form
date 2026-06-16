@@ -7,9 +7,7 @@ import '../schemas/form_schemas.dart';
 ///
 /// This widget shows how to use [useFormContext] to access
 /// the form controller and create custom form field widgets.
-class ThemeSelector extends StatelessWidget {
-  const ThemeSelector({super.key});
-
+class const ThemeSelector({super.key}) extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Access the form from the parent context

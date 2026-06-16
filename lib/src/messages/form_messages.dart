@@ -4,10 +4,8 @@ import 'package:flutter/widgets.dart';
 ///
 /// You can override the default messages by providing a custom
 /// [FormErrorMessages] instance to the [HookFormScope] widget.
-class FormErrorMessages {
-  /// Creates a [FormErrorMessages] instance.
-  const FormErrorMessages();
-
+/// Creates a [FormErrorMessages] instance.
+class const FormErrorMessages() {
   // Common messages
 
   /// The default required message.
@@ -64,17 +62,13 @@ class FormErrorMessages {
 
 /// Add this widget on top of your widget tree to override the default
 /// form messages. Useful to translate the form error messages.
-class HookFormScope extends InheritedWidget {
-  /// Creates a [HookFormScope] instance.
-  const HookFormScope({
-    super.key,
-    required super.child,
-    required this.messages,
-  });
+class const HookFormScope({
+  super.key,
+  required super.child,
 
   /// The form error messages.
-  final FormErrorMessages messages;
-
+  required final FormErrorMessages messages,
+}) extends InheritedWidget {
   /// Returns the [FormErrorMessages] instance from the nearest [HookFormScope].
   static FormErrorMessages of(BuildContext context) {
     return context

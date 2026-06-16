@@ -2,10 +2,12 @@ import 'package:flutter_hook_form/flutter_hook_form.dart';
 
 /// Compare the value with the value of the cross field and validate if the
 /// value is after the cross field value.
-class DateAfterValidator extends CrossFieldValidator<DateTime> {
+class const DateAfterValidator({
+  required super.field,
+  super.message,
+}) extends CrossFieldValidator<DateTime> {
   /// Creates a [IsAfterValidator].
-  const DateAfterValidator({required super.field, super.message})
-    : super(errorCode: 'date_after');
+  this : super(errorCode: 'date_after');
 
   @override
   CrossFieldValidatorFn<DateTime> get validator {
@@ -17,7 +19,9 @@ class DateAfterValidator extends CrossFieldValidator<DateTime> {
       assertValueIsOfType(context);
 
       final form = useFormContext(context);
-      final fieldValue = form.getValue<DateTime>(field as FieldSchema<DateTime>);
+      final fieldValue = form.getValue<DateTime>(
+        field as FieldSchema<DateTime>,
+      );
 
       if (fieldValue != null && value.isBefore(fieldValue)) {
         return message ?? errorCode;
@@ -30,10 +34,12 @@ class DateAfterValidator extends CrossFieldValidator<DateTime> {
 
 /// Compare the value with the value of the cross field and validate if the
 /// value matches the cross field value.
-class MatchesValidator<T> extends CrossFieldValidator<T> {
+class const MatchesValidator<T>({
+  required super.field,
+  super.message,
+}) extends CrossFieldValidator<T> {
   /// Creates a [MatchesValidator].
-  const MatchesValidator({required super.field, super.message})
-    : super(errorCode: 'field_does_not_match');
+  this : super(errorCode: 'field_does_not_match');
 
   @override
   CrossFieldValidatorFn<T> get validator {

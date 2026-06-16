@@ -6,9 +6,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 ///
 /// This example shows how widgets can listen to specific fields and only
 /// rebuild when those fields change, improving performance.
-class FieldListenerPage extends HookWidget {
-  const FieldListenerPage({super.key});
-
+class const FieldListenerPage({super.key}) extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final form = useForm<DemoFields>(
@@ -40,8 +38,8 @@ class FieldListenerPage extends HookWidget {
                     Text(
                       'Granular Rebuilds Demo',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     const Text(
@@ -120,10 +118,9 @@ class FieldListenerPage extends HookWidget {
 }
 
 /// Listens ONLY to firstName field
-class _FirstNameListener extends HookWidget {
-  const _FirstNameListener({required this.form});
-  final FormFieldsController<DemoFields> form;
-
+class const _FirstNameListener({
+  required final FormFieldsController<DemoFields> form,
+}) extends HookWidget {
   @override
   Widget build(BuildContext context) {
     // Track rebuilds
@@ -146,10 +143,9 @@ class _FirstNameListener extends HookWidget {
 }
 
 /// Listens ONLY to lastName field
-class _LastNameListener extends HookWidget {
-  const _LastNameListener({required this.form});
-  final FormFieldsController<DemoFields> form;
-
+class const _LastNameListener({
+  required final FormFieldsController<DemoFields> form,
+}) extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final rebuildCount = useRef(0);
@@ -170,10 +166,9 @@ class _LastNameListener extends HookWidget {
 }
 
 /// Listens ONLY to age field
-class _AgeListener extends HookWidget {
-  const _AgeListener({required this.form});
-  final FormFieldsController<DemoFields> form;
-
+class const _AgeListener({
+  required final FormFieldsController<DemoFields> form,
+}) extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final rebuildCount = useRef(0);
@@ -194,10 +189,9 @@ class _AgeListener extends HookWidget {
 }
 
 /// Listens to BOTH firstName AND lastName fields
-class _FullNameListener extends HookWidget {
-  const _FullNameListener({required this.form});
-  final FormFieldsController<DemoFields> form;
-
+class const _FullNameListener({
+  required final FormFieldsController<DemoFields> form,
+}) extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final rebuildCount = useRef(0);
@@ -209,8 +203,7 @@ class _FullNameListener extends HookWidget {
       (get) => [
         get<String>(DemoFields.firstName),
         get<String>(DemoFields.lastName),
-      ].where((s) => s != null && s.isNotEmpty)
-          .join(' '),
+      ].where((s) => s != null && s.isNotEmpty).join(' '),
     );
 
     return _ListenerCard(
@@ -223,21 +216,13 @@ class _FullNameListener extends HookWidget {
   }
 }
 
-class _ListenerCard extends StatelessWidget {
-  const _ListenerCard({
-    required this.title,
-    required this.field,
-    required this.value,
-    required this.rebuildCount,
-    required this.color,
-  });
-
-  final String title;
-  final String field;
-  final String value;
-  final int rebuildCount;
-  final Color color;
-
+class const _ListenerCard({
+  required final String title,
+  required final String field,
+  required final String value,
+  required final int rebuildCount,
+  required final Color color,
+}) extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -262,15 +247,15 @@ class _ListenerCard extends StatelessWidget {
                   Text(
                     title,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     'Listening to: $field',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey,
-                        ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: Colors.grey),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -288,10 +273,7 @@ class _ListenerCard extends StatelessWidget {
               ),
               child: Text(
                 'Rebuilds: $rebuildCount',
-                style: TextStyle(
-                  color: color,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(color: color, fontWeight: FontWeight.bold),
               ),
             ),
           ],
@@ -302,12 +284,10 @@ class _ListenerCard extends StatelessWidget {
 }
 
 /// Demo form fields schema
-enum DemoFields<T> implements FieldSchema<T> {
+enum DemoFields<T>({this.validators}) implements FieldSchema<T> {
   firstName<String>(),
   lastName<String>(),
   age<String>();
-
-  const DemoFields({this.validators});
 
   @override
   final List<Validator<T>>? validators;

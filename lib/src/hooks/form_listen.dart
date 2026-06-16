@@ -4,7 +4,8 @@ import 'package:flutter_hook_form/src/models/form_field_controller.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 
 /// Extension on [FormFieldsController] providing reactive field listening.
-extension FormListenExtension<F extends FieldSchema<dynamic>> on FormFieldsController<F> {
+extension FormListenExtension<F extends FieldSchema<dynamic>>
+    on FormFieldsController<F> {
   /// Listens to changes on the specified [fields] and rebuilds the widget
   /// when any of their values change.
   ///

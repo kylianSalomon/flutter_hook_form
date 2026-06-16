@@ -13,9 +13,7 @@ import '../widgets/theme_selector.dart';
 /// - Building reusable form field widgets
 /// - Using [HookedFormField.explicit] when form is provided directly
 /// - Custom widgets with form integration
-class ProfilePage extends HookWidget {
-  const ProfilePage({super.key});
-
+class const ProfilePage({super.key}) extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final form = useForm<ProfileFields>(

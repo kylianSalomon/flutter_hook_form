@@ -11,9 +11,7 @@ import '../schemas/form_schemas.dart';
 /// - Custom validation (password confirmation)
 /// - Server-side error simulation with setError
 /// - Form state tracking (hasChanged, isDirty)
-class RegistrationPage extends HookWidget {
-  const RegistrationPage({super.key});
-
+class const RegistrationPage({super.key}) extends HookWidget {
   static const _countries = [
     'United States',
     'United Kingdom',

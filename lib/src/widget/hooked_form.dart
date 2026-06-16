@@ -8,15 +8,16 @@ import '../models/form_field_controller.dart';
 ///
 /// This widget wraps a standard [Form] and connects it to a [FormFieldsController].
 /// It also provides a [FormFieldsController] to its children via [HookedFormProvider].
-class HookedForm<F extends FieldSchema> extends StatelessWidget {
-  /// Creates a [HookedForm] that gets the form from context.
-  const HookedForm({super.key, required this.form, required this.child});
+class const HookedForm<F extends FieldSchema>({
+  super.key,
 
   /// The form controller.
-  final FormFieldsController<F> form;
+  required final FormFieldsController<F> form,
 
   /// The child of the form.
-  final Widget child;
+  required final Widget child,
+}) extends StatelessWidget {
+  /// Creates a [HookedForm] that gets the form from context.
 
   @override
   Widget build(BuildContext context) {

@@ -7,11 +7,10 @@ import '../models/form_field_controller.dart';
 ///
 /// This is a simple provider - granular field listening is handled by
 /// [ValueNotifier]s in the controller, accessed via [useFieldValue].
-class _HookedFormProviderBase extends InheritedWidget {
-  const _HookedFormProviderBase({required super.child, required this.form});
-
-  final FormFieldsController form;
-
+class const _HookedFormProviderBase({
+  required super.child,
+  required final FormFieldsController form,
+}) extends InheritedWidget {
   static FormFieldsController<FieldSchema> of(
     BuildContext context,
   ) {
@@ -49,21 +48,15 @@ class _HookedFormProviderBase extends InheritedWidget {
 ///   child: MyFormWidget(),
 /// )
 /// ```
-class HookedFormProvider<F extends FieldSchema<dynamic>>
-    extends StatelessWidget {
-  /// Creates a [HookedFormProvider] that provides a [FormFieldsController] to the form fields.
-  const HookedFormProvider({
-    super.key,
-    required this.form,
-    required this.child,
-  });
+class const HookedFormProvider<F extends FieldSchema<dynamic>>({
+  super.key,
 
   /// The form controller.
-  final FormFieldsController<F> form;
+  required final FormFieldsController<F> form,
 
   /// The child of the form.
-  final Widget child;
-
+  required final Widget child,
+}) extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _HookedFormProviderBase(form: form, child: child);

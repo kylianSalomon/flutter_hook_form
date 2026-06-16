@@ -1,116 +1,57 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hook_form/flutter_hook_form.dart';
 
-/// A form field that integrates with flutter_hook_form.
-class HookedFormField<T, F extends FieldSchema<T>> extends StatelessWidget {
-  /// Creates a [HookedFormField] that gets the form from context.
-  ///
-  /// This widget wraps a standard [FormField] and connects it to a [FormFieldsController].
-  ///
-  /// Use the recommended [HookedForm] to wrap your form to provide the form
-  /// controller to this widget. If not, use [HookedFormField.explicit] to provide
-  /// the form controller explicitly.
-  ///
-  /// ```dart
-  /// /// Recommended
-  /// HookedForm( // <--- Form is provided via context
-  ///   form: form,
-  ///   child: HookedFormField<MyFormSchema, String>(
-  ///     fieldKey: MyFormSchema.fieldKey,
-  ///     builder: ({value, onChanged, error}){
-  ///       return MyWidget(value: value, onChanged: onChanged, error: error);
-  ///     },
-  ///   ),
-  /// )
-  ///
-  /// /// Alternative
-  /// Form(
-  ///   key: form.key,
-  ///   child: HookedFormField.explicit(
-  ///     form: form, // <--- Form is provided explicitly
-  ///     fieldKey: MyFormSchema.fieldKey,
-  ///     builder: ({value, onChanged, error}){
-  ///       return MyWidget(value: value, onChanged: onChanged, error: error);
-  ///     },
-  ///   ),
-  /// )
-  /// ```
-  const HookedFormField({
-    super.key,
-    required this.fieldHook,
-    required this.builder,
-    this.forceErrorText,
-    this.validator,
-    this.autovalidateMode,
-    this.enabled = true,
-    this.initialValue,
-    this.onSaved,
-    this.restorationId,
-    this.notifyOnChange = true,
-  }) : _form = null;
+/// The builder function receives a map with the following parameters:
+/// - `value`: The current value of the field.
+/// - `onChanged`: A function to update the value of the field.
+/// - `error`: The error message of the field.
+typedef HookedFormBuilderFn<T> = Widget Function(
+  T? value,
+  void Function(T?)? onChanged,
+  String? error,
+);
 
-  /// Creates a [HookedFormField] with an explicitly provided form.
-  ///
-  /// Consider using [HookedFormField.explicit] if you did not use [HookedForm] to
-  /// wrap your form or use [HookedFormProvider] to provide the form.
-  const HookedFormField.explicit({
-    super.key,
-    required this.fieldHook,
-    required this.builder,
-    required FormFieldsController<FieldSchema<dynamic>> form,
-    this.forceErrorText,
-    this.validator,
-    this.autovalidateMode,
-    this.enabled = true,
-    this.initialValue,
-    this.onSaved,
-    this.restorationId,
-    this.notifyOnChange = true,
-  }) : _form = form;
+/// A form field that integrates with flutter_hook_form.
+class const HookedFormField<T, F extends FieldSchema<T>>({
+  super.key,
 
   /// The form controller, if provided directly.
-  final FormFieldsController<FieldSchema<dynamic>>? _form;
+  final FormFieldsController<FieldSchema<dynamic>>? _form,
 
   /// The field identifier from the form schema.
-  final F fieldHook;
+  required final F fieldHook,
 
   /// Builder function to create the form field widget.
-  ///
-  /// The builder function receives a map with the following parameters:
-  /// - `value`: The current value of the field.
-  /// - `onChanged`: A function to update the value of the field.
-  /// - `error`: The error message of the field.
-  final Widget Function(T? value, void Function(T?)? onChanged, String? error)
-  builder;
+  required final HookedFormBuilderFn<T> builder,
 
   /// Optional error text to force the field into an error state.
-  final String? forceErrorText;
+  final String? forceErrorText,
 
   /// Optional validator function that overrides the form's validators.
-  final String? Function(T?)? validator;
+  final String? Function(T?)? validator,
 
   /// Controls when auto-validation occurs.
-  final AutovalidateMode? autovalidateMode;
+  final AutovalidateMode? autovalidateMode,
 
   /// Whether the field is enabled.
-  final bool enabled;
+  final bool enabled = true,
 
   /// Initial value for the field.
-  final T? initialValue;
+  final T? initialValue,
 
   /// Callback when the form is saved.
-  final void Function(T?)? onSaved;
+  final void Function(T?)? onSaved,
 
   /// Restoration ID for saving and restoring the field state.
-  final String? restorationId;
+  final String? restorationId,
 
   /// Whether to notify form listeners when the field value changes.
   ///
   /// Defaults to `true`. Required for [FormFieldsController.listen] to react
   /// to this field's changes. Set to `false` only if you need to suppress
   /// reactive updates for performance reasons.
-  final bool notifyOnChange;
-
+  final bool notifyOnChange = true,
+}) extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final FormFieldsController<FieldSchema<dynamic>> form =

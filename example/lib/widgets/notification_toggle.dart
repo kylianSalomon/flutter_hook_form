@@ -12,9 +12,7 @@ import '../schemas/form_schemas.dart';
 /// - Break down large forms into smaller, reusable widgets
 /// - Access form state in deeply nested widgets
 /// - Keep form logic encapsulated within widgets
-class NotificationToggle extends StatelessWidget {
-  const NotificationToggle({super.key});
-
+class const NotificationToggle({super.key}) extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Access the form controller from context.

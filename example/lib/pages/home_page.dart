@@ -5,9 +5,7 @@ import 'profile_page.dart';
 import 'registration_page.dart';
 import 'sign_in_page.dart';
 
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
-
+class const HomePage({super.key}) extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -62,17 +60,11 @@ class HomePage extends StatelessWidget {
   }
 }
 
-class _ExampleCard extends StatelessWidget {
-  const _ExampleCard({
-    required this.title,
-    required this.description,
-    required this.onTap,
-  });
-
-  final String title;
-  final String description;
-  final VoidCallback onTap;
-
+class const _ExampleCard({
+  required final String title,
+  required final String description,
+  required final VoidCallback onTap,
+}) extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(

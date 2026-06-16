@@ -13,12 +13,9 @@ typedef InitialFieldValues<F extends FieldSchema<dynamic>, T> = Map<F, T>;
 ///
 /// Uses [setSilently] to update the value without firing listeners, which is
 /// what `updateValue(field, value, notify: false)` needs.
-class _FieldNotifier extends ChangeNotifier
-    implements ValueListenable<Object?> {
-  _FieldNotifier(this._value);
-
-  Object? _value;
-
+class _FieldNotifier(
+  var Object? _value,
+) extends ChangeNotifier implements ValueListenable<Object?> {
   @override
   Object? get value => _value;
 
@@ -46,11 +43,9 @@ class _FieldNotifier extends ChangeNotifier
 /// Equality delegates to the wrapped notifier so multiple wrappers around the
 /// same field compare equal — keeps `useValueListenable` from re-subscribing
 /// on every rebuild.
-class _TypedFieldListenable<T> extends ValueListenable<T?> {
-  _TypedFieldListenable(this._inner);
-
-  final _FieldNotifier _inner;
-
+class _TypedFieldListenable<T>(
+  final _FieldNotifier _inner,
+) extends ValueListenable<T?> {
   @override
   T? get value => _inner.value as T?;
 
@@ -69,21 +64,16 @@ class _TypedFieldListenable<T> extends ValueListenable<T?> {
 }
 
 /// A controller that manages form field states and validation
-class FormFieldsController<F extends FieldSchema<dynamic>> {
-  /// Creates a [FormFieldsController].
-  FormFieldsController(
-    this.key, {
-    InitialFieldValues<F, Object?>? initialValues,
-  }) : _initialValues = initialValues;
-
+class FormFieldsController<F extends FieldSchema<dynamic>>(
   /// The form key.
-  final FormKey key;
-
-  /// The field keys.
-  final Map<FieldSchema<dynamic>, GlobalKey<FormFieldState<Object?>>> _fieldKeys = {};
+  final FormKey key, {
 
   /// The initial values.
-  final InitialFieldValues<F, Object?>? _initialValues;
+  final InitialFieldValues<F, Object?>? _initialValues,
+}) {
+  /// The field keys.
+  final Map<FieldSchema<dynamic>, GlobalKey<FormFieldState<Object?>>>
+  _fieldKeys = {};
 
   /// The forced errors.
   final _forcedErrors = <String, String>{};

@@ -12,9 +12,7 @@ import '../schemas/form_schemas.dart';
 /// - Using [HookedTextFormField] for text inputs
 /// - Using [HookedFormField] for custom widgets (checkbox)
 /// - Form validation and submission
-class SignInPage extends HookWidget {
-  const SignInPage({super.key});
-
+class const SignInPage({super.key}) extends HookWidget {
   @override
   Widget build(BuildContext context) {
     // Create a form controller using the useForm hook.
