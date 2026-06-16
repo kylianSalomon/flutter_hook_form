@@ -20,7 +20,7 @@ class const NotificationToggle({super.key}) extends StatelessWidget {
     // DO NOT use useForm here - that would create a new form instance!
     final form = useFormContext(context);
 
-    return HookedFormField<bool, ProfileFields<bool>>.explicit(
+    return HookedFormField<bool, ProfileFields<bool>>(
       form: form,
       fieldHook: ProfileFields.notificationsEnabled,
       notifyOnChange: true,

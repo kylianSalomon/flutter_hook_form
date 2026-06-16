@@ -13,7 +13,7 @@ class const ThemeSelector({super.key}) extends StatelessWidget {
     // Access the form from the parent context
     final form = useFormContext(context);
 
-    return HookedFormField<String, ProfileFields<String>>.explicit(
+    return HookedFormField<String, ProfileFields<String>>(
       form: form,
       fieldHook: ProfileFields.theme,
       notifyOnChange: true,
