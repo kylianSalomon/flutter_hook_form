@@ -560,5 +560,104 @@ void main() {
       expect(values[TestFormSchema.email], equals('test@example.com'));
       expect(values[TestFormSchema.password], equals('secret123'));
     });
+
+    testWidgets('focusOnInvalid moves focus to the first invalid field', (
+      tester,
+    ) async {
+      late FormFieldsController<TestFormSchema> formController;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: HookBuilder(
+            builder: (context) {
+              final form = useForm<TestFormSchema>(
+                focusOnInvalid: true,
+                autoScrollWhenFocusOnInvalid: false,
+              );
+              formController = form;
+
+              return Scaffold(
+                body: HookedForm(
+                  form: form,
+                  child: Column(
+                    children: [
+                      const HookedTextFormField(
+                        fieldHook: TestFormSchema.email,
+                        decoration: InputDecoration(labelText: 'Email'),
+                      ),
+                      const HookedTextFormField(
+                        fieldHook: TestFormSchema.password,
+                        decoration: InputDecoration(labelText: 'Password'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () => form.validate(),
+                        child: const Text('Validate'),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      );
+
+      // Both fields are empty, both fail the required validator.
+      await tester.tap(find.byType(ElevatedButton));
+      await tester.pump();
+
+      expect(
+        formController.focusNodeFor(TestFormSchema.email).hasFocus,
+        isTrue,
+      );
+      expect(
+        formController.focusNodeFor(TestFormSchema.password).hasFocus,
+        isFalse,
+      );
+    });
+
+    testWidgets(
+      'validate does not move focus when focusOnInvalid is disabled',
+      (tester) async {
+        late FormFieldsController<TestFormSchema> formController;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: HookBuilder(
+              builder: (context) {
+                final form = useForm<TestFormSchema>();
+                formController = form;
+
+                return Scaffold(
+                  body: HookedForm(
+                    form: form,
+                    child: Column(
+                      children: [
+                        const HookedTextFormField(
+                          fieldHook: TestFormSchema.email,
+                          decoration: InputDecoration(labelText: 'Email'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () => form.validate(),
+                          child: const Text('Validate'),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+
+        await tester.tap(find.byType(ElevatedButton));
+        await tester.pump();
+
+        expect(
+          formController.focusNodeFor(TestFormSchema.email).hasFocus,
+          isFalse,
+        );
+      },
+    );
   });
 }

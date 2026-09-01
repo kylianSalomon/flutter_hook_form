@@ -15,11 +15,15 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 FormFieldsController<F> useForm<F extends FieldSchema<dynamic>>({
   InitialFieldValues<F, dynamic>? initialValues,
   List<Object?> keys = const <Object>[],
+  bool focusOnInvalid = false,
+  bool autoScrollWhenFocusOnInvalid = true,
 }) {
   final form = useMemoized(() {
     return FormFieldsController<F>(
       GlobalKey<FormState>(debugLabel: 'FormFieldsController'),
       initialValues: initialValues,
+      focusOnInvalid: focusOnInvalid,
+      autoScrollWhenFocusOnInvalid: autoScrollWhenFocusOnInvalid,
     );
   }, keys);
 

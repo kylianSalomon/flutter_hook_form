@@ -478,6 +478,10 @@ class HookedTextFormField<F extends FieldSchema<String>>
     final FormFieldsController<FieldSchema<dynamic>> form =
         _form ?? useFormContext(context);
     final typedField = fieldHook as FieldSchema<String>;
+    final effectiveFocusNode = form.focusNodeFor(
+      typedField,
+      external: focusNode,
+    );
 
     return TextFormField(
       key: form.fieldKey(typedField),
@@ -486,7 +490,10 @@ class HookedTextFormField<F extends FieldSchema<String>>
           (value) {
             final forcedError = form.getFieldForcedError(fieldHook);
             if (forcedError != null) {
-              return forcedError.localize(context, form.getNotifier(typedField));
+              return forcedError.localize(
+                context,
+                form.getNotifier(typedField),
+              );
             }
             return form
                 .validators(fieldHook)
@@ -558,7 +565,7 @@ class HookedTextFormField<F extends FieldSchema<String>>
       autofocus: autofocus ?? false,
       controller: controller,
       decoration: decoration,
-      focusNode: focusNode,
+      focusNode: effectiveFocusNode,
       groupId: groupId ?? EditableText,
       keyboardType: keyboardType,
       readOnly: readOnly ?? false,

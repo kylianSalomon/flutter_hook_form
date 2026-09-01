@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_hook_form/src/models/field_schema.dart';
@@ -74,13 +75,35 @@ class FormFieldsController<F extends FieldSchema<dynamic>> {
   FormFieldsController(
     this.key, {
     InitialFieldValues<F, Object?>? initialValues,
+    this.focusOnInvalid = false,
+    this.autoScrollWhenFocusOnInvalid = true,
   }) : _initialValues = initialValues;
 
   /// The form key.
   final FormKey key;
 
+  /// Whether [validate] moves focus to the first invalid field by default.
+  ///
+  /// Can be overridden per call via `validate(focusOnInvalid: ...)`.
+  final bool focusOnInvalid;
+
+  /// Whether [validate] scrolls the first invalid field into view by
+  /// default, when [focusOnInvalid] (or its per-call override) is `true`.
+  ///
+  /// Can be overridden per call via
+  /// `validate(autoScrollWhenFocusOnInvalid: ...)`.
+  final bool autoScrollWhenFocusOnInvalid;
+
   /// The field keys.
-  final Map<FieldSchema<dynamic>, GlobalKey<FormFieldState<Object?>>> _fieldKeys = {};
+  final Map<FieldSchema<dynamic>, GlobalKey<FormFieldState<Object?>>>
+  _fieldKeys = {};
+
+  /// The focus node for each field that opted into focus-on-invalid support.
+  final Map<FieldSchema<dynamic>, FocusNode> _fieldFocusNodes = {};
+
+  /// Fields whose [FocusNode] was created (and is therefore owned and
+  /// disposed) by this controller, as opposed to one supplied by the caller.
+  final Set<FieldSchema<dynamic>> _ownedFocusNodes = {};
 
   /// The initial values.
   final InitialFieldValues<F, Object?>? _initialValues;
@@ -115,6 +138,25 @@ class FormFieldsController<F extends FieldSchema<dynamic>> {
     }
 
     return key;
+  }
+
+  /// Returns the [FocusNode] used to focus [field] when validation fails
+  /// with [focusOnInvalid] enabled.
+  ///
+  /// Pass [external] to register a [FocusNode] you manage yourself (e.g. one
+  /// created by a hook and wired into a custom [HookedFormField] builder).
+  /// Without [external], a node is lazily created and owned by the
+  /// controller, so it is disposed with [dispose].
+  FocusNode focusNodeFor<T>(FieldSchema<T> field, {FocusNode? external}) {
+    if (external != null) {
+      _fieldFocusNodes[field] = external;
+      return external;
+    }
+
+    return _fieldFocusNodes.putIfAbsent(field, () {
+      _ownedFocusNodes.add(field);
+      return FocusNode(debugLabel: field.name);
+    });
   }
 
   /// Returns a read-only [ValueListenable] for [field].
@@ -228,14 +270,61 @@ class FormFieldsController<F extends FieldSchema<dynamic>> {
   /// If `clearErrors` is `true`, the forced errors will be cleared.
   /// Consider setting `clearErrors` to `false` if you are calling `validate`
   /// as a condition to enable or disable a button.
-  bool validate({bool notify = true, bool clearErrors = true}) {
+  ///
+  /// If `focusOnInvalid` is `true` (defaults to the controller's
+  /// [FormFieldsController.focusOnInvalid]) and validation fails, focus
+  /// moves to the first invalid field's [FocusNode], if it has one — see
+  /// [focusNodeFor]. When `autoScrollWhenFocusOnInvalid` is also `true`
+  /// (defaults to [FormFieldsController.autoScrollWhenFocusOnInvalid]), that
+  /// field is scrolled into view beforehand.
+  bool validate({
+    bool notify = true,
+    bool clearErrors = true,
+    bool? focusOnInvalid,
+    bool? autoScrollWhenFocusOnInvalid,
+  }) {
     if (clearErrors) {
       _forcedErrors.clear();
     }
 
     final isValid = key.currentState?.validate() ?? false;
 
+    if (!isValid && (focusOnInvalid ?? this.focusOnInvalid)) {
+      _focusFirstInvalidField(
+        scroll:
+            autoScrollWhenFocusOnInvalid ?? this.autoScrollWhenFocusOnInvalid,
+      );
+    }
+
     return isValid;
+  }
+
+  /// Focuses (and optionally scrolls to) the invalid field declared first in
+  /// the [FieldSchema] enum.
+  void _focusFirstInvalidField({required bool scroll}) {
+    final invalidField = minBy(
+      _fieldKeys.entries.where(
+        (entry) => entry.value.currentState?.hasError ?? false,
+      ),
+      (entry) => entry.key.index,
+    );
+
+    if (invalidField == null) {
+      return;
+    }
+
+    if (scroll) {
+      if (invalidField.value.currentContext case final context?) {
+        Scrollable.ensureVisible(
+          context,
+          alignment: 0.5,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      }
+    }
+
+    _fieldFocusNodes[invalidField.key]?.requestFocus();
   }
 
   /// Clear the forced errors.
@@ -260,12 +349,20 @@ class FormFieldsController<F extends FieldSchema<dynamic>> {
   /// Dispose of all resources.
   ///
   /// Call this method when the form is no longer needed to clean up
-  /// the per-field notifiers.
+  /// the per-field notifiers and any [FocusNode] created by [focusNodeFor].
+  /// [FocusNode]s supplied via `focusNodeFor(field, external: ...)` are
+  /// owned by the caller and are left untouched.
   void dispose() {
     for (final notifier in _fieldNotifiers.values) {
       notifier.dispose();
     }
     _fieldNotifiers.clear();
+
+    for (final field in _ownedFocusNodes) {
+      _fieldFocusNodes[field]?.dispose();
+    }
+    _fieldFocusNodes.clear();
+    _ownedFocusNodes.clear();
   }
 
   /// Validate the form field.

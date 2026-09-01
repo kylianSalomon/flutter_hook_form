@@ -1,3 +1,7 @@
+## Unreleased
+
+* ✨ **Focus on invalid field**: `useForm` (and `FormFieldsController`) accept `focusOnInvalid` and `autoScrollWhenFocusOnInvalid` to automatically focus — and scroll to — the first invalid field when `form.validate()` fails. Both can be overridden per call via `form.validate(focusOnInvalid: ..., autoScrollWhenFocusOnInvalid: ...)`. `HookedTextFormField` wires this up automatically; other fields can opt in via the new `FormFieldsController.focusNodeFor`.
+
 ## 4.0.0
 
 ### Breaking Changes

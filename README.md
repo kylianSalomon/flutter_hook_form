@@ -29,6 +29,7 @@ Managing forms in Flutter often requires creating multiple `TextEditingControlle
     - [HookedTextFormField](#hookedtextformfield)
     - [HookedFormField](#hookedformfield)
     - [Form initialization](#form-initialization)
+    - [Focus on Invalid Field](#focus-on-invalid-field)
     - [Form State Management](#form-state-management)
     - [Reactive Field Listening](#reactive-field-listening)
     - [Form Field State](#form-field-state)
@@ -351,6 +352,39 @@ final form = useForm<SignInFormFields>(
     SignInFormFields.password: '',
   },
 );
+```
+
+#### Focus on Invalid Field
+
+`useForm` accepts `focusOnInvalid` and `autoScrollWhenFocusOnInvalid` to automatically move focus to (and scroll to) the first invalid field whenever `form.validate()` fails — the field with the lowest index in your `FieldSchema` enum wins if several are invalid.
+
+```dart
+final form = useForm<SignInFormFields>(
+  focusOnInvalid: true, // defaults to false
+  autoScrollWhenFocusOnInvalid: true, // defaults to true, only matters if focusOnInvalid is true
+);
+```
+
+`HookedTextFormField` wires this up automatically — it registers its `focusNode` (yours, or one created for you) with the controller. Both options can also be overridden per call:
+
+```dart
+form.validate(focusOnInvalid: true, autoScrollWhenFocusOnInvalid: false);
+```
+
+For a custom `HookedFormField`, grab the managed `FocusNode` yourself and wire it into your input:
+
+```dart
+HookedFormField<SignInFormFields<bool>, bool>(
+  fieldHook: .rememberMe,
+  builder: (value, onChanged, error) {
+    final form = useFormContext(context);
+    return Checkbox(
+      focusNode: form.focusNodeFor(.rememberMe),
+      value: value ?? false,
+      onChanged: onChanged,
+    );
+  },
+)
 ```
 
 #### Form State Management
