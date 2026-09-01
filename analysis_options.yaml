@@ -18,6 +18,7 @@ analyzer:
     - "web/flutter_bootstrap.js"
     - "lib/scan_pigeon.dart"
     - "lib/reply_channel.dart"
+    - build/**
 
 formatter:
   trailing_commas: preserve
