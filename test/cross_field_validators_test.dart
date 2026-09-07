@@ -9,8 +9,8 @@ void main() {
       testWidgets('returns null when value is null', (tester) async {
         final controller = FormFieldsController<_DateFormSchema>(
           GlobalKey<FormState>(),
-          initialValues: {
-            _DateFormSchema.startDate: DateTime(2024, 1, 1),
+          validators: {
+            .startDate: .required<DateTime>().initWith(DateTime(2024, 1, 1)),
           },
         );
 
@@ -45,7 +45,9 @@ void main() {
 
         final controller = FormFieldsController<_DateFormSchema>(
           GlobalKey<FormState>(),
-          initialValues: {_DateFormSchema.startDate: startDate},
+          validators: {
+            .startDate: .required<DateTime>().initWith(startDate),
+          },
         );
 
         final validator = const DateAfterValidator(
@@ -79,7 +81,7 @@ void main() {
 
         final controller = FormFieldsController<_DateFormSchema>(
           GlobalKey<FormState>(),
-          initialValues: {.startDate: startDate},
+          validators: {.startDate: .required<DateTime>().initWith(startDate)},
         );
 
         final validator = const DateAfterValidator(
@@ -111,7 +113,9 @@ void main() {
 
         final controller = FormFieldsController<_DateFormSchema>(
           GlobalKey<FormState>(),
-          initialValues: {_DateFormSchema.startDate: startDate},
+          validators: {
+            .startDate: .required<DateTime>().initWith(startDate),
+          },
         );
 
         final validator = const DateAfterValidator(
@@ -175,7 +179,9 @@ void main() {
       testWidgets('returns null when values match', (tester) async {
         final controller = FormFieldsController<_PasswordFormSchema>(
           GlobalKey<FormState>(),
-          initialValues: {.password: 'secret123'},
+          validators: {
+            .password: .required<String>().initWith('secret123'),
+          },
         );
 
         final validator = const MatchesValidator<String, _PasswordFormSchema>(
@@ -204,7 +210,9 @@ void main() {
       testWidgets('returns error when values do not match', (tester) async {
         final controller = FormFieldsController<_PasswordFormSchema>(
           GlobalKey<FormState>(),
-          initialValues: {.password: 'secret123'},
+          validators: {
+            .password: .required<String>().initWith('secret123'),
+          },
         );
 
         final validator = const MatchesValidator<String, _PasswordFormSchema>(
@@ -233,7 +241,9 @@ void main() {
       testWidgets('returns custom message when provided', (tester) async {
         final controller = FormFieldsController<_PasswordFormSchema>(
           GlobalKey<FormState>(),
-          initialValues: {.password: 'secret123'},
+          validators: {
+            .password: .required<String>().initWith('secret123'),
+          },
         );
 
         final validator = const MatchesValidator<String, _PasswordFormSchema>(
@@ -292,7 +302,7 @@ void main() {
       testWidgets('works with non-string types', (tester) async {
         final controller = FormFieldsController<_NumberFormSchema>(
           GlobalKey<FormState>(),
-          initialValues: {_NumberFormSchema.firstNumber: 42},
+          validators: {.firstNumber: .required<int>().initWith(42)},
         );
 
         final validator = const MatchesValidator<int, _NumberFormSchema>(

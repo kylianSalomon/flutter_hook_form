@@ -13,11 +13,10 @@ class FieldListenerPage extends HookWidget {
   Widget build(BuildContext context) {
     final form = useForm<DemoFields>(
       validators: {
-        .firstName: .required<String>(),
-        .lastName: .required<String>(),
+        .firstName: .required<String>().initWith(''),
+        .lastName: .required<String>().initWith(''),
         .age: .optional<int>().min(18),
       },
-      initialValues: {.firstName: '', .lastName: '', .age: ''},
     );
 
     return Scaffold(

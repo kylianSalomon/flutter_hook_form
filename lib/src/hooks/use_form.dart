@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_hook_form/src/models/form_field_controller.dart';
-import 'package:flutter_hook_form/src/validators/validator_wrapper.dart';
+import 'package:flutter_hook_form/src/validators/field_config.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 
 /// A hook that provides a [FormFieldsController] to manage form field states.
@@ -13,8 +13,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 /// inside a [HookWidget]. For more information about `flutter_hooks`, please
 /// refer to the [flutter_hooks documentation](https://pub.dev/packages/flutter_hooks).
 FormFieldsController<E> useForm<E extends Enum>({
-  InitialFieldValues<E, dynamic>? initialValues,
-  Map<E, ValidatorWrapper> validators = const {},
+  Map<E, FieldConfig> validators = const {},
   List<Object?> keys = const <Object>[],
   bool focusOnInvalid = false,
   bool autoScrollWhenFocusOnInvalid = true,
@@ -22,7 +21,6 @@ FormFieldsController<E> useForm<E extends Enum>({
   final form = useMemoized(() {
     return FormFieldsController<E>(
       GlobalKey<FormState>(debugLabel: 'FormFieldsController'),
-      initialValues: initialValues,
       validators: validators,
       focusOnInvalid: focusOnInvalid,
       autoScrollWhenFocusOnInvalid: autoScrollWhenFocusOnInvalid,

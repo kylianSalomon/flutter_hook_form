@@ -19,11 +19,11 @@ class ProfilePage extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final form = useForm<ProfileFields>(
-      initialValues: {
-        ProfileFields.firstName: 'John',
-        ProfileFields.lastName: 'Doe',
-        ProfileFields.bio: '',
-        ProfileFields.website: '',
+      validators: {
+        .firstName: .required<String>().initWith('John'),
+        .lastName: .required<String>().maxLength(500).initWith('Doe'),
+        .bio: .required<String>().initWith(''),
+        .website: .required<String>().initWith(''),
       },
     );
 

@@ -2,25 +2,26 @@ import 'package:cross_file/cross_file.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_hook_form/flutter_hook_form.dart';
 
-class const ValidatorWrapper<T>([
+class const FieldConfig<T>([
   final List<Validator<T>> validators = const [],
+  final T? initialValue,
 ]) {
-  static ValidatorWrapper<T> required<T>({
+  static FieldConfig<T> required<T>({
     String? message,
     String? errorCode,
-  }) => ValidatorWrapper<T>([
+  }) => FieldConfig<T>([
     RequiredValidator(message: message, errorCode: errorCode),
   ]);
 
-  static ValidatorWrapper<T> optional<T>({
+  static FieldConfig<T> optional<T>({
     String? message,
     String? errorCode,
-  }) => ValidatorWrapper<T>([
+  }) => FieldConfig<T>([
     OptionalValidator(message: message, errorCode: errorCode),
   ]);
 
-  ValidatorWrapper<T> merge(Validator<T> validator) {
-    return ValidatorWrapper<T>([...validators, validator]);
+  FieldConfig<T> merge([Validator<T>? validator, T? initialValue]) {
+    return FieldConfig<T>([...validators, ?validator], initialValue);
   }
 
   String? validate(T value, BuildContext context) {
@@ -39,14 +40,14 @@ class const ValidatorWrapper<T>([
   }
 }
 
-extension ValidatorWrapperBase<T> on ValidatorWrapper<T> {
-  ValidatorWrapper<T> optional({String? message, String? errorCode}) {
+extension FieldConfigBase<T> on FieldConfig<T> {
+  FieldConfig<T> optional({String? message, String? errorCode}) {
     return merge(OptionalValidator<T>(message: message, errorCode: errorCode));
   }
 
-  ValidatorWrapper<T> required() => merge(const RequiredValidator());
+  FieldConfig<T> required() => merge(const RequiredValidator());
 
-  ValidatorWrapper<T> matcheField(
+  FieldConfig<T> matcheField(
     Enum field, {
     String? message,
     String? errorCode,
@@ -55,18 +56,22 @@ extension ValidatorWrapperBase<T> on ValidatorWrapper<T> {
       MatchesValidator(field: field, message: message, errorCode: errorCode),
     );
   }
+
+  FieldConfig<T> initWith(T value) {
+    return merge(null, value);
+  }
 }
 
-extension ValidatorWrapperString on ValidatorWrapper<String> {
-  ValidatorWrapper<String> email({String? message, String? errorCode}) {
+extension FieldConfigString on FieldConfig<String> {
+  FieldConfig<String> email({String? message, String? errorCode}) {
     return merge(EmailValidator(message: message, errorCode: errorCode));
   }
 
-  ValidatorWrapper<String> phone({String? message, String? errorCode}) {
+  FieldConfig<String> phone({String? message, String? errorCode}) {
     return merge(PhoneValidator(message: message, errorCode: errorCode));
   }
 
-  ValidatorWrapper<String> pattern(
+  FieldConfig<String> pattern(
     RegExp pattern, {
     String? message,
     String? errorCode,
@@ -76,7 +81,7 @@ extension ValidatorWrapperString on ValidatorWrapper<String> {
     );
   }
 
-  ValidatorWrapper<String> minLength(
+  FieldConfig<String> minLength(
     int length, {
     String? message,
     String? errorCode,
@@ -86,7 +91,7 @@ extension ValidatorWrapperString on ValidatorWrapper<String> {
     );
   }
 
-  ValidatorWrapper<String> maxLength(
+  FieldConfig<String> maxLength(
     int length, {
     String? message,
     String? errorCode,
@@ -97,16 +102,16 @@ extension ValidatorWrapperString on ValidatorWrapper<String> {
   }
 }
 
-extension ValidatorWrapperNum on ValidatorWrapper<num> {
-  ValidatorWrapper<num> min(num min, {String? message, String? errorCode}) {
+extension FieldConfigNum on FieldConfig<num> {
+  FieldConfig<num> min(num min, {String? message, String? errorCode}) {
     return merge(MinValidator(min, message: message, errorCode: errorCode));
   }
 
-  ValidatorWrapper<num> max(num max, {String? message, String? errorCode}) {
+  FieldConfig<num> max(num max, {String? message, String? errorCode}) {
     return merge(MaxValidator(max, message: message, errorCode: errorCode));
   }
 
-  ValidatorWrapper<num> range(
+  FieldConfig<num> range(
     num min,
     num max, {
     String? message,
@@ -118,8 +123,8 @@ extension ValidatorWrapperNum on ValidatorWrapper<num> {
   }
 }
 
-extension ValidatorWrapperXFile on ValidatorWrapper<XFile> {
-  ValidatorWrapper<XFile> mimeType(
+extension FieldConfigXFile on FieldConfig<XFile> {
+  FieldConfig<XFile> mimeType(
     Set<String> mimeType, {
     String? message,
     String? errorCode,
@@ -130,8 +135,8 @@ extension ValidatorWrapperXFile on ValidatorWrapper<XFile> {
   }
 }
 
-extension ValidatorWrapperDateTime on ValidatorWrapper<DateTime> {
-  ValidatorWrapper<DateTime> isBefore(
+extension FieldConfigDateTime on FieldConfig<DateTime> {
+  FieldConfig<DateTime> isBefore(
     DateTime date, {
     String? message,
     String? errorCode,
@@ -145,7 +150,7 @@ extension ValidatorWrapperDateTime on ValidatorWrapper<DateTime> {
     );
   }
 
-  ValidatorWrapper<DateTime> isAfter(
+  FieldConfig<DateTime> isAfter(
     DateTime date, {
     String? message,
     String? errorCode,
@@ -159,7 +164,7 @@ extension ValidatorWrapperDateTime on ValidatorWrapper<DateTime> {
     );
   }
 
-  ValidatorWrapper<DateTime> dateAfterField(
+  FieldConfig<DateTime> dateAfterField(
     Enum field, {
     String? message,
     String? errorCode,
@@ -174,8 +179,8 @@ extension ValidatorWrapperDateTime on ValidatorWrapper<DateTime> {
   }
 }
 
-extension ValidatorWrapperList<T> on ValidatorWrapper<List<T>> {
-  ValidatorWrapper<List<T>> minItems(
+extension FieldConfigList<T> on FieldConfig<List<T>> {
+  FieldConfig<List<T>> minItems(
     int length, {
     String? message,
     String? errorCode,
@@ -185,7 +190,7 @@ extension ValidatorWrapperList<T> on ValidatorWrapper<List<T>> {
     );
   }
 
-  ValidatorWrapper<List<T>> maxItems(
+  FieldConfig<List<T>> maxItems(
     int length, {
     String? message,
     String? errorCode,

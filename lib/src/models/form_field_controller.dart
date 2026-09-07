@@ -2,7 +2,7 @@ import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_hook_form/src/models/validator.dart';
-import 'package:flutter_hook_form/src/validators/validator_wrapper.dart';
+import 'package:flutter_hook_form/src/validators/field_config.dart';
 
 import 'types.dart';
 
@@ -68,10 +68,7 @@ class FormFieldsController<E extends Enum>(
   /// The form key.
   final FormKey key, {
 
-  /// The initial values.
-  final InitialFieldValues<E, dynamic>? _initialValues,
-
-  final Map<E, ValidatorWrapper>? _validators,
+  final Map<E, FieldConfig>? _validators,
 
   /// Whether [validate] moves focus to the first invalid field by default.
   ///
@@ -87,6 +84,9 @@ class FormFieldsController<E extends Enum>(
 }) {
   /// Creates a [FormFieldsController].
   this {
+    _initialValues = {
+      ...?_validators?.map((key, value) => MapEntry(key, value.initialValue)),
+    };
     _fieldKeys = {};
     _fieldFocusNodes = {};
     _ownedFocusNodes = {};
@@ -106,6 +106,8 @@ class FormFieldsController<E extends Enum>(
   /// The forced errors.
   late final Map<String, String> _forcedErrors;
 
+  late final InitialFieldValues<E, dynamic> _initialValues;
+
   /// Single source of truth for field values. One notifier per field, used
   /// by both [getNotifier] (typed read access) and [fieldListenable]
   /// (untyped change subscription for `form.listen`).
@@ -115,7 +117,7 @@ class FormFieldsController<E extends Enum>(
   _FieldNotifier _notifierFor(E field) {
     return _fieldNotifiers.putIfAbsent(
       field,
-      () => _FieldNotifier(_initialValues?[field]),
+      () => _FieldNotifier(_initialValues[field]),
     );
   }
 
@@ -190,7 +192,7 @@ class FormFieldsController<E extends Enum>(
     if (_fieldNotifiers[field] case final notifier?) {
       return notifier.value as T?;
     }
-    if (_initialValues?[field] case final T value) {
+    if (_initialValues[field] case final T value) {
       return value;
     }
     return null;
@@ -198,7 +200,7 @@ class FormFieldsController<E extends Enum>(
 
   /// Get the initial value of a form field.
   T? getInitialValue<T extends Object?>(E field) {
-    if (_initialValues?[field] case final T value) {
+    if (_initialValues[field] case final T value) {
       return value;
     }
 
@@ -338,7 +340,7 @@ class FormFieldsController<E extends Enum>(
     // Restore notifiers to initial values (loud notification so subscribers
     // rebuild). ValueNotifier-style equality means no-op resets don't fire.
     for (final entry in _fieldNotifiers.entries) {
-      entry.value.value = _initialValues?[entry.key];
+      entry.value.value = _initialValues[entry.key];
     }
   }
 

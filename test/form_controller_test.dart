@@ -56,9 +56,9 @@ void main() {
     test('controller initializes with initial values', () {
       final controllerWithValues = FormFieldsController<TestFormSchema>(
         GlobalKey<FormState>(),
-        initialValues: {
-          .email: 'test@example.com',
-          .password: 'password123',
+        validators: {
+          .email: .required<String>().initWith('test@example.com'),
+          .password: .required<String>().initWith('password123'),
         },
       );
 
@@ -75,7 +75,9 @@ void main() {
     test('getInitialValue returns stored initial value', () {
       final controllerWithValues = FormFieldsController<TestFormSchema>(
         GlobalKey<FormState>(),
-        initialValues: {.email: 'initial@example.com'},
+        validators: {
+          .email: .required<String>().initWith('initial@example.com'),
+        },
       );
 
       expect(

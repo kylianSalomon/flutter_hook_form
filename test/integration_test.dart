@@ -15,13 +15,11 @@ void main() {
           home: HookBuilder(
             builder: (context) {
               final form = useForm<TestFormSchema>(
-                initialValues: {
-                  .email: 'test@example.com',
-                  .password: 'password123',
-                },
                 validators: {
-                  .email: .required<String>().email(),
-                  .password: .required<String>(),
+                  .email: .required<String>().email().initWith(
+                    'test@example.com',
+                  ),
+                  .password: .required<String>().initWith('password123'),
                 },
               );
 
@@ -192,9 +190,11 @@ void main() {
           home: HookBuilder(
             builder: (context) {
               final form = useForm<TestFormSchema>(
-                initialValues: {
-                  TestFormSchema.email: 'test@example.com',
-                  TestFormSchema.password: 'password123',
+                validators: {
+                  .email: .required<String>().email().initWith(
+                    'test@example.com',
+                  ),
+                  .password: .required<String>().initWith('password123'),
                 },
               );
 
@@ -240,9 +240,11 @@ void main() {
           home: HookBuilder(
             builder: (context) {
               final form = useForm<TestFormSchema>(
-                initialValues: {
-                  TestFormSchema.email: 'test@example.com',
-                  TestFormSchema.password: 'password123',
+                validators: {
+                  .email: .required<String>().email().initWith(
+                    'test@example.com',
+                  ),
+                  .password: .required<String>().initWith('password123'),
                 },
               );
               formController = form;
@@ -496,7 +498,9 @@ void main() {
           home: HookBuilder(
             builder: (context) {
               final form = useForm<TestFormSchema>(
-                initialValues: {TestFormSchema.email: 'prefilled@example.com'},
+                validators: {
+                  .email: .required<String>().initWith('prefilled@example.com'),
+                },
               );
 
               return Scaffold(

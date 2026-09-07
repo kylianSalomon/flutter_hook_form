@@ -19,11 +19,10 @@ class SignInPage extends HookWidget {
   Widget build(BuildContext context) {
     final form = useForm<SignInFields>(
       validators: {
-        .email: .required<String>().email(),
-        .password: .required<String>().minLength(8),
+        .email: .required<String>().email().initWith(''),
+        .password: .required<String>().minLength(8).initWith(''),
         .rememberMe: .required<bool>(),
       },
-      initialValues: {.email: '', .password: ''},
     );
 
     // State for password visibility toggle
