@@ -16,8 +16,12 @@ void main() {
             builder: (context) {
               final form = useForm<TestFormSchema>(
                 initialValues: {
-                  TestFormSchema.email: 'test@example.com',
-                  TestFormSchema.password: 'password123',
+                  .email: 'test@example.com',
+                  .password: 'password123',
+                },
+                validators: {
+                  .email: .required<String>().email(),
+                  .password: .required<String>(),
                 },
               );
 
@@ -146,7 +150,9 @@ void main() {
         MaterialApp(
           home: HookBuilder(
             builder: (context) {
-              final form = useForm<TestFormSchema>();
+              final form = useForm<TestFormSchema>(
+                validators: {.email: .required<String>().email()},
+              );
 
               return Scaffold(
                 body: HookedForm(
@@ -388,7 +394,12 @@ void main() {
         MaterialApp(
           home: HookBuilder(
             builder: (context) {
-              final form = useForm<TestFormSchema>();
+              final form = useForm<TestFormSchema>(
+                validators: {
+                  .email: .required<String>().email(),
+                  .password: .required<String>(),
+                },
+              );
               formController = form;
 
               return Scaffold(
@@ -573,6 +584,10 @@ void main() {
               final form = useForm<TestFormSchema>(
                 focusOnInvalid: true,
                 autoScrollWhenFocusOnInvalid: false,
+                validators: {
+                  .email: .required<String>().email(),
+                  .password: .required<String>(),
+                },
               );
               formController = form;
 

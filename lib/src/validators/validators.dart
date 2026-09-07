@@ -1,3 +1,5 @@
+// ignore_for_file: public_member_api_docs
+
 import 'package:cross_file/cross_file.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_hook_form/src/messages/form_messages.dart';
@@ -9,8 +11,8 @@ final _phonePattern = RegExp(r'^\+?[0-9]{9,14}$');
 
 /// Required field validator.
 class RequiredValidator<T> extends FieldValidator<T> {
-  /// Creates a [RequiredValidator].
-  const RequiredValidator({super.message}) : super(errorCode: 'required');
+  const new({super.message, String? errorCode})
+    : super(errorCode: errorCode ?? 'required');
 
   @override
   FieldValidatorFn<T> get validator {
@@ -31,10 +33,27 @@ class RequiredValidator<T> extends FieldValidator<T> {
   }
 }
 
+/// Optional field validator.
+class OptionalValidator<T> extends FieldValidator<T> {
+  const new({super.message, String? errorCode})
+    : super(errorCode: errorCode ?? 'invalid_field_type');
+
+  @override
+  FieldValidatorFn<T> get validator {
+    return (value) {
+      if (value is! T) {
+        return message ?? errorCode;
+      }
+
+      return null;
+    };
+  }
+}
+
 /// Email validator.
 class EmailValidator extends FieldValidator<String> {
-  /// Creates a [EmailValidator].
-  const EmailValidator({super.message}) : super(errorCode: 'invalid_email');
+  const new({super.message, String? errorCode})
+    : super(errorCode: errorCode ?? 'invalid_email');
 
   @override
   FieldValidatorFn<String> get validator {
@@ -54,11 +73,9 @@ class EmailValidator extends FieldValidator<String> {
 
 /// Minimum length validator.
 class MinLengthValidator extends FieldValidator<String> {
-  /// Creates a [MinLengthValidator].
-  const MinLengthValidator(this.length, {super.message})
-    : super(errorCode: 'min_length');
+  const new(this.length, {super.message, String? errorCode})
+    : super(errorCode: errorCode ?? 'min_length');
 
-  /// The minimum length.
   final int length;
 
   @override
@@ -75,11 +92,9 @@ class MinLengthValidator extends FieldValidator<String> {
 
 /// Pattern validator.
 class PatternValidator extends FieldValidator<String> {
-  /// Creates a [PatternValidator].
-  const PatternValidator(this.pattern, {super.message})
-    : super(errorCode: 'invalid_pattern');
+  const new(this.pattern, {super.message, String? errorCode})
+    : super(errorCode: errorCode ?? 'invalid_pattern');
 
-  /// The pattern to validate against.
   final RegExp pattern;
 
   @override
@@ -96,11 +111,9 @@ class PatternValidator extends FieldValidator<String> {
 
 /// Maximum length validator.
 class MaxLengthValidator extends FieldValidator<String> {
-  /// Creates a [MaxLengthValidator].
-  const MaxLengthValidator(this.length, {super.message})
-    : super(errorCode: 'max_length');
+  const new(this.length, {super.message, String? errorCode})
+    : super(errorCode: errorCode ?? 'max_length');
 
-  /// The maximum length.
   final int length;
 
   @override
@@ -117,8 +130,8 @@ class MaxLengthValidator extends FieldValidator<String> {
 
 /// Phone validator.
 class PhoneValidator extends FieldValidator<String> {
-  /// Creates a [PhoneValidator].
-  const PhoneValidator({super.message}) : super(errorCode: 'invalid_phone');
+  const new({super.message, String? errorCode})
+    : super(errorCode: errorCode ?? 'invalid_phone');
 
   @override
   FieldValidatorFn<String> get validator {
@@ -136,13 +149,67 @@ class PhoneValidator extends FieldValidator<String> {
   }
 }
 
+/// Minimum validator.
+class MinValidator extends FieldValidator<num> {
+  const new(this.min, {super.message, String? errorCode})
+    : super(errorCode: errorCode ?? 'num_infer_to_min');
+
+  final num min;
+
+  @override
+  FieldValidatorFn<num> get validator {
+    return (value) {
+      if (value != null && value < min) {
+        return message ?? errorCode;
+      }
+
+      return null;
+    };
+  }
+}
+
+/// Maximum validator.
+class MaxValidator extends FieldValidator<num> {
+  const new(this.max, {super.message, String? errorCode})
+    : super(errorCode: errorCode ?? 'num_superior_to_max');
+
+  final num max;
+
+  @override
+  FieldValidatorFn<num> get validator {
+    return (value) {
+      if (value != null && value > max) {
+        return message ?? errorCode;
+      }
+
+      return null;
+    };
+  }
+}
+
+class RangeValidator extends FieldValidator<num> {
+  const new(this.min, this.max, {super.message, String? errorCode})
+    : super(errorCode: errorCode ?? 'num_out_of_range');
+
+  final num min;
+  final num max;
+
+  @override
+  FieldValidatorFn<num> get validator {
+    return (value) {
+      if (value != null && (value < min || value > max)) {
+        return message ?? errorCode;
+      }
+      return null;
+    };
+  }
+}
+
 /// Mime type validator.
 class MimeTypeValidator extends FieldValidator<XFile> {
-  /// Creates a [MimeTypeValidator].
-  const MimeTypeValidator(this.mimeType, {super.message})
-    : super(errorCode: 'invalid_file_format');
+  const new(this.mimeType, {super.message, String? errorCode})
+    : super(errorCode: errorCode ?? 'invalid_file_format');
 
-  /// The mime type to validate against.
   final Set<String> mimeType;
 
   @override
@@ -159,11 +226,9 @@ class MimeTypeValidator extends FieldValidator<XFile> {
 
 /// Date after validator.
 class IsAfterValidator extends FieldValidator<DateTime> {
-  /// Creates a [IsAfterValidator].
-  const IsAfterValidator(this.min, {super.message})
-    : super(errorCode: 'date_after');
+  const new(this.min, {super.message, String? errorCode})
+    : super(errorCode: errorCode ?? 'date_after');
 
-  /// The minimum date.
   final String min;
 
   @override
@@ -180,11 +245,9 @@ class IsAfterValidator extends FieldValidator<DateTime> {
 
 /// Date before validator.
 class IsBeforeValidator extends FieldValidator<DateTime> {
-  /// Creates a [IsBeforeValidator].
-  const IsBeforeValidator(this.max, {super.message})
-    : super(errorCode: 'date_before');
+  const new(this.max, {super.message, String? errorCode})
+    : super(errorCode: errorCode ?? 'date_before');
 
-  /// The maximum date.
   final String max;
 
   @override
@@ -201,11 +264,9 @@ class IsBeforeValidator extends FieldValidator<DateTime> {
 
 /// Minimum items validator.
 class ListMinItemsValidator<T> extends FieldValidator<List<T>> {
-  /// Creates a [ListMinItemsValidator].
-  const ListMinItemsValidator(this.length, {super.message})
-    : super(errorCode: 'min_items');
+  const new(this.length, {super.message, String? errorCode})
+    : super(errorCode: errorCode ?? 'min_items');
 
-  /// The minimum length.
   final int length;
 
   @override
@@ -222,11 +283,9 @@ class ListMinItemsValidator<T> extends FieldValidator<List<T>> {
 
 /// Maximum items validator.
 class ListMaxItemsValidator<T> extends FieldValidator<List<T>> {
-  /// Creates a [ListMaxItemsValidator].
-  const ListMaxItemsValidator(this.length, {super.message})
-    : super(errorCode: 'max_items');
+  const new(this.length, {super.message, String? errorCode})
+    : super(errorCode: errorCode ?? 'max_items');
 
-  /// The maximum length.
   final int length;
 
   @override
@@ -271,8 +330,11 @@ extension MessageResolver on List<Validator<dynamic>>? {
     T value,
   ) {
     final error = switch (validator) {
-      FieldValidator<T>(:final validator) => validator(value),
-      CrossFieldValidator<T>(:final validator) => validator(value, context),
+      FieldValidator(:final validator) => validator(value),
+      CrossFieldValidator<dynamic, Enum>(:final validator) => validator(
+        value,
+        context,
+      ),
     };
 
     if (error == null) {
@@ -285,37 +347,28 @@ extension MessageResolver on List<Validator<dynamic>>? {
       return error;
     }
 
+    final formScope = HookFormScope.of(context);
+
     return switch (validator) {
-      RequiredValidator() => HookFormScope.of(context).required,
-      EmailValidator() => HookFormScope.of(context).invalidEmail,
-      PatternValidator() => HookFormScope.of(context).invalidPattern,
-      MinLengthValidator(length: final length) => HookFormScope.of(
-        context,
-      ).minLength(length),
-      MaxLengthValidator(length: final length) => HookFormScope.of(
-        context,
-      ).maxLength(length),
-      PhoneValidator() => HookFormScope.of(context).invalidPhone,
-      MimeTypeValidator(mimeType: final mimeType) => HookFormScope.of(
-        context,
-      ).invalidFileFormat(mimeType),
-      IsAfterValidator(min: final min) => HookFormScope.of(
-        context,
-      ).dateAfter(DateTime.parse(min)),
-      IsBeforeValidator(max: final max) => HookFormScope.of(
-        context,
-      ).dateBefore(DateTime.parse(max)),
-      ListMinItemsValidator(length: final length) => HookFormScope.of(
-        context,
-      ).minItems(length),
-      ListMaxItemsValidator(length: final length) => HookFormScope.of(
-        context,
-      ).maxItems(length),
-      MatchesValidator() => HookFormScope.of(context).fieldDoesNotMatch,
-      DateAfterValidator() => HookFormScope.of(context).fieldIsNotAfter,
-      _ =>
-        HookFormScope.of(context).parseErrorCode(validator.errorCode, value) ??
-            error,
+      RequiredValidator() => formScope.required,
+      EmailValidator() => formScope.invalidEmail,
+      PatternValidator() => formScope.invalidPattern,
+      MinLengthValidator(length: final length) => formScope.minLength(length),
+      MaxLengthValidator(length: final length) => formScope.maxLength(length),
+      PhoneValidator() => formScope.invalidPhone,
+      MimeTypeValidator(mimeType: final mimeType) =>
+        formScope.invalidFileFormat(mimeType),
+      IsAfterValidator(min: final min) => formScope.dateAfter(
+        DateTime.parse(min),
+      ),
+      IsBeforeValidator(max: final max) => formScope.dateBefore(
+        DateTime.parse(max),
+      ),
+      ListMinItemsValidator(length: final length) => formScope.minItems(length),
+      ListMaxItemsValidator(length: final length) => formScope.maxItems(length),
+      MatchesValidator() => formScope.fieldDoesNotMatch,
+      DateAfterValidator() => formScope.fieldIsNotAfter,
+      _ => formScope.parseErrorCode(validator.errorCode, value) ?? error,
     };
   }
 }

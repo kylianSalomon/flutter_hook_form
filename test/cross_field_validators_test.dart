@@ -77,9 +77,9 @@ void main() {
         final startDate = DateTime(2024, 1, 15);
         final endDate = DateTime(2024, 1, 1);
 
-        final controller = FormFieldsController<_DateFormSchema<DateTime>>(
+        final controller = FormFieldsController<_DateFormSchema>(
           GlobalKey<FormState>(),
-          initialValues: {_DateFormSchema.startDate: startDate},
+          initialValues: {.startDate: startDate},
         );
 
         final validator = const DateAfterValidator(
@@ -175,11 +175,11 @@ void main() {
       testWidgets('returns null when values match', (tester) async {
         final controller = FormFieldsController<_PasswordFormSchema>(
           GlobalKey<FormState>(),
-          initialValues: {_PasswordFormSchema.password: 'secret123'},
+          initialValues: {.password: 'secret123'},
         );
 
-        final validator = const MatchesValidator<String>(
-          field: _PasswordFormSchema.password,
+        final validator = const MatchesValidator<String, _PasswordFormSchema>(
+          field: .password,
         ).validator;
 
         String? result;
@@ -204,11 +204,11 @@ void main() {
       testWidgets('returns error when values do not match', (tester) async {
         final controller = FormFieldsController<_PasswordFormSchema>(
           GlobalKey<FormState>(),
-          initialValues: {_PasswordFormSchema.password: 'secret123'},
+          initialValues: {.password: 'secret123'},
         );
 
-        final validator = const MatchesValidator<String>(
-          field: _PasswordFormSchema.password,
+        final validator = const MatchesValidator<String, _PasswordFormSchema>(
+          field: .password,
         ).validator;
 
         String? result;
@@ -233,11 +233,11 @@ void main() {
       testWidgets('returns custom message when provided', (tester) async {
         final controller = FormFieldsController<_PasswordFormSchema>(
           GlobalKey<FormState>(),
-          initialValues: {_PasswordFormSchema.password: 'secret123'},
+          initialValues: {.password: 'secret123'},
         );
 
-        final validator = const MatchesValidator<String>(
-          field: _PasswordFormSchema.password,
+        final validator = const MatchesValidator<String, _PasswordFormSchema>(
+          field: .password,
           message: 'Passwords must match',
         ).validator;
 
@@ -265,8 +265,8 @@ void main() {
           GlobalKey<FormState>(),
         );
 
-        final validator = const MatchesValidator<String>(
-          field: _PasswordFormSchema.password,
+        final validator = const MatchesValidator<String, _PasswordFormSchema>(
+          field: .password,
         ).validator;
 
         String? result;
@@ -295,7 +295,7 @@ void main() {
           initialValues: {_NumberFormSchema.firstNumber: 42},
         );
 
-        final validator = const MatchesValidator<int>(
+        final validator = const MatchesValidator<int, _NumberFormSchema>(
           field: _NumberFormSchema.firstNumber,
         ).validator;
 
@@ -324,35 +324,21 @@ void main() {
   });
 }
 
-enum _DateFormSchema<T> implements FieldSchema<T> {
-  startDate<DateTime>(),
+enum _DateFormSchema {
+  startDate,
+  // (validators: [DateAfterValidator(field: startDate)]);
   // ignore: unused_field
-  endDate<DateTime>(validators: [DateAfterValidator(field: startDate)]);
-
-  const _DateFormSchema({this.validators});
-
-  @override
-  final List<Validator<T>>? validators;
+  endDate,
 }
 
-enum _PasswordFormSchema<T> implements FieldSchema<T> {
-  password<String>(),
+enum _PasswordFormSchema {
+  password,
   // ignore: unused_field
-  confirmPassword<String>();
-
-  const _PasswordFormSchema({this.validators});
-
-  @override
-  final List<Validator<T>>? validators;
+  confirmPassword,
 }
 
-enum _NumberFormSchema<T> implements FieldSchema<T> {
-  firstNumber<int>(),
+enum _NumberFormSchema {
+  firstNumber,
   // ignore: unused_field
-  secondNumber<int>();
-
-  const _NumberFormSchema({this.validators});
-
-  @override
-  final List<Validator<T>>? validators;
+  secondNumber,
 }

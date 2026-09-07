@@ -1,25 +1,22 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutter_hook_form/src/models/field_schema.dart';
 import 'package:flutter_hook_form/src/models/validator.dart';
+import 'package:flutter_hook_form/src/validators/validator_wrapper.dart';
 
 import 'types.dart';
 
 /// A type that represents the initial values of a form field.
-typedef InitialFieldValues<F extends FieldSchema<dynamic>, T> = Map<F, T>;
+typedef InitialFieldValues<E extends Enum, T> = Map<E, T>;
 
 /// Single per-field value holder. Acts as the canonical store for the field's
 /// value and as the [Listenable] that powers reactive subscribers.
 ///
 /// Uses [setSilently] to update the value without firing listeners, which is
 /// what `updateValue(field, value, notify: false)` needs.
-class _FieldNotifier extends ChangeNotifier
+class _FieldNotifier(var Object? _value)
+    extends ChangeNotifier
     implements ValueListenable<Object?> {
-  _FieldNotifier(this._value);
-
-  Object? _value;
-
   @override
   Object? get value => _value;
 
@@ -47,11 +44,8 @@ class _FieldNotifier extends ChangeNotifier
 /// Equality delegates to the wrapped notifier so multiple wrappers around the
 /// same field compare equal — keeps `useValueListenable` from re-subscribing
 /// on every rebuild.
-class _TypedFieldListenable<T> extends ValueListenable<T?> {
-  _TypedFieldListenable(this._inner);
-
-  final _FieldNotifier _inner;
-
+class const _TypedFieldListenable<T>(final _FieldNotifier _inner)
+    extends ValueListenable<T?> {
   @override
   T? get value => _inner.value as T?;
 
@@ -70,54 +64,55 @@ class _TypedFieldListenable<T> extends ValueListenable<T?> {
 }
 
 /// A controller that manages form field states and validation
-class FormFieldsController<F extends FieldSchema<dynamic>> {
-  /// Creates a [FormFieldsController].
-  FormFieldsController(
-    this.key, {
-    InitialFieldValues<F, Object?>? initialValues,
-    this.focusOnInvalid = false,
-    this.autoScrollWhenFocusOnInvalid = true,
-  }) : _initialValues = initialValues;
-
+class FormFieldsController<E extends Enum>(
   /// The form key.
-  final FormKey key;
+  final FormKey key, {
+
+  /// The initial values.
+  final InitialFieldValues<E, dynamic>? _initialValues,
+
+  final Map<E, ValidatorWrapper>? _validators,
 
   /// Whether [validate] moves focus to the first invalid field by default.
   ///
   /// Can be overridden per call via `validate(focusOnInvalid: ...)`.
-  final bool focusOnInvalid;
+  final bool focusOnInvalid = false,
 
   /// Whether [validate] scrolls the first invalid field into view by
   /// default, when [focusOnInvalid] (or its per-call override) is `true`.
   ///
   /// Can be overridden per call via
   /// `validate(autoScrollWhenFocusOnInvalid: ...)`.
-  final bool autoScrollWhenFocusOnInvalid;
+  final bool autoScrollWhenFocusOnInvalid = false,
+}) {
+  /// Creates a [FormFieldsController].
+  this {
+    _fieldKeys = {};
+    _fieldFocusNodes = {};
+    _ownedFocusNodes = {};
+    _forcedErrors = {};
+  }
 
   /// The field keys.
-  final Map<FieldSchema<dynamic>, GlobalKey<FormFieldState<Object?>>>
-  _fieldKeys = {};
+  late final Map<E, GlobalKey<FormFieldState<Object?>>> _fieldKeys;
 
   /// The focus node for each field that opted into focus-on-invalid support.
-  final Map<FieldSchema<dynamic>, FocusNode> _fieldFocusNodes = {};
+  late final Map<E, FocusNode> _fieldFocusNodes;
 
   /// Fields whose [FocusNode] was created (and is therefore owned and
   /// disposed) by this controller, as opposed to one supplied by the caller.
-  final Set<FieldSchema<dynamic>> _ownedFocusNodes = {};
-
-  /// The initial values.
-  final InitialFieldValues<F, Object?>? _initialValues;
+  late final Set<E> _ownedFocusNodes;
 
   /// The forced errors.
-  final _forcedErrors = <String, String>{};
+  late final Map<String, String> _forcedErrors;
 
   /// Single source of truth for field values. One notifier per field, used
   /// by both [getNotifier] (typed read access) and [fieldListenable]
   /// (untyped change subscription for `form.listen`).
-  final Map<FieldSchema<dynamic>, _FieldNotifier> _fieldNotifiers = {};
+  final Map<E, _FieldNotifier> _fieldNotifiers = {};
 
   /// Lazily creates the notifier for [field], seeded with its initial value.
-  _FieldNotifier _notifierFor(FieldSchema<dynamic> field) {
+  _FieldNotifier _notifierFor(E field) {
     return _fieldNotifiers.putIfAbsent(
       field,
       () => _FieldNotifier(_initialValues?[field]),
@@ -125,17 +120,11 @@ class FormFieldsController<F extends FieldSchema<dynamic>> {
   }
 
   /// Get or create a GlobalKey for a form field
-  GlobalKey<FormFieldState<T>> fieldKey<T>(FieldSchema<T> field) {
+  GlobalKey<FormFieldState> fieldKey(E field) {
     final key = _fieldKeys.putIfAbsent(
       field,
-      () => GlobalKey<FormFieldState<T>>(debugLabel: field.name),
+      () => GlobalKey<FormFieldState>(debugLabel: field.name),
     );
-
-    if (key is! GlobalKey<FormFieldState<T>>) {
-      throw Exception(
-        'Cannot return $key as a GlobalKey<FormFieldState<$T>>, key is of type ${key.runtimeType}',
-      );
-    }
 
     return key;
   }
@@ -147,7 +136,7 @@ class FormFieldsController<F extends FieldSchema<dynamic>> {
   /// created by a hook and wired into a custom [HookedFormField] builder).
   /// Without [external], a node is lazily created and owned by the
   /// controller, so it is disposed with [dispose].
-  FocusNode focusNodeFor<T>(FieldSchema<T> field, {FocusNode? external}) {
+  FocusNode focusNodeFor(E field, {FocusNode? external}) {
     if (external != null) {
       _fieldFocusNodes[field] = external;
       return external;
@@ -174,8 +163,15 @@ class FormFieldsController<F extends FieldSchema<dynamic>> {
   ///   builder: (context, email, _) => Text('Email: $email'),
   /// )
   /// ```
-  ValueListenable<T?> getNotifier<T extends Object?>(FieldSchema<T> field) {
-    return _TypedFieldListenable<T>(_notifierFor(field));
+  ValueListenable<T?> getNotifier<T extends Object?>(E field) {
+    final notifier = _notifierFor(field);
+    if (notifier.value is! T) {
+      throw Exception(
+        'Cannot return $notifier as a ValueListenable<T>, value is of type ${notifier._value?.runtimeType}',
+      );
+    }
+
+    return _TypedFieldListenable<T>(notifier);
   }
 
   /// Returns a [Listenable] that fires when [field]'s value changes.
@@ -184,13 +180,13 @@ class FormFieldsController<F extends FieldSchema<dynamic>> {
   /// without requiring type information. Backed by the same per-field
   /// notifier as [getNotifier], so updates fire both subscribers from a
   /// single source.
-  Listenable fieldListenable(F field) => _notifierFor(field);
+  Listenable fieldListenable(E field) => _notifierFor(field);
 
   /// Get the value of a form field.
   ///
   /// Reads from the field's notifier (the canonical store). Falls back to
   /// the initial-values map if no write has occurred yet.
-  T? getValue<T>(FieldSchema<T> field) {
+  T? getValue<T>(E field) {
     if (_fieldNotifiers[field] case final notifier?) {
       return notifier.value as T?;
     }
@@ -201,7 +197,7 @@ class FormFieldsController<F extends FieldSchema<dynamic>> {
   }
 
   /// Get the initial value of a form field.
-  T? getInitialValue<T extends Object?>(FieldSchema<T> field) {
+  T? getInitialValue<T extends Object?>(E field) {
     if (_initialValues?[field] case final T value) {
       return value;
     }
@@ -216,7 +212,7 @@ class FormFieldsController<F extends FieldSchema<dynamic>> {
   /// [ValueListenableBuilder] to rebuild. Setting [notify] to `false`
   /// writes silently — useful when the caller wants to update the value
   /// without triggering reactive rebuilds (e.g., during bulk updates).
-  T? updateValue<T>(FieldSchema<T> field, T? value, {bool notify = true}) {
+  T? updateValue<T>(E field, T? value, {bool notify = true}) {
     final notifier = _notifierFor(field);
     if (notify) {
       notifier.value = value;
@@ -232,18 +228,18 @@ class FormFieldsController<F extends FieldSchema<dynamic>> {
   }
 
   /// Get the error of a form field.
-  String? getFieldError(F field) {
+  String? getFieldError(E field) {
     return getFieldForcedError(field) ??
         _fieldKeys[field]?.currentState?.errorText;
   }
 
   /// Get the forced error of a form field.
-  String? getFieldForcedError(F field) {
+  String? getFieldForcedError(E field) {
     return _forcedErrors[field.name];
   }
 
   /// Set the error of a form field.
-  void setError(F field, String error, {bool notify = true}) {
+  void setError(E field, String error, {bool notify = true}) {
     _forcedErrors[field.name] = error;
     if (notify) {
       _fieldKeys[field]?.currentState?.validate();
@@ -251,14 +247,14 @@ class FormFieldsController<F extends FieldSchema<dynamic>> {
   }
 
   /// Check if a form field has an error.
-  bool hasFieldError(F field) {
+  bool hasFieldError(E field) {
     return getFieldError(field) != null;
   }
 
   /// Get the validators of a form field. Use `localize` to localize the
   /// validators.
-  List<Validator>? validators(F field) {
-    return field.validators;
+  List<Validator>? validators(E field) {
+    return _validators?[field]?.validators;
   }
 
   /// Validate the form.
@@ -366,12 +362,12 @@ class FormFieldsController<F extends FieldSchema<dynamic>> {
   }
 
   /// Validate the form field.
-  bool validateField(F field) {
+  bool validateField(E field) {
     return _fieldKeys[field]?.currentState?.validate() ?? false;
   }
 
   /// Check if the form fields have been interacted with.
-  bool isDirty(Set<F> fields) {
+  bool isDirty(Set<E> fields) {
     return fields.every((field) {
       return _fieldKeys[field]?.currentState?.hasInteractedByUser ?? false;
     });
@@ -404,9 +400,9 @@ class FormFieldsController<F extends FieldSchema<dynamic>> {
   }
 
   /// Get the values of the form fields.
-  Map<F, dynamic> getValues() {
+  Map<E, dynamic> getValues() {
     return _fieldKeys.map(
-      (key, field) => MapEntry(key as F, _fieldNotifiers[key]?.value),
+      (key, field) => MapEntry(key, _fieldNotifiers[key]?.value),
     );
   }
 }

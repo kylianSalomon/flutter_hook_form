@@ -90,7 +90,7 @@ class ProfilePage extends HookWidget {
               const Row(
                 children: [
                   Expanded(
-                    child: HookedTextFormField<ProfileFields<String>>(
+                    child: HookedTextFormField<ProfileFields>(
                       fieldHook: .firstName,
                       decoration: InputDecoration(labelText: 'First Name'),
                       textInputAction: TextInputAction.next,
@@ -99,7 +99,7 @@ class ProfilePage extends HookWidget {
                   ),
                   SizedBox(width: 16),
                   Expanded(
-                    child: HookedTextFormField<ProfileFields<String>>(
+                    child: HookedTextFormField<ProfileFields>(
                       fieldHook: .lastName,
                       decoration: InputDecoration(labelText: 'Last Name'),
                       textInputAction: .next,
@@ -110,7 +110,7 @@ class ProfilePage extends HookWidget {
               ),
               const SizedBox(height: 16),
               // Bio field with character counter
-              HookedFormField<String, ProfileFields<String>>(
+              HookedFormField<String, ProfileFields>(
                 fieldHook: ProfileFields.bio,
                 notifyOnChange: true,
                 builder: (value, onChanged, error) {
@@ -130,7 +130,7 @@ class ProfilePage extends HookWidget {
               ),
               const SizedBox(height: 16),
               // Website field with inline validator
-              HookedTextFormField<ProfileFields<String>>(
+              HookedTextFormField<ProfileFields>(
                 fieldHook: .website,
                 decoration: const InputDecoration(
                   labelText: 'Website (optional)',

@@ -17,11 +17,13 @@ class SignInPage extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Create a form controller using the useForm hook.
-    // The form controller manages all field states and validation.
     final form = useForm<SignInFields>(
-      // Optionally provide initial values for fields
-      initialValues: {SignInFields.email: '', SignInFields.password: ''},
+      validators: {
+        .email: .required<String>().email(),
+        .password: .required<String>().minLength(8),
+        .rememberMe: .required<bool>(),
+      },
+      initialValues: {.email: '', .password: ''},
     );
 
     // State for password visibility toggle
@@ -47,8 +49,8 @@ class SignInPage extends HookWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Email field using HookedTextFormField
-                  const HookedTextFormField<SignInFields<String>>(
-                    fieldHook: .email,
+                  const HookedTextFormField(
+                    fieldHook: SignInFields.email,
                     decoration: InputDecoration(
                       labelText: 'Email',
                       hintText: 'Enter your email',
@@ -60,8 +62,8 @@ class SignInPage extends HookWidget {
                   ),
                   const SizedBox(height: 16),
                   // Password field with visibility toggle
-                  HookedTextFormField<SignInFields<String>>(
-                    fieldHook: .password,
+                  HookedTextFormField(
+                    fieldHook: SignInFields.password,
                     decoration: InputDecoration(
                       labelText: 'Password',
                       hintText: 'Enter your password',
@@ -82,7 +84,7 @@ class SignInPage extends HookWidget {
                   ),
                   const SizedBox(height: 8),
                   // Remember me checkbox using HookedFormField
-                  HookedFormField<bool, SignInFields<bool>>(
+                  HookedFormField<bool, SignInFields>(
                     fieldHook: .rememberMe,
                     builder: (value, onChanged, error) {
                       return CheckboxListTile(
