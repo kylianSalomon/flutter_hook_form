@@ -53,6 +53,11 @@
 
 * ✨ **Focus on invalid field**: `useForm` (and `FormFieldsController`) accept `focusOnInvalid` and `autoScrollWhenFocusOnInvalid` to automatically focus — and scroll to — the first invalid field when `form.validate()` fails. Both can be overridden per call via `form.validate(focusOnInvalid: ..., autoScrollWhenFocusOnInvalid: ...)`. `HookedTextFormField` wires this up automatically; other fields can opt in via the new `FormFieldsController.focusNodeFor`.
 
+### Documentation
+
+* 📝 **README rework**: rewritten around a "why this package" pitch, with a side-by-side comparison table against a vanilla `Form` + `GlobalKey<FormState>`, a new minimal example, and a section on making custom validators chainable via `FieldConfig` extensions.
+* 📝 **Use Cases moved to `doc/USE_CASES.md`**: the former "Use Cases" section of the README is now a standalone doc, keeping the README focused on getting started.
+
 ## 4.0.0
 
 ### Breaking Changes
