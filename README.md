@@ -4,19 +4,6 @@ A type-safe, schema-driven form controller for Flutter, inspired by _react-hook-
 
 `flutter_hook_form` gives you a single, typed source of truth for a form's fields, values, and validation rules — without asking you to rebuild your UI around a bundled widget library.
 
-<table>
-<tr>
-<th align="left">flutter_hook_form</th>
-<th align="left">Vanilla Flutter (<code>Form</code> + <code>GlobalKey&lt;FormState&gt;</code>)</th>
-</tr>
-<tr>
-<td><img src="images/hook_form_widget.png" width="420"/></td>
-<td><img src="images/vanilla_form_widget.png" width="420"/></td>
-</tr>
-</table>
-
-Same `SignInPage`, side by side: no `TextEditingController` to create or dispose, no duplicated email/password validation logic, no manual `bool` field wired through `setState`.
-
 ## Why flutter_hook_form?
 
 Most Flutter form packages solve forms the same way: they ship their own text field, their own dropdown, their own date picker, and ask you to rebuild your screens around them to get validation and state management "for free." That's a real cost — you either give up your design system, or you maintain two ways of building inputs.
