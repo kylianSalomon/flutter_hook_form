@@ -89,14 +89,14 @@ Add `flutter_hook_form` to your dependencies in `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  flutter_hook_form: ^4.0.0
+  flutter_hook_form: ^5.0.0-beta.1
 ```
 
 `flutter_hooks` is **not** a hard requirement — it's only needed if you use the `useForm` hook, which is the most convenient way to create a `FormFieldsController` inside a `HookWidget`. If you'd rather instantiate the controller yourself (Riverpod, GetIt, plain `StatefulWidget`, ...), skip it entirely; see [Alternative Injection Methods](#alternative-injection-methods).
 
 ```yaml
 dependencies:
-  flutter_hook_form: ^4.0.0
+  flutter_hook_form: ^5.0.0-beta.1
 
   # Only required if you use the useForm hook
   flutter_hooks: ">=0.18.4 <1.0.0"
