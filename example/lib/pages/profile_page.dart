@@ -140,18 +140,14 @@ class ProfilePage extends HookWidget {
                 keyboardType: TextInputType.url,
                 autovalidateMode: AutovalidateMode.onUserInteraction,
                 // Custom inline validator - useful when validator needs runtime data
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return null;
-                  }
-                  final urlPattern = RegExp(
-                    r'^https?:\/\/([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$',
-                  );
-                  if (!urlPattern.hasMatch(value)) {
-                    return 'Please enter a valid URL';
-                  }
-                  return null;
-                },
+                validator: (value) => FieldConfig<String>()
+                    .required()
+                    .pattern(
+                      RegExp(
+                        r'^https?:\/\/([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$',
+                      ),
+                    )
+                    .validate(value ?? '', context),
               ),
               const SizedBox(height: 24),
               const Divider(),

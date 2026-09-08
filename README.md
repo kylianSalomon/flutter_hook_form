@@ -1,34 +1,74 @@
 # flutter_hook_form
 
-A type-safe form controller for Flutter applications using hooks. Inspired by _react_hook_form_.
+A type-safe, schema-driven form controller for Flutter — built on `flutter_hooks`, inspired by _react-hook-form_ and _Zod_.
 
-## What's New in 4.0.0
+`flutter_hook_form` gives you a single, typed source of truth for a form's fields, values, and validation rules — without asking you to rebuild your UI around a bundled widget library.
 
-Version 4.0.0 introduces a significantly simplified API for defining form schemas. The `FieldSchema<T>` interface now only requires `validators`, removing the need for boilerplate field name declarations. This makes your enum-based schemas cleaner and more concise while maintaining full type safety.
+<table>
+<tr>
+<th align="left">flutter_hook_form</th>
+<th align="left">Vanilla Flutter (<code>Form</code> + <code>GlobalKey&lt;FormState&gt;</code>)</th>
+</tr>
+<tr>
+<td><img src="images/hook_form_widget.png" width="420"/></td>
+<td><img src="images/vanilla_form_widget.png" width="420"/></td>
+</tr>
+</table>
 
-The release also adds `form.listen` — a hook-friendly extension that lets widgets subscribe to one or more fields and derive reactive state, rebuilding only when the watched fields change. Cross-field validation is now built-in via `MatchesValidator` and `DateAfterValidator`.
+Same `SignInPage`, side by side: no `TextEditingController` to create or dispose, no duplicated email/password validation logic, no manual `bool` field wired through `setState`.
+
+## Why flutter_hook_form?
+
+Most Flutter form packages solve forms the same way: they ship their own text field, their own dropdown, their own date picker, and ask you to rebuild your screens around them to get validation and state management "for free." That's a real cost — you either give up your design system, or you maintain two ways of building inputs.
+
+`flutter_hook_form` takes a different approach:
+
+- **Bring your own widgets, always.** `HookedFormField` turns *any* widget — your design system's button, a third-party date picker, a `Slider`, a signature pad — into a controlled, validated form field. `HookedTextFormField`/`HookedFormField` are convenience wrappers, not a requirement: nothing in this package asks you to replace the inputs you already use.
+
+- **Reading values isn't a `GlobalKey<FormState>` scavenger hunt.** A plain `Form` + `GlobalKey<FormState>` gives you validation, but getting typed values back out means a `TextEditingController` per field, manual casting, or `FormState.value` archaeology. Here, `form.getValue<String>(.email)` and `form.getValues()` return typed values directly from the controller — no controllers to create, dispose, or keep in sync.
+
+- **Zod-style centralized schemas — opt-in, not imposed.** Declare your fields once as an enum and describe each one fluently: `.required<String>().email().minLength(8)`. Every screen using that schema enforces the same rules, so validation logic stops drifting between widgets. If a field's logic really only makes sense next to that one widget, skip the schema for it and pass `validator:` directly — both styles compose in the same form.
+
+- **Granular reactivity.** `form.listen({.email, .password}, ...)` rebuilds only the widgets watching those specific fields, not the whole form, without wiring up a separate state management layer.
+
+### How it compares to a vanilla `Form`
+
+| | `flutter_hook_form` | Vanilla `Form` |
+|---|---|---|
+| Bring your own widgets | ✅ any widget via `HookedFormField` | ✅ but all wiring is manual |
+| Typed value access | ✅ `form.getValue<T>(field)` | ❌ one controller per field |
+| Centralized, reusable schema | ✅ enum + fluent `FieldConfig` | ❌ |
+| Cross-field validation | ✅ built-in (`.matcheField`, `.dateAfterField`) | ❌ manual |
+| Granular rebuilds on field change | ✅ `form.listen({...})` | ❌ |
+| Focus + scroll to first invalid field | ✅ built-in (`focusOnInvalid`) | ❌ manual |
+| No controllers to create/dispose | ✅ | ❌ |
+
+## What's New
+
+The schema API has been reworked around `FieldConfig` — a fluent, chainable builder (`.required<String>().email().minLength(8).initWith('')`) that replaces the previous per-enum-value validator lists. Field enums are now plain Dart enums — no interface to implement. `useForm` also gained `focusOnInvalid` and `autoScrollWhenFocusOnInvalid`, so a failed `form.validate()` can automatically focus (and scroll to) the first invalid field.
 
 ## Motivation
 
-Managing forms in Flutter often requires creating multiple `TextEditingController` instances, managing their lifecycle, and scattering validation logic across widgets. This package was created to:
+Managing forms in Flutter often means creating multiple `TextEditingController` instances, tracking their lifecycle, and scattering validation logic across widgets. This package exists to:
 
-- **Centralize validation logic**: Define all your form fields and their validators in a single enum schema
-- **Easy access to field values**: Get and update field values directly from the form controller without setting up a dedicated state manager or dependency injection
+- **Centralize validation logic**: describe all your form fields and their rules in a single, fluent schema — while still allowing per-widget overrides when that's a better fit.
+- **Make field values easy to reach**: read and update typed values directly from the form controller, with no extra state manager or dependency injection required.
 
 ## Table of Contents
 
-- [Getting Started](#getting-started)
 - [How to use](#how-to-use)
   - [Install](#install)
+  - [Minimal example](#minimal-example)
   - [Create your Schema](#create-your-schema)
     - [Available Validators](#available-validators)
     - [Cross-Field Validators](#cross-field-validators)
     - [Create validators](#create-validators)
+      - [Making a custom validator chainable](#making-a-custom-validator-chainable)
   - [Use "hooked" widgets](#use-hooked-widgets)
     - [Use form controller](#use-form-controller)
     - [HookedTextFormField](#hookedtextformfield)
     - [HookedFormField](#hookedformfield)
-    - [Form initialization](#form-initialization)
+    - [Overriding a field's validator inline](#overriding-a-fields-validator-inline)
     - [Focus on Invalid Field](#focus-on-invalid-field)
     - [Form State Management](#form-state-management)
     - [Reactive Field Listening](#reactive-field-listening)
@@ -38,106 +78,129 @@ Managing forms in Flutter often requires creating multiple `TextEditingControlle
   - [Form Injection and Context Access](#form-injection-and-context-access)
   - [Alternative Injection Methods](#alternative-injection-methods)
   - [Write your own Form field](#write-your-own-form-field)
-- [Use Cases](#use-cases)
-  - [Form Value Handling and Payload Conversion](#form-value-handling-and-payload-conversion)
-  - [Asynchronous Form Validation](#asynchronous-form-validation)
-  - [Form Controller Enhancements](#form-controller-enhancements)
+- [Use Cases](#use-cases) *(see [doc/USE_CASES.md](doc/USE_CASES.md))*
 - [Additional Information](#additional-information)
-
-## Getting Started
-
-Add this to your package's `pubspec.yaml` file:
-
-```yaml
-dependencies:
-  flutter_hook_form: ^4.0.0
-```
 
 ## How to use
 
 ### Install
 
-To use `flutter_hook_form`, you need to add it to your dependencies in `pubspec.yaml`:
+Add `flutter_hook_form` to your dependencies in `pubspec.yaml`, alongside `flutter_hooks`, which is required for the `useForm` hook:
 
 ```yaml
 dependencies:
   flutter_hook_form: ^4.0.0
-
-  # Required for the useForm hook
-  flutter_hooks: ^0.20.0
+  flutter_hooks: ">=0.18.4 <1.0.0"
 ```
+
+### Minimal example
+
+The smallest possible form: one field, one validator.
+
+```dart
+enum LoginFields { email }
+
+class MinimalPage extends HookWidget {
+  const MinimalPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final form = useForm<LoginFields>(
+      validators: {.email: .required<String>().email().initWith('')},
+    );
+
+    return HookedForm(
+      form: form,
+      child: HookedTextFormField<LoginFields>(fieldHook: .email),
+    );
+  }
+}
+```
+
+The rest of this section builds up from there: schema syntax, validators, cross-field rules, and the widgets that connect them to your UI.
 
 ### Create your Schema
 
-Define your form schema as an enum implementing `FieldSchema<T>`. Each enum value represents a form field with its validators and optional initial value.
+Define your form fields as a plain enum, then describe each field's validation (and, optionally, its initial value) with `FieldConfig`'s fluent builder:
 
 ```dart
 import 'package:flutter_hook_form/flutter_hook_form.dart';
 
-enum SignInFormFields<T> implements FieldSchema<T> {
-  email<String>(validators: [RequiredValidator(), EmailValidator()]),
-  password<String>(validators: [RequiredValidator(), MinLengthValidator(8)]),
-  rememberMe<bool>();
+enum SignInFields { email, password, rememberMe }
 
-  const SignInFormFields({this.validators});
-
-  @override
-  final List<Validator<T>>? validators;
-}
+// Wherever you create the form:
+final form = useForm<SignInFields>(
+  validators: {
+    .email: .required<String>().email().initWith(''),
+    .password: .required<String>().minLength(8).initWith(''),
+    .rememberMe: .required<bool>(),
+  },
+);
 ```
+
+Every `FieldConfig<T>` chain starts from `.required<T>()` or `.optional<T>()` and reads like a sentence: pick the base rule, then chain the type-specific checks that apply. `.initWith(value)` sets the field's initial value.
 
 #### Available Validators
 
-The package comes with several built-in validators:
+The package comes with several built-in validators, exposed both as fluent `FieldConfig` methods and as standalone classes:
 
-| Category | Validator | Description | Example |
-|----------|-----------|-------------|---------|
-| **Generic** | `RequiredValidator<T>` | Ensures field is not empty | `RequiredValidator<String>()` |
-| **String** | `EmailValidator` | Validates email format | `EmailValidator()` |
-| | `MinLengthValidator` | Checks minimum length | `MinLengthValidator(8)` |
-| | `MaxLengthValidator` | Checks maximum length | `MaxLengthValidator(32)` |
-| | `PhoneValidator` | Validates phone number format | `PhoneValidator()` |
-| | `PatternValidator` | Validate the value with the given pattern | `PatternValidator(RegExp(r'^[A-zÀ-ú \-]+$'))` |
-| **Date** | `IsAfterValidator` | Validates minimum date | `IsAfterValidator(DateTime.now())` |
-| | `IsBeforeValidator` | Validates maximum date | `IsBeforeValidator(DateTime.now())` |
-| **List** | `ListMinItemsValidator` | Checks minimum items | `ListMinItemsValidator<T>(2)` |
-| | `ListMaxItemsValidator` | Checks maximum items | `ListMaxItemsValidator<T>(5)` |
-| **File** | `MimeTypeValidator` | Validates file type | `MimeTypeValidator({'image/jpeg', 'image/png'})` |
-| **Cross-Field** | `DateAfterValidator` | Validates date is after another field | `DateAfterValidator(field: .startDate)` |
-| | `MatchesValidator<T>` | Validates value matches another field | `MatchesValidator<String>(field: .password)` |
+| Category | `FieldConfig` method | Validator class | Description |
+|----------|-----------------------|------------------|-------------|
+| **Generic** | `.required()` | `RequiredValidator<T>` | Ensures the field is not empty |
+| | `.optional()` | `OptionalValidator<T>` | Ensures the field, if present, matches type `T` |
+| **String** | `.email()` | `EmailValidator` | Validates email format |
+| | `.minLength(8)` | `MinLengthValidator` | Checks minimum length |
+| | `.maxLength(32)` | `MaxLengthValidator` | Checks maximum length |
+| | `.phone()` | `PhoneValidator` | Validates phone number format |
+| | `.pattern(RegExp(...))` | `PatternValidator` | Validates against a regular expression |
+| **Number** | `.min(0)` | `MinValidator` | Checks minimum value |
+| | `.max(100)` | `MaxValidator` | Checks maximum value |
+| | `.range(0, 100)` | `RangeValidator` | Checks value is within a range |
+| **Date** | `.isAfter(date)` | `IsAfterValidator` | Validates minimum date |
+| | `.isBefore(date)` | `IsBeforeValidator` | Validates maximum date |
+| **List** | `.minItems(2)` | `ListMinItemsValidator<T>` | Checks minimum items |
+| | `.maxItems(5)` | `ListMaxItemsValidator<T>` | Checks maximum items |
+| **File** | `.mimeType({...})` | `MimeTypeValidator` | Validates file MIME type |
+| **Cross-Field** | `.dateAfterField(.startDate)` | `DateAfterValidator` | Validates a date is after another field's date |
+| | `.matcheField(.password)` | `MatchesValidator<T>` | Validates the value matches another field's value |
 
-When using multiple validators, they are executed in the order they are defined in the list.
+Chained methods run in the order they're called, and stop at the first error.
 
 #### Cross-Field Validators
 
-Cross-field validators allow you to validate a field based on the value of another field. They require access to `BuildContext` to retrieve the other field's value from the form.
+Cross-field validators compare a field's value against another field's value. They resolve the other field through `BuildContext`, so they only work inside a `HookedForm`/`HookedFormProvider` subtree.
 
 ```dart
-enum RegistrationFormFields<T> implements FieldSchema<T> {
-  password<String>(validators: [RequiredValidator(), MinLengthValidator(8)]),
-  confirmPassword<String>(validators: [
-    RequiredValidator(),
-    MatchesValidator<String>(field: password, message: 'Passwords must match'),
-  ]),
-  startDate<DateTime>(validators: [RequiredValidator()]),
-  endDate<DateTime>(validators: [
-    RequiredValidator(),
-    DateAfterValidator(field: startDate, message: 'End date must be after start date'),
-  ]);
-
-  const RegistrationFormFields({this.validators, this.initialValue});
-
-  @override
-  final List<Validator<T>>? validators;
+enum RegistrationFields {
+  password,
+  confirmPassword,
+  startDate,
+  endDate,
 }
+
+final form = useForm<RegistrationFields>(
+  validators: {
+    .password: .required<String>().minLength(8),
+    .confirmPassword: .required<String>().matcheField(
+      RegistrationFields.password,
+      message: 'Passwords must match',
+    ),
+    .startDate: .required<DateTime>(),
+    .endDate: .required<DateTime>().dateAfterField(
+      RegistrationFields.startDate,
+      message: 'End date must be after start date',
+    ),
+  },
+);
 ```
 
 ##### Creating Custom Cross-Field Validators
 
-You can create custom cross-field validators by extending the `CrossFieldValidator` class:
+Extend `CrossFieldValidator<T, E>` to compare against another field:
 
 ```dart
-class PasswordStrengthValidator extends CrossFieldValidator<String> {
+class PasswordStrengthValidator<E extends Enum>
+    extends CrossFieldValidator<String, E> {
   const PasswordStrengthValidator({required super.field, super.message})
     : super(errorCode: 'password_too_similar');
 
@@ -146,7 +209,7 @@ class PasswordStrengthValidator extends CrossFieldValidator<String> {
     return (value, context) {
       if (value == null) return null;
 
-      final form = useFormContext(context);
+      final form = useFormContext<E>(context);
       final usernameValue = form.getValue<String>(field);
 
       if (usernameValue != null && value.contains(usernameValue)) {
@@ -159,30 +222,31 @@ class PasswordStrengthValidator extends CrossFieldValidator<String> {
 }
 
 // Usage
-enum SecurityFormFields<T> implements FieldSchema<T> {
-  username<String>(validators: [RequiredValidator()]),
-  password<String>(validators: [
-    RequiredValidator(),
-    PasswordStrengthValidator(
-      field: username,
-      message: 'Password cannot contain your username',
-    ),
-  ]);
+enum SecurityFields { username, password }
 
-  // ...
-}
+final form = useForm<SecurityFields>(
+  validators: {
+    .username: .required<String>(),
+    .password: FieldConfig<String>().required().merge(
+      PasswordStrengthValidator(
+        field: SecurityFields.username,
+        message: 'Password cannot contain your username',
+      ),
+    ),
+  },
+);
 ```
 
 #### Create validators
 
-You can create custom validators by extending the `Validator` class. Return the `errorCode` on error to support internationalization (see [Custom Validation Messages & Internationalization](#custom-validation-messages--internationalization)).
+Create custom field-level validators by extending `FieldValidator<T>`. Return `errorCode` on failure to support internationalization (see [Custom Validation Messages & Internationalization](#custom-validation-messages--internationalization)). Once you have one, see [Making a custom validator chainable](#making-a-custom-validator-chainable) to give it the same fluent, discoverable feel as the built-ins.
 
 ```dart
-class UsernameValidator extends Validator<String> {
+class UsernameValidator extends FieldValidator<String> {
   const UsernameValidator() : super(errorCode: 'username_error');
 
   @override
-  ValidatorFn<String> get validator => (String? value) {
+  FieldValidatorFn<String> get validator => (value) {
     if (value?.contains('@') == true) {
       return errorCode;
     }
@@ -190,38 +254,69 @@ class UsernameValidator extends Validator<String> {
   };
 }
 
-// Use in your form schema
-enum ProfileFormFields<T> implements FieldSchema<T> {
-  username<String>(validators: [RequiredValidator(), UsernameValidator()]);
-
-  // ...
-}
+// Use it via `.merge`
+final usernameConfig = FieldConfig<String>()
+    .required()
+    .merge(const UsernameValidator());
 ```
 
-Custom validators can also include additional parameters:
+Custom validators can carry their own parameters:
 
 ```dart
-class MinAgeValidator extends Validator<DateTime> {
-  const MinAgeValidator({required this.minAge}) : super(errorCode: 'min_age_error');
+class MinAgeValidator extends FieldValidator<DateTime> {
+  const MinAgeValidator(this.minAge, {super.message, String? errorCode})
+    : super(errorCode: errorCode ?? 'min_age_error');
 
   final int minAge;
 
   @override
-  ValidatorFn<DateTime> get validator => (DateTime? value) {
+  FieldValidatorFn<DateTime> get validator => (value) {
     if (value == null) return null;
 
     final age = DateTime.now().year - value.year;
     if (age < minAge) {
-      return errorCode;
+      return message ?? errorCode;
     }
     return null;
   };
 }
 ```
 
+#### Making a custom validator chainable
+
+A custom validator works right away with `.merge()`:
+
+```dart
+final config = FieldConfig<DateTime>().required().merge(const MinAgeValidator(18));
+```
+
+That's fine for a one-off use, but it doesn't read like the built-in `.required().minLength(8)` chain, and it doesn't show up in autocomplete next to them. Add an extension on `FieldConfig<T>` for the type your validator applies to, and it becomes a first-class citizen of the fluent API — exactly like `.email()` or `.minLength()` are:
+
+```dart
+extension FieldConfigMinAge on FieldConfig<DateTime> {
+  FieldConfig<DateTime> minAge(
+    int years, {
+    String? message,
+    String? errorCode,
+  }) {
+    return merge(MinAgeValidator(years, message: message, errorCode: errorCode));
+  }
+}
+```
+
+```dart
+final form = useForm<ProfileFields>(
+  validators: {
+    .birthDate: .required<DateTime>().minAge(18),
+  },
+);
+```
+
+Both approaches use the same `merge` under the hood — the extension is purely about giving your validator the same discoverable, chainable feel as the built-ins. Group related extensions in one file per project (a `field_config_extensions.dart`, say) and every schema in the app gets to use them.
+
 ### Use "Hooked" widgets
 
-`flutter_hook_form` includes convenient Form widgets to streamline your development process. These widgets are optional and simply wrap Flutter's standard form widgets.
+`flutter_hook_form` includes convenient form widgets to streamline development. They're entirely optional — they wrap Flutter's standard `Form`, `FormField`, and `TextFormField`, and any widget can be turned into a form field with `HookedFormField` without using them at all.
 
 #### Use form controller
 
@@ -232,7 +327,7 @@ The `useForm` hook requires `flutter_hooks` and can only be used within a `HookW
 class MyForm extends HookWidget {
   @override
   Widget build(BuildContext context) {
-    final form = useForm<MyFormFields>();
+    final form = useForm<MyFields>(validators: {/* ... */});
     // ...
   }
 }
@@ -241,24 +336,24 @@ class MyForm extends HookWidget {
 class MyForm extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final form = useForm<MyFormFields>();
+    final form = useForm<MyFields>(validators: {/* ... */});
     // ...
   }
 }
 ```
 
-If you need to use the form controller in a regular widget, you can either:
+If you need to use the form controller in a regular (non-hook) widget, you can either:
 
-1. Use the `FormFieldsController` directly
+1. Use `FormFieldsController` directly
 2. Access it through `useFormContext` (see [Form Injection and Context Access](#form-injection-and-context-access))
 3. Use any other dependency injection method (see [Alternative Injection Methods](#alternative-injection-methods))
 
 #### HookedTextFormField
 
-`HookedTextFormField` is a wrapper around Flutter's `TextFormField` that integrates with the form controller:
+`HookedTextFormField` wraps Flutter's `TextFormField` and connects it to the form controller:
 
 ```dart
-HookedTextFormField<SignInFormFields<String>>(
+HookedTextFormField<SignInFields>(
   fieldHook: .email,
   decoration: const InputDecoration(
     labelText: 'Email',
@@ -269,10 +364,10 @@ HookedTextFormField<SignInFormFields<String>>(
 
 #### HookedFormField
 
-`HookedFormField` is a generic form field that can be used with any type of input:
+`HookedFormField<T, E>` is a generic form field that turns any widget into a controlled field — this is what lets you keep using your own components instead of a bundled widget set:
 
 ```dart
-HookedFormField<SignInFormFields<bool>, bool>(
+HookedFormField<bool, SignInFields>(
   fieldHook: .rememberMe,
   builder: (value, onChanged, error) {
     return Checkbox(
@@ -283,28 +378,37 @@ HookedFormField<SignInFormFields<bool>, bool>(
 )
 ```
 
-Here's a complete example of a form using these widgets:
+Here's a complete sign-in form using both widgets:
 
 ```dart
+enum SignInFields { email, password, rememberMe }
+
 class SignInPage extends HookWidget {
+  const SignInPage({super.key});
+
   @override
   Widget build(BuildContext context) {
-    final form = useForm<SignInFormFields>();
+    final form = useForm<SignInFields>(
+      validators: {
+        .email: .required<String>().email().initWith(''),
+        .password: .required<String>().minLength(8).initWith(''),
+        .rememberMe: .required<bool>(),
+      },
+    );
 
     return Scaffold(
       body: HookedForm(
         form: form,
         child: Column(
           children: [
-            HookedTextFormField<SignInFormFields<String>>(
+            HookedTextFormField<SignInFields>(
               fieldHook: .email,
               decoration: const InputDecoration(
                 labelText: 'Email',
                 hintText: 'Enter your email',
               ),
             ),
-
-            HookedTextFormField<SignInFormFields<String>>(
+            HookedTextFormField<SignInFields>(
               fieldHook: .password,
               obscureText: true,
               decoration: const InputDecoration(
@@ -312,8 +416,7 @@ class SignInPage extends HookWidget {
                 hintText: 'Enter your password',
               ),
             ),
-
-            HookedFormField<SignInFormFields<bool>, bool>(
+            HookedFormField<bool, SignInFields>(
               fieldHook: .rememberMe,
               builder: (value, onChanged, error) {
                 return Checkbox(
@@ -322,12 +425,11 @@ class SignInPage extends HookWidget {
                 );
               },
             ),
-
             ElevatedButton(
               onPressed: () {
                 if (form.validate()) {
-                  final email = form.getValue(.email);
-                  final password = form.getValue(.password);
+                  final email = form.getValue<String>(SignInFields.email);
+                  final password = form.getValue<String>(SignInFields.password);
                   print('Email: $email, Password: $password');
                 }
               },
@@ -341,25 +443,30 @@ class SignInPage extends HookWidget {
 }
 ```
 
-#### Form initialization
+#### Overriding a field's validator inline
 
-When you want to initialize your form with values, pass them to `useForm`:
+Every "hooked" widget accepts a `validator:` parameter that overrides whatever is declared in the schema for that field — useful when a check genuinely only makes sense next to that one widget (e.g. it needs runtime data unavailable to the schema):
 
 ```dart
-final form = useForm<SignInFormFields>(
-  initialValues: {
-    SignInFormFields.email: 'user@example.com',
-    SignInFormFields.password: '',
-  },
-);
+final _urlPattern = RegExp(r'^https?:\/\/([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$');
+
+HookedTextFormField<ProfileFields>(
+  fieldHook: .website,
+  decoration: const InputDecoration(labelText: 'Website (optional)'),
+  validator: (value) => FieldConfig<String>()
+      .required()
+      .pattern(_urlPattern)
+      .validate(value ?? '', context),
+)
 ```
 
 #### Focus on Invalid Field
 
-`useForm` accepts `focusOnInvalid` and `autoScrollWhenFocusOnInvalid` to automatically move focus to (and scroll to) the first invalid field whenever `form.validate()` fails — the field with the lowest index in your `FieldSchema` enum wins if several are invalid.
+`useForm` accepts `focusOnInvalid` and `autoScrollWhenFocusOnInvalid` to automatically move focus to (and scroll to) the first invalid field whenever `form.validate()` fails — the field declared first in your enum wins if several are invalid.
 
 ```dart
-final form = useForm<SignInFormFields>(
+final form = useForm<SignInFields>(
+  validators: {/* ... */},
   focusOnInvalid: true, // defaults to false
   autoScrollWhenFocusOnInvalid: true, // defaults to true, only matters if focusOnInvalid is true
 );
@@ -374,10 +481,10 @@ form.validate(focusOnInvalid: true, autoScrollWhenFocusOnInvalid: false);
 For a custom `HookedFormField`, grab the managed `FocusNode` yourself and wire it into your input:
 
 ```dart
-HookedFormField<SignInFormFields<bool>, bool>(
+HookedFormField<bool, SignInFields>(
   fieldHook: .rememberMe,
   builder: (value, onChanged, error) {
-    final form = useFormContext(context);
+    final form = useFormContext<SignInFields>(context);
     return Checkbox(
       focusNode: form.focusNodeFor(.rememberMe),
       value: value ?? false,
@@ -396,7 +503,7 @@ The form controller provides several methods to manage form state:
 form.updateValue(.email, 'new@email.com');
 
 // Get a field value
-final email = form.getValue(.email);
+final email = form.getValue<String>(SignInFields.email);
 
 // Get all form values
 final values = form.getValues();
@@ -410,20 +517,20 @@ final isValid = form.validate();
 
 #### Reactive Field Listening
 
-Use `form.listen` inside a `HookWidget` to subscribe to one or more fields and derive state. The widget rebuilds only when the watched fields change.
+Use `form.listen` inside a `HookWidget` to subscribe to one or more fields and derive state. The widget rebuilds only when the watched fields change — no separate state manager required.
 
 ```dart
 class SignInButton extends HookWidget {
   @override
   Widget build(BuildContext context) {
-    final form = useFormContext(context);
+    final form = useFormContext<SignInFields>(context);
 
     // Rebuilds only when email or password changes
     final canSubmit = form.listen(
-      {SignInFormFields.email, SignInFormFields.password},
+      {SignInFields.email, SignInFields.password},
       (get) =>
-          get<String>(SignInFormFields.email) != null &&
-          get<String>(SignInFormFields.password) != null,
+          get<String>(SignInFields.email) != null &&
+          get<String>(SignInFields.password) != null,
     );
 
     return ElevatedButton(
@@ -438,8 +545,8 @@ You can also listen to a single field and read its current value:
 
 ```dart
 final email = form.listen(
-  {SignInFormFields.email},
-  (get) => get<String>(SignInFormFields.email),
+  {SignInFields.email},
+  (get) => get<String>(SignInFields.email),
 );
 ```
 
@@ -447,7 +554,7 @@ For use outside a `HookWidget` (e.g. with `ValueListenableBuilder`), use `form.g
 
 ```dart
 ValueListenableBuilder<String?>(
-  valueListenable: form.getNotifier<String>(SignInFormFields.email),
+  valueListenable: form.getNotifier<String>(SignInFields.email),
   builder: (context, email, _) => Text('Email: ${email ?? '—'}'),
 )
 ```
@@ -511,29 +618,29 @@ class MyApp extends StatelessWidget {
 
 ### Form Injection and Context Access
 
-Use `HookedForm` to inject the form controller into the widget tree and retrieve it with `useFormContext` in child widgets.
+Use `HookedForm` to inject the form controller into the widget tree and retrieve it with `useFormContext` in child widgets — this is how you keep large forms broken into small, focused, reusable widgets instead of one giant `build` method.
 
 ```dart
 class ParentWidget extends HookWidget {
   @override
   Widget build(BuildContext context) {
-    final form = useForm<SignInFormFields>();
+    final form = useForm<SignInFields>(validators: {/* ... */});
 
     return HookedForm(
       form: form,
-      child: Column(
-        children: [
-          const ChildWidget(),
-        ],
+      child: const Column(
+        children: [ChildWidget()],
       ),
     );
   }
 }
 
 class ChildWidget extends StatelessWidget {
+  const ChildWidget({super.key});
+
   @override
   Widget build(BuildContext context) {
-    final form = useFormContext(context);
+    final form = useFormContext<SignInFields>(context);
 
     return // ... child widget
   }
@@ -558,15 +665,13 @@ showBottomSheet(
 
 ### Alternative Injection Methods
 
-While `HookedForm` is the recommended way to inject form controllers, you can also use any other dependency injection method.
+While `HookedForm` is the recommended way to inject form controllers, you can use any other dependency injection method — `flutter_hook_form` doesn't require flutter_hooks-based DI to work.
 
 #### Using Riverpod
 
 ```dart
-final signInFormProvider = Provider<FormFieldsController<SignInFormFields>>((ref) {
-  return FormFieldsController(
-    GlobalKey<FormState>(),
-  );
+final signInFormProvider = Provider<FormFieldsController<SignInFields>>((ref) {
+  return FormFieldsController(GlobalKey<FormState>());
 });
 
 class SignInForm extends HookConsumerWidget {
@@ -588,7 +693,7 @@ class SignInForm extends HookConsumerWidget {
 final getIt = GetIt.instance;
 
 void setupDependencies() {
-  getIt.registerLazySingleton<FormFieldsController<SignInFormFields>>(
+  getIt.registerLazySingleton<FormFieldsController<SignInFields>>(
     () => FormFieldsController(GlobalKey<FormState>()),
   );
 }
@@ -596,7 +701,7 @@ void setupDependencies() {
 class SignInForm extends HookWidget {
   @override
   Widget build(BuildContext context) {
-    final form = getIt<FormFieldsController<SignInFormFields>>();
+    final form = getIt<FormFieldsController<SignInFields>>();
 
     return HookedForm(
       form: form,
@@ -608,9 +713,9 @@ class SignInForm extends HookWidget {
 
 ### Write your own Form field
 
-"Hooked" widgets simply wrap Flutter's standard `FormField` and `TextFormField`. You can write your own form fields to fit your specific needs.
+"Hooked" widgets simply wrap Flutter's standard `FormField` and `TextFormField`. Since `HookedFormField` already covers "any widget, any type," writing a fully custom field is only necessary when you want full control over the underlying `FormField`.
 
-To create your own custom form field, you need to:
+To create your own custom form field:
 
 1. Connect to the form controller (either via `useFormContext` or by passing it directly)
 2. Use `form.fieldKey(field)` to connect the field to the form
@@ -620,19 +725,19 @@ To create your own custom form field, you need to:
 Here's an example of a custom checkbox form field:
 
 ```dart
-class CustomCheckboxField extends StatelessWidget {
+class CustomCheckboxField<E extends Enum> extends StatelessWidget {
   const CustomCheckboxField({
     super.key,
     required this.field,
     required this.label,
   });
 
-  final FieldSchema<bool> field;
+  final E field;
   final String label;
 
   @override
   Widget build(BuildContext context) {
-    final form = useFormContext(context);
+    final form = useFormContext<E>(context);
 
     return FormField<bool>(
       key: form.fieldKey(field),
@@ -663,147 +768,13 @@ class CustomCheckboxField extends StatelessWidget {
 
 ## Use Cases
 
-### Form Value Handling and Payload Conversion
-
-Define static methods in your form schema for validation and payload conversion:
-
-```dart
-enum SignInFormFields<T> implements FieldSchema<T> {
-  email<String>(validators: [RequiredValidator(), EmailValidator()]),
-  password<String>(validators: [RequiredValidator(), MinLengthValidator(8)]);
-
-  const SignInFormFields({this.validators});
-
-  @override
-  final List<Validator<T>>? validators;
-
-  // Static method to validate and convert form values to API payload
-  static SignInPayload? toPayload(FormFieldsController<SignInFormFields> form) {
-    if (!form.validate()) {
-      return null;
-    }
-
-    return SignInPayload(
-      email: form.getValue(.email)!,
-      password: form.getValue(.password)!,
-    );
-  }
-}
-
-// Usage
-ElevatedButton(
-  onPressed: () {
-    final payload = SignInFormFields.toPayload(form);
-    if (payload != null) {
-      // Send payload to API
-    }
-  },
-  child: const Text('Sign In'),
-)
-```
-
-### Asynchronous Form Validation
-
-Use the `setError` method for asynchronous validation:
-
-```dart
-class RegistrationForm extends HookWidget {
-  @override
-  Widget build(BuildContext context) {
-    final form = useForm<RegistrationFormFields>();
-    final isLoading = useState(false);
-
-    Future<void> validateUsernameAsync(String username) async {
-      if (username.isEmpty) return;
-
-      isLoading.value = true;
-      try {
-        final exists = await userRepository.checkUsernameExists(username);
-
-        if (exists) {
-          form.setError(RegistrationFormFields.username, 'Username is already taken');
-        }
-      } finally {
-        isLoading.value = false;
-      }
-    }
-
-    return HookedForm(
-      form: form,
-      child: Column(
-        children: [
-          HookedTextFormField<RegistrationFormFields>(
-            fieldHook: .username,
-            decoration: InputDecoration(
-              labelText: 'Username',
-              suffixIcon: isLoading.value
-                ? const CircularProgressIndicator(strokeWidth: 2)
-                : null,
-            ),
-            onChanged: (value) => validateUsernameAsync(value),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (form.validate()) {
-                final username = form.getValue(.username);
-                await validateUsernameAsync(username!);
-
-                if (!form.hasFieldError(.username)) {
-                  submitForm(form);
-                }
-              }
-            },
-            child: const Text('Register'),
-          ),
-        ],
-      ),
-    );
-  }
-}
-```
-
-### Form Controller Enhancements
-
-#### Error Handling and Validation
-
-```dart
-// Set a field error with optional notification control
-controller.setError(field, "Error message", notify: false);
-
-// Clear all forced errors
-controller.clearForcedErrors(notify: true);
-```
-
-#### Automatic Form Validation
-
-Control validation behavior to prevent rebuild errors:
-
-```dart
-controller.validate(
-  notify: false,     // Prevent listener notifications
-  clearErrors: false // Keep existing forced errors
-);
-```
-
-#### Form State Tracking
-
-```dart
-// Check if any field has been interacted with
-if (controller.hasBeenInteracted) {
-  // Show confirmation dialog before navigating away
-}
-
-// Check if any field value has changed from its initial value
-if (controller.hasChanged) {
-  // Enable the "Save Changes" button
-}
-```
+Payload conversion, async validation, and lower-level controller methods (`setError`, `hasBeenInteracted`, `hasChanged`, ...) are covered in [doc/USE_CASES.md](doc/USE_CASES.md).
 
 ## Additional Information
 
 ### Dependencies
 
-- flutter_hooks: ^0.21.3
+- flutter_hooks: `>=0.18.4 <1.0.0`
 
 ### Contributing
 
