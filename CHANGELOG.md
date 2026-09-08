@@ -1,3 +1,63 @@
+## 5.0.0-beta.1
+
+### Breaking Changes
+
+* 💥 **`FieldSchema` interface removed — fields are now plain enums**: Form fields no longer need to implement `FieldSchema<T>`. Any `enum` works. Validators (and initial values) are declared separately, as a `Map<E, FieldConfig>` passed to `useForm`/`FormFieldsController`.
+
+  ```dart
+  // Before
+  enum MyFormSchema<T> implements FieldSchema<T> {
+    email<String>(validators: [RequiredValidator(), EmailValidator()]);
+
+    const MyFormSchema({this.validators});
+
+    @override
+    final List<Validator<T>>? validators;
+  }
+
+  final form = useForm<MyFormSchema>();
+
+  // After
+  enum MyFields { email }
+
+  final form = useForm<MyFields>(
+    validators: {
+      .email: .required<String>().email(),
+    },
+  );
+  ```
+
+* 💥 **New `FieldConfig<T>` fluent builder replaces raw `Validator` lists**: Instead of listing `Validator` instances by hand, chain fluent methods off `.required<T>()` / `.optional<T>()` — e.g. `.required<String>().email().minLength(8)`. Built-in validators are exposed both as `FieldConfig` methods and as the underlying validator classes, so existing custom `Validator` subclasses keep working — attach them with `.merge(...)`, or expose them fluently via a `FieldConfig` extension (see the [README](README.md#making-a-custom-validator-chainable)).
+
+* 💥 **Initial values folded into `FieldConfig`**: `useForm`'s `initialValues` map is gone. Set a field's initial value inline with `.initWith(value)` as part of its `FieldConfig` chain.
+
+  ```dart
+  // Before
+  final form = useForm<MyFormSchema>(
+    initialValues: {MyFormSchema.email: 'user@example.com'},
+  );
+
+  // After
+  final form = useForm<MyFields>(
+    validators: {
+      .email: .required<String>().email().initWith('user@example.com'),
+    },
+  );
+  ```
+
+* 💥 **`useFormContext` requires a type parameter again**: Now that fields are plain enums with no shared upper bound to infer from, pass the enum type explicitly: `useFormContext<MyFields>(context)`.
+
+* 💥 **Cross-field validators are now generic over the field enum**: `CrossFieldValidator<T>` is now `CrossFieldValidator<T, E extends Enum>`, and its `field` is typed `E` instead of `FieldSchema`. Custom cross-field validators need the extra type parameter — see `MatchesValidator<T, E>` and `DateAfterValidator<E>` for reference.
+
+### New Features
+
+* ✨ **Focus on invalid field**: `useForm` (and `FormFieldsController`) accept `focusOnInvalid` and `autoScrollWhenFocusOnInvalid` to automatically focus — and scroll to — the first invalid field when `form.validate()` fails. Both can be overridden per call via `form.validate(focusOnInvalid: ..., autoScrollWhenFocusOnInvalid: ...)`. `HookedTextFormField` wires this up automatically; other fields can opt in via the new `FormFieldsController.focusNodeFor`.
+
+### Documentation
+
+* 📝 **README rework**: rewritten around a "why this package" pitch, with a side-by-side comparison table against a vanilla `Form` + `GlobalKey<FormState>`, a new minimal example, and a section on making custom validators chainable via `FieldConfig` extensions.
+* 📝 **Use Cases moved to `doc/USE_CASES.md`**: the former "Use Cases" section of the README is now a standalone doc, keeping the README focused on getting started.
+
 ## 4.0.0
 
 ### Breaking Changes

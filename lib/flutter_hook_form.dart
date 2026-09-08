@@ -1,12 +1,11 @@
 export 'src/hooks/form_listen.dart';
-export 'src/hooks/use_field_value.dart';
 export 'src/hooks/use_form.dart';
 export 'src/hooks/use_form_context.dart';
 export 'src/messages/form_messages.dart';
-export 'src/models/field_schema.dart';
 export 'src/models/form_field_controller.dart';
 export 'src/models/validator.dart';
 export 'src/validators/cross_field_validators.dart';
+export 'src/validators/field_config.dart';
 export 'src/validators/validators.dart';
 export 'src/widget/hooked_form.dart';
 export 'src/widget/hooked_form_field.dart';

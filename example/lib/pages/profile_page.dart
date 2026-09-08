@@ -19,11 +19,11 @@ class ProfilePage extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final form = useForm<ProfileFields>(
-      initialValues: {
-        ProfileFields.firstName: 'John',
-        ProfileFields.lastName: 'Doe',
-        ProfileFields.bio: '',
-        ProfileFields.website: '',
+      validators: {
+        .firstName: .required<String>().initWith('John'),
+        .lastName: .required<String>().maxLength(500).initWith('Doe'),
+        .bio: .required<String>().initWith(''),
+        .website: .required<String>().initWith(''),
       },
     );
 
@@ -90,7 +90,7 @@ class ProfilePage extends HookWidget {
               const Row(
                 children: [
                   Expanded(
-                    child: HookedTextFormField<ProfileFields<String>>(
+                    child: HookedTextFormField<ProfileFields>(
                       fieldHook: .firstName,
                       decoration: InputDecoration(labelText: 'First Name'),
                       textInputAction: TextInputAction.next,
@@ -99,7 +99,7 @@ class ProfilePage extends HookWidget {
                   ),
                   SizedBox(width: 16),
                   Expanded(
-                    child: HookedTextFormField<ProfileFields<String>>(
+                    child: HookedTextFormField<ProfileFields>(
                       fieldHook: .lastName,
                       decoration: InputDecoration(labelText: 'Last Name'),
                       textInputAction: .next,
@@ -110,7 +110,7 @@ class ProfilePage extends HookWidget {
               ),
               const SizedBox(height: 16),
               // Bio field with character counter
-              HookedFormField<String, ProfileFields<String>>(
+              HookedFormField<String, ProfileFields>(
                 fieldHook: ProfileFields.bio,
                 notifyOnChange: true,
                 builder: (value, onChanged, error) {
@@ -130,7 +130,7 @@ class ProfilePage extends HookWidget {
               ),
               const SizedBox(height: 16),
               // Website field with inline validator
-              HookedTextFormField<ProfileFields<String>>(
+              HookedTextFormField<ProfileFields>(
                 fieldHook: .website,
                 decoration: const InputDecoration(
                   labelText: 'Website (optional)',
@@ -140,18 +140,14 @@ class ProfilePage extends HookWidget {
                 keyboardType: TextInputType.url,
                 autovalidateMode: AutovalidateMode.onUserInteraction,
                 // Custom inline validator - useful when validator needs runtime data
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return null;
-                  }
-                  final urlPattern = RegExp(
-                    r'^https?:\/\/([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$',
-                  );
-                  if (!urlPattern.hasMatch(value)) {
-                    return 'Please enter a valid URL';
-                  }
-                  return null;
-                },
+                validator: (value) => FieldConfig<String>()
+                    .required()
+                    .pattern(
+                      RegExp(
+                        r'^https?:\/\/([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$',
+                      ),
+                    )
+                    .validate(value ?? '', context),
               ),
               const SizedBox(height: 24),
               const Divider(),
