@@ -1,6 +1,6 @@
 # flutter_hook_form
 
-A type-safe, schema-driven form controller for Flutter — built on `flutter_hooks`, inspired by _react-hook-form_ and _Zod_.
+A type-safe, schema-driven form controller for Flutter, inspired by _react-hook-form_ and _Zod_. It ships with an optional `flutter_hooks` integration (`useForm`) for the most convenient setup, but the core `FormFieldsController` has no dependency on `flutter_hooks` and can be instantiated however fits your app.
 
 `flutter_hook_form` gives you a single, typed source of truth for a form's fields, values, and validation rules — without asking you to rebuild your UI around a bundled widget library.
 
@@ -85,11 +85,20 @@ Managing forms in Flutter often means creating multiple `TextEditingController` 
 
 ### Install
 
-Add `flutter_hook_form` to your dependencies in `pubspec.yaml`, alongside `flutter_hooks`, which is required for the `useForm` hook:
+Add `flutter_hook_form` to your dependencies in `pubspec.yaml`:
 
 ```yaml
 dependencies:
   flutter_hook_form: ^4.0.0
+```
+
+`flutter_hooks` is **not** a hard requirement — it's only needed if you use the `useForm` hook, which is the most convenient way to create a `FormFieldsController` inside a `HookWidget`. If you'd rather instantiate the controller yourself (Riverpod, GetIt, plain `StatefulWidget`, ...), skip it entirely; see [Alternative Injection Methods](#alternative-injection-methods).
+
+```yaml
+dependencies:
+  flutter_hook_form: ^4.0.0
+
+  # Only required if you use the useForm hook
   flutter_hooks: ">=0.18.4 <1.0.0"
 ```
 
