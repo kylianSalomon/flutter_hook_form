@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hook_form/flutter_hook_form.dart';
 
 /// A form field that integrates with flutter_hook_form.
-class HookedFormField<T, F extends FieldSchema<T>> extends StatelessWidget {
+class HookedFormField<T, E extends Enum> extends StatelessWidget {
   /// Creates a [HookedFormField] that gets the form from context.
   ///
   /// This widget wraps a standard [FormField] and connects it to a [FormFieldsController].
@@ -57,7 +57,7 @@ class HookedFormField<T, F extends FieldSchema<T>> extends StatelessWidget {
     super.key,
     required this.fieldHook,
     required this.builder,
-    required FormFieldsController<FieldSchema<dynamic>> form,
+    required this._form,
     this.forceErrorText,
     this.validator,
     this.autovalidateMode,
@@ -66,13 +66,13 @@ class HookedFormField<T, F extends FieldSchema<T>> extends StatelessWidget {
     this.onSaved,
     this.restorationId,
     this.notifyOnChange = true,
-  }) : _form = form;
+  });
 
   /// The form controller, if provided directly.
-  final FormFieldsController<FieldSchema<dynamic>>? _form;
+  final FormFieldsController<E>? _form;
 
   /// The field identifier from the form schema.
-  final F fieldHook;
+  final E fieldHook;
 
   /// Builder function to create the form field widget.
   ///
@@ -113,27 +113,25 @@ class HookedFormField<T, F extends FieldSchema<T>> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final FormFieldsController<FieldSchema<dynamic>> form =
-        _form ?? useFormContext(context);
-    final typedField = fieldHook as FieldSchema<T>;
+    final form = _form ?? useFormContext<E>(context);
 
     return FormField<T>(
-      key: form.fieldKey(typedField),
+      key: form.fieldKey(fieldHook),
       validator:
           validator ?? form.validators(fieldHook)?.resolveMessage<T>(context),
       forceErrorText:
           forceErrorText ??
           form
               .getFieldForcedError(fieldHook)
-              .localize(context, form.getNotifier(typedField)),
+              .localize(context, form.getNotifier(fieldHook)),
       autovalidateMode: autovalidateMode,
       enabled: enabled,
-      initialValue: form.getInitialValue(typedField) ?? initialValue,
+      initialValue: form.getInitialValue(fieldHook) ?? initialValue,
       onSaved: onSaved,
       restorationId: restorationId,
       builder: (_) {
-        return builder(form.getNotifier(typedField).value, (value) {
-          form.updateValue(typedField, value, notify: notifyOnChange);
+        return builder(form.getNotifier<T>(fieldHook).value, (value) {
+          form.updateValue(fieldHook, value, notify: notifyOnChange);
         }, form.getFieldError(fieldHook));
       },
     );

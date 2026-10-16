@@ -1,3 +1,5 @@
+// ignore_for_file: public_member_api_docs
+
 import 'package:flutter/material.dart';
 import 'package:flutter_hook_form/flutter_hook_form.dart';
 
@@ -5,49 +7,40 @@ import 'package:flutter_hook_form/flutter_hook_form.dart';
 typedef FieldValidatorFn<T> = String? Function(T? value);
 
 /// A type alias for a cross field validator function.
-typedef CrossFieldValidatorFn<T> =
-    String? Function(T? value, BuildContext context);
+typedef CrossFieldValidatorFn<T> = String? Function(
+  T? value,
+  BuildContext context,
+);
 
 /// Base class for all validators.
-sealed class Validator<T> {
-  /// Creates a [Validator].
-  const Validator({required this.errorCode, this.message});
+sealed class const Validator<T>({
+  /// The error code to display if the validation fails.
+  required final String errorCode,
 
   /// The error message to display if the validation fails.
-  final String? message;
-
-  /// The error code to display if the validation fails.
-  final String errorCode;
-}
+  final String? message,
+}) {}
 
 /// A validator that validates a single field.
-abstract class FieldValidator<T> extends Validator<T> {
-  /// Creates a [Validator].
-  const FieldValidator({
-    required super.errorCode,
-    super.message,
-    // required this.validator,
-  });
-
+abstract class const FieldValidator<T>({
+  required super.errorCode,
+  super.message,
+}) extends Validator<T> {
   /// The validator function.
   FieldValidatorFn<T> get validator;
 }
 
 /// A validator that validates a cross field.
-abstract class CrossFieldValidator<T> extends Validator<T> {
-  /// Creates a [CrossFieldValidator].
-  const CrossFieldValidator({
-    required super.errorCode,
-    required this.field,
-    super.message,
-  });
+abstract class const CrossFieldValidator<T, E extends Enum>({
+  required super.errorCode,
 
   /// The field to compare with.
-  final FieldSchema<dynamic> field;
-
+  required final E field,
+  super.message,
+}) extends Validator<T> {
   /// Asserts that the value is of the correct type.
   void assertValueIsOfType(BuildContext context) {
-    final form = useFormContext(context);
+    final form = useFormContext<E>(context);
     final value = form.getValue<dynamic>(field);
 
     assert(

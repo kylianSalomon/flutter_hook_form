@@ -42,7 +42,7 @@ void main() {
             form: controller,
             child: HookBuilder(
               builder: (context) {
-                capturedController = useFormContext(context);
+                capturedController = useFormContext<TestFormSchema>(context);
                 return Container();
               },
             ),

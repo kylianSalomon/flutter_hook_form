@@ -171,6 +171,22 @@ void main() {
       expect(validator2(pdfFile), 'Custom message');
     });
   });
+
+  group('FieldConfig initWith', () {
+    test('keeps initial value when validators are chained after it', () {
+      final config = FieldConfig.required<String>().initWith('a').email();
+
+      expect(config.initialValue, 'a');
+      expect(config.validators, hasLength(2));
+    });
+
+    test('accepts null on a non-nullable field as "no initial value"', () {
+      const String? email = null;
+      final config = FieldConfig.required<String>().initWith(email);
+
+      expect(config.initialValue, isNull);
+    });
+  });
 }
 
 /// Helper function to expect no errors on null value
