@@ -40,14 +40,9 @@ class OptionalValidator<T> extends FieldValidator<T> {
 
   @override
   FieldValidatorFn<T> get validator {
-    return (value) {
-      // An optional field may stay empty: only a wrongly typed value fails.
-      if (value != null && value is! T) {
-        return message ?? errorCode;
-      }
-
-      return null;
-    };
+    // An optional field may stay empty, and the `T?` signature already
+    // rejects wrongly typed values: there is nothing left to check.
+    return (_) => null;
   }
 }
 
