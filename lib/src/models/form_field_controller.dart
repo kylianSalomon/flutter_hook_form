@@ -167,7 +167,7 @@ class FormFieldsController<E extends Enum>(
   /// ```
   ValueListenable<T?> getNotifier<T extends Object?>(E field) {
     final notifier = _notifierFor(field);
-    if (notifier.value is! T) {
+    if (notifier.value is! T?) {
       throw Exception(
         'Cannot return $notifier as a ValueListenable<T>, value is of type ${notifier._value?.runtimeType}',
       );

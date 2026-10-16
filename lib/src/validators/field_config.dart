@@ -32,10 +32,8 @@ class const FieldConfig<T>([
         .map((v) {
           return switch (v) {
             FieldValidator(:final validator) => validator(value),
-            CrossFieldValidator<dynamic, Enum>(:final validator) => validator(
-              value,
-              context,
-            ),
+            final CrossFieldValidator<dynamic, Enum> crossField =>
+              _runCrossField(crossField, value, context),
           };
         })
         .whereType<String>()
@@ -50,13 +48,17 @@ extension FieldConfigBase<T> on FieldConfig<T> {
 
   FieldConfig<T> required() => merge(const RequiredValidator());
 
-  FieldConfig<T> matcheField(
-    Enum field, {
+  FieldConfig<T> matcheField<E extends Enum>(
+    E field, {
     String? message,
     String? errorCode,
   }) {
     return merge(
-      MatchesValidator(field: field, message: message, errorCode: errorCode),
+      MatchesValidator<T, E>(
+        field: field,
+        message: message,
+        errorCode: errorCode,
+      ),
     );
   }
 
@@ -106,23 +108,23 @@ extension FieldConfigString on FieldConfig<String> {
   }
 }
 
-extension FieldConfigNum on FieldConfig<num> {
-  FieldConfig<num> min(num min, {String? message, String? errorCode}) {
-    return merge(MinValidator(min, message: message, errorCode: errorCode));
+extension FieldConfigNum<T extends num> on FieldConfig<T> {
+  FieldConfig<T> min(num min, {String? message, String? errorCode}) {
+    return merge(MinValidator<T>(min, message: message, errorCode: errorCode));
   }
 
-  FieldConfig<num> max(num max, {String? message, String? errorCode}) {
-    return merge(MaxValidator(max, message: message, errorCode: errorCode));
+  FieldConfig<T> max(num max, {String? message, String? errorCode}) {
+    return merge(MaxValidator<T>(max, message: message, errorCode: errorCode));
   }
 
-  FieldConfig<num> range(
+  FieldConfig<T> range(
     num min,
     num max, {
     String? message,
     String? errorCode,
   }) {
     return merge(
-      RangeValidator(min, max, message: message, errorCode: errorCode),
+      RangeValidator<T>(min, max, message: message, errorCode: errorCode),
     );
   }
 }
@@ -168,13 +170,13 @@ extension FieldConfigDateTime on FieldConfig<DateTime> {
     );
   }
 
-  FieldConfig<DateTime> dateAfterField(
-    Enum field, {
+  FieldConfig<DateTime> dateAfterField<E extends Enum>(
+    E field, {
     String? message,
     String? errorCode,
   }) {
     return merge(
-      DateAfterValidator(
+      DateAfterValidator<E>(
         field: field,
         message: message,
         errorCode: errorCode,
@@ -203,4 +205,15 @@ extension FieldConfigList<T> on FieldConfig<List<T>> {
       ListMaxItemsValidator<T>(length, message: message, errorCode: errorCode),
     );
   }
+}
+
+/// Calls [validator] without going through its `(T?, BuildContext)` getter
+/// type, which a `CrossFieldValidator<dynamic, Enum>` view fails to read when
+/// `T` is narrower than `dynamic`.
+String? _runCrossField(
+  CrossFieldValidator<dynamic, Enum> validator,
+  Object? value,
+  BuildContext context,
+) {
+  return (validator as dynamic).validator(value, context) as String?;
 }

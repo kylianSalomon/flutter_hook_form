@@ -41,7 +41,8 @@ class OptionalValidator<T> extends FieldValidator<T> {
   @override
   FieldValidatorFn<T> get validator {
     return (value) {
-      if (value is! T) {
+      // An optional field may stay empty: only a wrongly typed value fails.
+      if (value != null && value is! T) {
         return message ?? errorCode;
       }
 
@@ -150,14 +151,14 @@ class PhoneValidator extends FieldValidator<String> {
 }
 
 /// Minimum validator.
-class MinValidator extends FieldValidator<num> {
+class MinValidator<T extends num> extends FieldValidator<T> {
   const new(this.min, {super.message, String? errorCode})
     : super(errorCode: errorCode ?? 'num_infer_to_min');
 
   final num min;
 
   @override
-  FieldValidatorFn<num> get validator {
+  FieldValidatorFn<T> get validator {
     return (value) {
       if (value != null && value < min) {
         return message ?? errorCode;
@@ -169,14 +170,14 @@ class MinValidator extends FieldValidator<num> {
 }
 
 /// Maximum validator.
-class MaxValidator extends FieldValidator<num> {
+class MaxValidator<T extends num> extends FieldValidator<T> {
   const new(this.max, {super.message, String? errorCode})
     : super(errorCode: errorCode ?? 'num_superior_to_max');
 
   final num max;
 
   @override
-  FieldValidatorFn<num> get validator {
+  FieldValidatorFn<T> get validator {
     return (value) {
       if (value != null && value > max) {
         return message ?? errorCode;
@@ -187,7 +188,7 @@ class MaxValidator extends FieldValidator<num> {
   }
 }
 
-class RangeValidator extends FieldValidator<num> {
+class RangeValidator<T extends num> extends FieldValidator<T> {
   const new(this.min, this.max, {super.message, String? errorCode})
     : super(errorCode: errorCode ?? 'num_out_of_range');
 
@@ -195,7 +196,7 @@ class RangeValidator extends FieldValidator<num> {
   final num max;
 
   @override
-  FieldValidatorFn<num> get validator {
+  FieldValidatorFn<T> get validator {
     return (value) {
       if (value != null && (value < min || value > max)) {
         return message ?? errorCode;
@@ -331,7 +332,8 @@ extension MessageResolver on List<Validator<dynamic>>? {
   ) {
     final error = switch (validator) {
       FieldValidator(:final validator) => validator(value),
-      CrossFieldValidator<dynamic, Enum>(:final validator) => validator(
+      final CrossFieldValidator<dynamic, Enum> crossField => _runCrossField(
+        crossField,
         value,
         context,
       ),
@@ -383,4 +385,15 @@ extension LocalizeError on String? {
       _ => null,
     };
   }
+}
+
+/// Calls [validator] without going through its `(T?, BuildContext)` getter
+/// type, which a `CrossFieldValidator<dynamic, Enum>` view fails to read when
+/// `T` is narrower than `dynamic`.
+String? _runCrossField(
+  CrossFieldValidator<dynamic, Enum> validator,
+  Object? value,
+  BuildContext context,
+) {
+  return (validator as dynamic).validator(value, context) as String?;
 }
