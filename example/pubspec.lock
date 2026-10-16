@@ -68,7 +68,7 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "4.0.0"
+    version: "5.0.0-beta.2"
   flutter_hooks:
     dependency: "direct main"
     description:
