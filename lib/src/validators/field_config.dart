@@ -21,7 +21,10 @@ class const FieldConfig<T>([
   ]);
 
   FieldConfig<T> merge([Validator<T>? validator, T? initialValue]) {
-    return FieldConfig<T>([...validators, ?validator], initialValue);
+    return FieldConfig<T>(
+      [...validators, ?validator],
+      initialValue ?? this.initialValue,
+    );
   }
 
   String? validate(T value, BuildContext context) {
