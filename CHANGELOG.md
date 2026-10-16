@@ -1,3 +1,12 @@
+## 5.0.0-beta.3
+
+### Bug Fixes
+
+* 🐛 **Empty fields no longer crash**: `getNotifier` accepts a `null` value for any `T`, so an empty `HookedFormField` builds again.
+* 🐛 **Cross-field validators no longer throw a `TypeError`**: `matcheField` / `dateAfterField` run correctly on fields narrower than `dynamic` (e.g. `String`, `DateTime`).
+* 🐛 **Numeric validators keep the field type**: `.min()`, `.max()` and `.range()` now work on `FieldConfig<int>` / `FieldConfig<double>` instead of collapsing to `FieldConfig<num>`.
+* 🐛 **Optional fields accept an empty value**: `FieldConfig.optional<T>()` no longer fails on `null`.
+
 ## 5.0.0-beta.2
 
 ### New Features
