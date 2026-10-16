@@ -1,3 +1,13 @@
+## 5.0.0-beta.2
+
+### New Features
+
+* ✨ **`initWith` accepts `null`**: `FieldConfig.initWith` now takes a `T?`, so a nullable source can be passed directly — e.g. `.required<String>().initWith(user?.email)`. `null` means "no initial value", same as not calling `initWith`.
+
+### Bug Fixes
+
+* 🐛 **Initial value no longer lost when chaining validators after `initWith`**: `.initWith('a').email()` used to drop `'a'`; the initial value is now preserved regardless of chain order.
+
 ## 5.0.0-beta.1
 
 ### Breaking Changes

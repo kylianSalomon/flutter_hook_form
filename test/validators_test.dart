@@ -179,6 +179,13 @@ void main() {
       expect(config.initialValue, 'a');
       expect(config.validators, hasLength(2));
     });
+
+    test('accepts null on a non-nullable field as "no initial value"', () {
+      const String? email = null;
+      final config = FieldConfig.required<String>().initWith(email);
+
+      expect(config.initialValue, isNull);
+    });
   });
 }
 

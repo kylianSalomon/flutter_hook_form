@@ -60,7 +60,8 @@ extension FieldConfigBase<T> on FieldConfig<T> {
     );
   }
 
-  FieldConfig<T> initWith(T value) {
+  /// Sets the field's initial value. `null` means no initial value.
+  FieldConfig<T> initWith(T? value) {
     return merge(null, value);
   }
 }
