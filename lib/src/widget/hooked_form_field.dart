@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hook_form/flutter_hook_form.dart';
+import 'package:flutter_hook_form/src/widget/field_validation.dart';
 
 /// A form field that integrates with flutter_hook_form.
 class HookedFormField<T, E extends Enum> extends StatelessWidget {
@@ -89,7 +90,8 @@ class HookedFormField<T, E extends Enum> extends StatelessWidget {
   /// Optional validator function that overrides the form's validators.
   final String? Function(T?)? validator;
 
-  /// Controls when auto-validation occurs.
+  /// Controls when auto-validation occurs. Overrides the field's
+  /// `FieldConfig.validateOn` and the form's `validateOn`.
   final AutovalidateMode? autovalidateMode;
 
   /// Whether the field is enabled.
@@ -115,25 +117,39 @@ class HookedFormField<T, E extends Enum> extends StatelessWidget {
   Widget build(BuildContext context) {
     final form = _form ?? useFormContext<E>(context);
 
-    return FormField<T>(
-      key: form.fieldKey(fieldHook),
-      validator:
-          validator ?? form.validators(fieldHook)?.resolveMessage<T>(context),
-      forceErrorText:
-          forceErrorText ??
-          form
-              .getFieldForcedError(fieldHook)
-              .localize(context, form.getNotifier(fieldHook)),
+    return FieldValidation<E>(
+      form: form,
+      field: fieldHook,
       autovalidateMode: autovalidateMode,
-      enabled: enabled,
-      initialValue: form.getInitialValue(fieldHook) ?? initialValue,
-      onSaved: onSaved,
-      restorationId: restorationId,
-      builder: (_) {
-        return builder(form.getNotifier<T>(fieldHook).value, (value) {
-          form.updateValue(fieldHook, value, notify: notifyOnChange);
-        }, form.getFieldError(fieldHook));
-      },
+      builder: (mode) => FormField<T>(
+        key: form.fieldKey(fieldHook),
+        validator:
+            validator ??
+            (value) {
+              final forcedError = form.getFieldForcedError(fieldHook);
+              if (forcedError != null) {
+                return forcedError.localize(
+                  context,
+                  form.getNotifier(fieldHook),
+                );
+              }
+              return form
+                  .validators(fieldHook)
+                  ?.resolveMessage<T>(context)
+                  ?.call(value);
+            },
+        forceErrorText: forceErrorText,
+        autovalidateMode: mode,
+        enabled: enabled,
+        initialValue: form.getInitialValue(fieldHook) ?? initialValue,
+        onSaved: onSaved,
+        restorationId: restorationId,
+        builder: (_) {
+          return builder(form.getNotifier<T>(fieldHook).value, (value) {
+            form.updateValue(fieldHook, value, notify: notifyOnChange);
+          }, form.getFieldError(fieldHook));
+        },
+      ),
     );
   }
 }

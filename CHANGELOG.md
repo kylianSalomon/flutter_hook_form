@@ -1,3 +1,24 @@
+## Unreleased
+
+### Breaking Changes
+
+* 💥 **`validate()` keeps forced errors by default**: `clearErrors` now defaults to `false`. A forced error (`setError`/`setErrors`) makes `validate()` fail until its field changes — it no longer disappears silently on submit. Pass `validate(clearErrors: true)` or call `clearForcedErrors()` to get the old behavior.
+* 💥 **Fields that are not mounted are validated**: `validate()`, `validateField()` and the new `validateFields()` run the schema validators of unmounted fields (e.g. on another page of a `PageView`) on their stored value. A schema field that is never rendered now fails `validate()` if its value is invalid — make conditional fields `.optional()` or use `.requiredIf(...)`. `validateField()` on an unmounted field used to always return `false`.
+* 💥 **Forced errors no longer go through `forceErrorText`**: `HookedTextFormField`/`HookedFormField` show forced errors through their validator, so `validate()` and the error display stay in sync. A forced error set with `notify: false` shows on the next validation instead of on the next rebuild.
+
+### New Features
+
+* ✨ **`setErrors(Map<E, String>)`**: applies a server response (e.g. a 422) in one pass, then focuses and scrolls to the first field in error when `focusOnInvalid` is enabled. `setErrorsByName(Map<String, String>)` does the same from JSON keys (enum names); unknown keys are ignored.
+* ✨ **Forced errors clear on change**: editing a field removes its forced error and revalidates it — "username taken" no longer stays while the user fixes it.
+* ✨ **Per-field validation mode**: `.validateOn(...)` in the schema (`.required<String>().email().validateOn(.onUnfocus)`) and a form-wide default with `useForm(validateOn: ...)`. `ValidationMode` mirrors `AutovalidateMode` and adds `afterFirstUnfocus`: silent until the user edits and leaves the field, then validates on every change. The widget's `autovalidateMode` argument still wins.
+* ✨ **`validateFields(Set<E>)`**: validates only some fields, e.g. a wizard step, with focus/scroll on the first invalid one.
+* ✨ **`.requiredIf(field, condition)`**: requires a field while a condition holds on another field (`RequiredIfValidator`). Fields with cross-field validators are revalidated when the field they read changes, if they show an error or validate on interaction.
+* ✨ **Forced errors on unmounted fields**: shown as soon as the field is mounted.
+
+### Bug Fixes
+
+* 🐛 **`clearForcedErrors(notify: true)` refreshes the fields**: `notify` used to be ignored.
+
 ## 5.0.0-beta.3
 
 ### Bug Fixes

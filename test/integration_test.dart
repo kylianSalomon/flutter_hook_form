@@ -442,7 +442,9 @@ void main() {
       expect(find.text('required'), findsNothing);
     });
 
-    testWidgets('form clears forced errors after validation', (tester) async {
+    testWidgets('validate keeps forced errors unless clearErrors is set', (
+      tester,
+    ) async {
       late FormFieldsController<TestFormSchema> formController;
 
       await tester.pumpWidget(
@@ -483,11 +485,21 @@ void main() {
         equals('Server error'),
       );
 
-      // Validate clears forced errors by default
+      // Validate keeps forced errors by default: the field is still invalid.
       await tester.tap(find.byType(ElevatedButton));
       await tester.pump();
 
+      expect(
+        formController.getFieldForcedError(.email),
+        equals('Server error'),
+      );
+      expect(find.text('Server error'), findsOneWidget);
+
+      expect(formController.validate(clearErrors: true), isTrue);
+      await tester.pump();
+
       expect(formController.getFieldForcedError(.email), isNull);
+      expect(find.text('Server error'), findsNothing);
     });
 
     testWidgets('useForm with initial values populates form fields', (

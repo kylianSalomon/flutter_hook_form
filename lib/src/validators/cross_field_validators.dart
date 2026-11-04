@@ -54,3 +54,33 @@ class MatchesValidator<T, E extends Enum> extends CrossFieldValidator<T, E> {
     };
   }
 }
+
+/// Requires a value while [condition] holds for the value of the cross
+/// field. Built with `FieldConfig.requiredIf`.
+class RequiredIfValidator<T, E extends Enum> extends CrossFieldValidator<T, E> {
+  const new({
+    required super.field,
+    required this.condition,
+    super.message,
+    String? errorCode,
+  }) : super(errorCode: errorCode ?? 'required');
+
+  /// Receives the cross field's current value; the field is required when
+  /// it returns `true`.
+  final bool Function(Object? value) condition;
+
+  @override
+  CrossFieldValidatorFn<T> get validator {
+    return (value, context) {
+      final form = useFormContext<E>(context);
+      if (!condition(form.getValue<Object?>(field))) {
+        return null;
+      }
+
+      return RequiredValidator<T>(
+        message: message,
+        errorCode: errorCode,
+      ).validator(value);
+    };
+  }
+}
