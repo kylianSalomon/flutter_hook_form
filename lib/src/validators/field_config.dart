@@ -5,6 +5,10 @@ import 'package:flutter_hook_form/flutter_hook_form.dart';
 class const FieldConfig<T>([
   final List<Validator<T>> validators = const [],
   final T? initialValue,
+
+  /// When the field validates itself, set with [FieldConfigBase.validateOn].
+  /// `null` falls back to the form's default.
+  final ValidationMode? validationMode,
 ]) {
   static FieldConfig<T> required<T>({
     String? message,
@@ -24,6 +28,7 @@ class const FieldConfig<T>([
     return FieldConfig<T>(
       [...validators, ?validator],
       initialValue ?? this.initialValue,
+      validationMode,
     );
   }
 
@@ -65,6 +70,37 @@ extension FieldConfigBase<T> on FieldConfig<T> {
   /// Sets the field's initial value. `null` means no initial value.
   FieldConfig<T> initWith(T? value) {
     return merge(null, value);
+  }
+
+  /// Sets when the field validates itself while the user edits it, e.g.
+  /// `.required<String>().email().validateOn(.onUnfocus)`.
+  ///
+  /// Overrides the form's default (`useForm(validateOn: ...)`). The widget's
+  /// `autovalidateMode` argument still takes priority.
+  FieldConfig<T> validateOn(ValidationMode mode) {
+    return FieldConfig<T>(validators, initialValue, mode);
+  }
+
+  /// Makes the field required while [condition] holds for the current value
+  /// of [field], e.g.
+  /// `.optional<String>().requiredIf(Fields.hasCompany, (v) => v == true)`.
+  ///
+  /// The field is revalidated when [field] changes, if it shows an error or
+  /// validates on interaction.
+  FieldConfig<T> requiredIf<E extends Enum>(
+    E field,
+    bool Function(Object? value) condition, {
+    String? message,
+    String? errorCode,
+  }) {
+    return merge(
+      RequiredIfValidator<T, E>(
+        field: field,
+        condition: condition,
+        message: message,
+        errorCode: errorCode,
+      ),
+    );
   }
 }
 

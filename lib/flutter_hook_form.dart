@@ -3,6 +3,7 @@ export 'src/hooks/use_form.dart';
 export 'src/hooks/use_form_context.dart';
 export 'src/messages/form_messages.dart';
 export 'src/models/form_field_controller.dart';
+export 'src/models/validation_mode.dart';
 export 'src/models/validator.dart';
 export 'src/validators/cross_field_validators.dart';
 export 'src/validators/field_config.dart';

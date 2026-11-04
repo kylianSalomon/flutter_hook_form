@@ -347,7 +347,7 @@ extension MessageResolver on List<Validator<dynamic>>? {
     final formScope = HookFormScope.of(context);
 
     return switch (validator) {
-      RequiredValidator() => formScope.required,
+      RequiredValidator() || RequiredIfValidator() => formScope.required,
       EmailValidator() => formScope.invalidEmail,
       PatternValidator() => formScope.invalidPattern,
       MinLengthValidator(length: final length) => formScope.minLength(length),
