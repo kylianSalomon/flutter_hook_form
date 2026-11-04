@@ -20,9 +20,9 @@ class NotificationToggle extends StatelessWidget {
     // Access the form controller from context.
     // This requires a HookedForm or HookedFormProvider ancestor.
     // DO NOT use useForm here - that would create a new form instance!
-    final form = useFormContext(context);
+    final form = useFormContext<ProfileFields>(context);
 
-    return HookedFormField<bool, ProfileFields<bool>>.explicit(
+    return HookedFormField<bool, ProfileFields>.explicit(
       form: form,
       fieldHook: ProfileFields.notificationsEnabled,
       notifyOnChange: true,

@@ -1,3 +1,103 @@
+## 5.0.0-beta.4
+
+### Breaking Changes
+
+* 💥 **`validate()` keeps forced errors by default**: `clearErrors` now defaults to `false`. A forced error (`setError`/`setErrors`) makes `validate()` fail until its field changes — it no longer disappears silently on submit. Pass `validate(clearErrors: true)` or call `clearForcedErrors()` to get the old behavior.
+* 💥 **Fields that are not mounted are validated**: `validate()`, `validateField()` and the new `validateFields()` run the schema validators of unmounted fields (e.g. on another page of a `PageView`) on their stored value. A schema field that is never rendered now fails `validate()` if its value is invalid — make conditional fields `.optional()` or use `.requiredIf(...)`. `validateField()` on an unmounted field used to always return `false`.
+* 💥 **Forced errors no longer go through `forceErrorText`**: `HookedTextFormField`/`HookedFormField` show forced errors through their validator, so `validate()` and the error display stay in sync. A forced error set with `notify: false` shows on the next validation instead of on the next rebuild.
+
+### New Features
+
+* ✨ **`setErrors(Map<E, String>)`**: applies a server response (e.g. a 422) in one pass, then focuses and scrolls to the first field in error when `focusOnInvalid` is enabled. `setErrorsByName(Map<String, String>)` does the same from JSON keys (enum names); unknown keys are ignored.
+* ✨ **Forced errors clear on change**: editing a field removes its forced error and revalidates it — "username taken" no longer stays while the user fixes it.
+* ✨ **Per-field validation mode**: `.validateOn(...)` in the schema (`.required<String>().email().validateOn(.onUnfocus)`) and a form-wide default with `useForm(validateOn: ...)`. `ValidationMode` mirrors `AutovalidateMode` and adds `afterFirstUnfocus`: silent until the user edits and leaves the field, then validates on every change. The widget's `autovalidateMode` argument still wins.
+* ✨ **`validateFields(Set<E>)`**: validates only some fields, e.g. a wizard step, with focus/scroll on the first invalid one.
+* ✨ **`.requiredIf(field, condition)`**: requires a field while a condition holds on another field (`RequiredIfValidator`). Fields with cross-field validators are revalidated when the field they read changes, if they show an error or validate on interaction.
+* ✨ **Forced errors on unmounted fields**: shown as soon as the field is mounted.
+
+### Bug Fixes
+
+* 🐛 **`clearForcedErrors(notify: true)` refreshes the fields**: `notify` used to be ignored.
+
+## 5.0.0-beta.3
+
+### Bug Fixes
+
+* 🐛 **Empty fields no longer crash**: `getNotifier` accepts a `null` value for any `T`, so an empty `HookedFormField` builds again.
+* 🐛 **Cross-field validators no longer throw a `TypeError`**: `matcheField` / `dateAfterField` run correctly on fields narrower than `dynamic` (e.g. `String`, `DateTime`).
+* 🐛 **Numeric validators keep the field type**: `.min()`, `.max()` and `.range()` now work on `FieldConfig<int>` / `FieldConfig<double>` instead of collapsing to `FieldConfig<num>`.
+* 🐛 **Optional fields accept an empty value**: `FieldConfig.optional<T>()` no longer fails on `null`.
+
+## 5.0.0-beta.2
+
+### New Features
+
+* ✨ **`initWith` accepts `null`**: `FieldConfig.initWith` now takes a `T?`, so a nullable source can be passed directly — e.g. `.required<String>().initWith(user?.email)`. `null` means "no initial value", same as not calling `initWith`.
+
+### Bug Fixes
+
+* 🐛 **Initial value no longer lost when chaining validators after `initWith`**: `.initWith('a').email()` used to drop `'a'`; the initial value is now preserved regardless of chain order.
+
+## 5.0.0-beta.1
+
+### Breaking Changes
+
+* 💥 **`FieldSchema` interface removed — fields are now plain enums**: Form fields no longer need to implement `FieldSchema<T>`. Any `enum` works. Validators (and initial values) are declared separately, as a `Map<E, FieldConfig>` passed to `useForm`/`FormFieldsController`.
+
+  ```dart
+  // Before
+  enum MyFormSchema<T> implements FieldSchema<T> {
+    email<String>(validators: [RequiredValidator(), EmailValidator()]);
+
+    const MyFormSchema({this.validators});
+
+    @override
+    final List<Validator<T>>? validators;
+  }
+
+  final form = useForm<MyFormSchema>();
+
+  // After
+  enum MyFields { email }
+
+  final form = useForm<MyFields>(
+    validators: {
+      .email: .required<String>().email(),
+    },
+  );
+  ```
+
+* 💥 **New `FieldConfig<T>` fluent builder replaces raw `Validator` lists**: Instead of listing `Validator` instances by hand, chain fluent methods off `.required<T>()` / `.optional<T>()` — e.g. `.required<String>().email().minLength(8)`. Built-in validators are exposed both as `FieldConfig` methods and as the underlying validator classes, so existing custom `Validator` subclasses keep working — attach them with `.merge(...)`, or expose them fluently via a `FieldConfig` extension (see the [README](README.md#making-a-custom-validator-chainable)).
+
+* 💥 **Initial values folded into `FieldConfig`**: `useForm`'s `initialValues` map is gone. Set a field's initial value inline with `.initWith(value)` as part of its `FieldConfig` chain.
+
+  ```dart
+  // Before
+  final form = useForm<MyFormSchema>(
+    initialValues: {MyFormSchema.email: 'user@example.com'},
+  );
+
+  // After
+  final form = useForm<MyFields>(
+    validators: {
+      .email: .required<String>().email().initWith('user@example.com'),
+    },
+  );
+  ```
+
+* 💥 **`useFormContext` requires a type parameter again**: Now that fields are plain enums with no shared upper bound to infer from, pass the enum type explicitly: `useFormContext<MyFields>(context)`.
+
+* 💥 **Cross-field validators are now generic over the field enum**: `CrossFieldValidator<T>` is now `CrossFieldValidator<T, E extends Enum>`, and its `field` is typed `E` instead of `FieldSchema`. Custom cross-field validators need the extra type parameter — see `MatchesValidator<T, E>` and `DateAfterValidator<E>` for reference.
+
+### New Features
+
+* ✨ **Focus on invalid field**: `useForm` (and `FormFieldsController`) accept `focusOnInvalid` and `autoScrollWhenFocusOnInvalid` to automatically focus — and scroll to — the first invalid field when `form.validate()` fails. Both can be overridden per call via `form.validate(focusOnInvalid: ..., autoScrollWhenFocusOnInvalid: ...)`. `HookedTextFormField` wires this up automatically; other fields can opt in via the new `FormFieldsController.focusNodeFor`.
+
+### Documentation
+
+* 📝 **README rework**: rewritten around a "why this package" pitch, with a side-by-side comparison table against a vanilla `Form` + `GlobalKey<FormState>`, a new minimal example, and a section on making custom validators chainable via `FieldConfig` extensions.
+* 📝 **Use Cases moved to `doc/USE_CASES.md`**: the former "Use Cases" section of the README is now a standalone doc, keeping the README focused on getting started.
+
 ## 4.0.0
 
 ### Breaking Changes

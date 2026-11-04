@@ -13,11 +13,11 @@ class ThemeSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Access the form from the parent context
-    final form = useFormContext(context);
+    final form = useFormContext<ProfileFields>(context);
 
-    return HookedFormField<String, ProfileFields<String>>.explicit(
+    return HookedFormField<String, ProfileFields>.explicit(
       form: form,
-      fieldHook: ProfileFields.theme,
+      fieldHook: .theme,
       notifyOnChange: true,
       builder: (value, onChanged, error) {
         return Column(

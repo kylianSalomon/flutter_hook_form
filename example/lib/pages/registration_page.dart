@@ -27,7 +27,21 @@ class RegistrationPage extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    final form = useForm<RegistrationFields>();
+    final form = useForm<RegistrationFields>(
+      validators: {
+        .username: .required<String>().minLength(3).maxLength(20),
+        .email: .required<String>().email(),
+        .phone: .optional<String>().phone(),
+        .password: .required<String>().minLength(8),
+        .confirmPassword: .required<String>().matcheField(
+          RegistrationFields.password,
+        ),
+        .birthDate: .optional<DateTime>().isBefore(DateTime(2023, 1, 1)),
+        .firstJobDate: .optional<DateTime>(),
+        .country: .required<String>(),
+        .agreeToTerms: .required<bool>(),
+      },
+    );
     final obscurePassword = useState(true);
     final obscureConfirmPassword = useState(true);
     final isSubmitting = useState(false);
@@ -45,7 +59,7 @@ class RegistrationPage extends HookWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Username field
-              const HookedTextFormField<RegistrationFields<String>>(
+              const HookedTextFormField<RegistrationFields>(
                 fieldHook: .username,
                 decoration: InputDecoration(
                   labelText: 'Username',
@@ -57,7 +71,7 @@ class RegistrationPage extends HookWidget {
               ),
               const SizedBox(height: 16),
               // Email field
-              const HookedTextFormField<RegistrationFields<String>>(
+              const HookedTextFormField<RegistrationFields>(
                 fieldHook: .email,
                 decoration: InputDecoration(
                   labelText: 'Email',
@@ -70,7 +84,7 @@ class RegistrationPage extends HookWidget {
               ),
               const SizedBox(height: 16),
               // Phone field (optional)
-              const HookedTextFormField<RegistrationFields<String>>(
+              const HookedTextFormField<RegistrationFields>(
                 fieldHook: .phone,
                 decoration: InputDecoration(
                   labelText: 'Phone (optional)',
@@ -83,7 +97,7 @@ class RegistrationPage extends HookWidget {
               ),
               const SizedBox(height: 16),
               // Password field
-              HookedTextFormField<RegistrationFields<String>>(
+              HookedTextFormField<RegistrationFields>(
                 fieldHook: .password,
                 decoration: InputDecoration(
                   labelText: 'Password',
@@ -105,7 +119,7 @@ class RegistrationPage extends HookWidget {
               ),
               const SizedBox(height: 16),
               // Confirm password field with custom validator
-              HookedTextFormField<RegistrationFields<String>>(
+              HookedTextFormField<RegistrationFields>(
                 fieldHook: .confirmPassword,
                 decoration: InputDecoration(
                   labelText: 'Confirm Password',
@@ -127,7 +141,7 @@ class RegistrationPage extends HookWidget {
               ),
               const SizedBox(height: 16),
               // Birth date picker using HookedFormField
-              HookedFormField<DateTime, RegistrationFields<DateTime>>(
+              HookedFormField<DateTime, RegistrationFields>(
                 fieldHook: .birthDate,
                 builder: (value, onChanged, error) {
                   return Column(
@@ -173,7 +187,7 @@ class RegistrationPage extends HookWidget {
               ),
               const SizedBox(height: 16),
               // Country dropdown using HookedFormField
-              HookedFormField<String, RegistrationFields<String>>(
+              HookedFormField<String, RegistrationFields>(
                 fieldHook: .country,
                 builder: (value, onChanged, error) {
                   return DropdownButtonFormField<String>(
@@ -196,7 +210,7 @@ class RegistrationPage extends HookWidget {
               ),
               const SizedBox(height: 16),
               // Terms and conditions checkbox
-              HookedFormField<bool, RegistrationFields<bool>>(
+              HookedFormField<bool, RegistrationFields>(
                 fieldHook: .agreeToTerms,
                 builder: (value, onChanged, error) {
                   return Column(

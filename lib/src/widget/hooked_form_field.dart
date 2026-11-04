@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hook_form/flutter_hook_form.dart';
+import 'package:flutter_hook_form/src/widget/field_validation.dart';
 
 /// A form field that integrates with flutter_hook_form.
-class HookedFormField<T, F extends FieldSchema<T>> extends StatelessWidget {
+class HookedFormField<T, E extends Enum> extends StatelessWidget {
   /// Creates a [HookedFormField] that gets the form from context.
   ///
   /// This widget wraps a standard [FormField] and connects it to a [FormFieldsController].
@@ -57,7 +58,7 @@ class HookedFormField<T, F extends FieldSchema<T>> extends StatelessWidget {
     super.key,
     required this.fieldHook,
     required this.builder,
-    required FormFieldsController<FieldSchema<dynamic>> form,
+    required this._form,
     this.forceErrorText,
     this.validator,
     this.autovalidateMode,
@@ -66,13 +67,13 @@ class HookedFormField<T, F extends FieldSchema<T>> extends StatelessWidget {
     this.onSaved,
     this.restorationId,
     this.notifyOnChange = true,
-  }) : _form = form;
+  });
 
   /// The form controller, if provided directly.
-  final FormFieldsController<FieldSchema<dynamic>>? _form;
+  final FormFieldsController<E>? _form;
 
   /// The field identifier from the form schema.
-  final F fieldHook;
+  final E fieldHook;
 
   /// Builder function to create the form field widget.
   ///
@@ -89,7 +90,8 @@ class HookedFormField<T, F extends FieldSchema<T>> extends StatelessWidget {
   /// Optional validator function that overrides the form's validators.
   final String? Function(T?)? validator;
 
-  /// Controls when auto-validation occurs.
+  /// Controls when auto-validation occurs. Overrides the field's
+  /// `FieldConfig.validateOn` and the form's `validateOn`.
   final AutovalidateMode? autovalidateMode;
 
   /// Whether the field is enabled.
@@ -113,29 +115,41 @@ class HookedFormField<T, F extends FieldSchema<T>> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final FormFieldsController<FieldSchema<dynamic>> form =
-        _form ?? useFormContext(context);
-    final typedField = fieldHook as FieldSchema<T>;
+    final form = _form ?? useFormContext<E>(context);
 
-    return FormField<T>(
-      key: form.fieldKey(typedField),
-      validator:
-          validator ?? form.validators(fieldHook)?.resolveMessage<T>(context),
-      forceErrorText:
-          forceErrorText ??
-          form
-              .getFieldForcedError(fieldHook)
-              .localize(context, form.getNotifier(typedField)),
+    return FieldValidation<E>(
+      form: form,
+      field: fieldHook,
       autovalidateMode: autovalidateMode,
-      enabled: enabled,
-      initialValue: form.getInitialValue(typedField) ?? initialValue,
-      onSaved: onSaved,
-      restorationId: restorationId,
-      builder: (_) {
-        return builder(form.getNotifier(typedField).value, (value) {
-          form.updateValue(typedField, value, notify: notifyOnChange);
-        }, form.getFieldError(fieldHook));
-      },
+      builder: (mode) => FormField<T>(
+        key: form.fieldKey(fieldHook),
+        validator:
+            validator ??
+            (value) {
+              final forcedError = form.getFieldForcedError(fieldHook);
+              if (forcedError != null) {
+                return forcedError.localize(
+                  context,
+                  form.getNotifier(fieldHook),
+                );
+              }
+              return form
+                  .validators(fieldHook)
+                  ?.resolveMessage<T>(context)
+                  ?.call(value);
+            },
+        forceErrorText: forceErrorText,
+        autovalidateMode: mode,
+        enabled: enabled,
+        initialValue: form.getInitialValue(fieldHook) ?? initialValue,
+        onSaved: onSaved,
+        restorationId: restorationId,
+        builder: (_) {
+          return builder(form.getNotifier<T>(fieldHook).value, (value) {
+            form.updateValue(fieldHook, value, notify: notifyOnChange);
+          }, form.getFieldError(fieldHook));
+        },
+      ),
     );
   }
 }

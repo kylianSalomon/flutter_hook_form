@@ -15,9 +15,11 @@ void main() {
           home: HookBuilder(
             builder: (context) {
               final form = useForm<TestFormSchema>(
-                initialValues: {
-                  TestFormSchema.email: 'test@example.com',
-                  TestFormSchema.password: 'password123',
+                validators: {
+                  .email: .required<String>().email().initWith(
+                    'test@example.com',
+                  ),
+                  .password: .required<String>().initWith('password123'),
                 },
               );
 
@@ -146,7 +148,9 @@ void main() {
         MaterialApp(
           home: HookBuilder(
             builder: (context) {
-              final form = useForm<TestFormSchema>();
+              final form = useForm<TestFormSchema>(
+                validators: {.email: .required<String>().email()},
+              );
 
               return Scaffold(
                 body: HookedForm(
@@ -186,9 +190,11 @@ void main() {
           home: HookBuilder(
             builder: (context) {
               final form = useForm<TestFormSchema>(
-                initialValues: {
-                  TestFormSchema.email: 'test@example.com',
-                  TestFormSchema.password: 'password123',
+                validators: {
+                  .email: .required<String>().email().initWith(
+                    'test@example.com',
+                  ),
+                  .password: .required<String>().initWith('password123'),
                 },
               );
 
@@ -234,9 +240,11 @@ void main() {
           home: HookBuilder(
             builder: (context) {
               final form = useForm<TestFormSchema>(
-                initialValues: {
-                  TestFormSchema.email: 'test@example.com',
-                  TestFormSchema.password: 'password123',
+                validators: {
+                  .email: .required<String>().email().initWith(
+                    'test@example.com',
+                  ),
+                  .password: .required<String>().initWith('password123'),
                 },
               );
               formController = form;
@@ -388,7 +396,12 @@ void main() {
         MaterialApp(
           home: HookBuilder(
             builder: (context) {
-              final form = useForm<TestFormSchema>();
+              final form = useForm<TestFormSchema>(
+                validators: {
+                  .email: .required<String>().email(),
+                  .password: .required<String>(),
+                },
+              );
               formController = form;
 
               return Scaffold(
@@ -429,7 +442,9 @@ void main() {
       expect(find.text('required'), findsNothing);
     });
 
-    testWidgets('form clears forced errors after validation', (tester) async {
+    testWidgets('validate keeps forced errors unless clearErrors is set', (
+      tester,
+    ) async {
       late FormFieldsController<TestFormSchema> formController;
 
       await tester.pumpWidget(
@@ -470,11 +485,21 @@ void main() {
         equals('Server error'),
       );
 
-      // Validate clears forced errors by default
+      // Validate keeps forced errors by default: the field is still invalid.
       await tester.tap(find.byType(ElevatedButton));
       await tester.pump();
 
+      expect(
+        formController.getFieldForcedError(.email),
+        equals('Server error'),
+      );
+      expect(find.text('Server error'), findsOneWidget);
+
+      expect(formController.validate(clearErrors: true), isTrue);
+      await tester.pump();
+
       expect(formController.getFieldForcedError(.email), isNull);
+      expect(find.text('Server error'), findsNothing);
     });
 
     testWidgets('useForm with initial values populates form fields', (
@@ -485,7 +510,9 @@ void main() {
           home: HookBuilder(
             builder: (context) {
               final form = useForm<TestFormSchema>(
-                initialValues: {TestFormSchema.email: 'prefilled@example.com'},
+                validators: {
+                  .email: .required<String>().initWith('prefilled@example.com'),
+                },
               );
 
               return Scaffold(
@@ -560,5 +587,108 @@ void main() {
       expect(values[TestFormSchema.email], equals('test@example.com'));
       expect(values[TestFormSchema.password], equals('secret123'));
     });
+
+    testWidgets('focusOnInvalid moves focus to the first invalid field', (
+      tester,
+    ) async {
+      late FormFieldsController<TestFormSchema> formController;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: HookBuilder(
+            builder: (context) {
+              final form = useForm<TestFormSchema>(
+                focusOnInvalid: true,
+                autoScrollWhenFocusOnInvalid: false,
+                validators: {
+                  .email: .required<String>().email(),
+                  .password: .required<String>(),
+                },
+              );
+              formController = form;
+
+              return Scaffold(
+                body: HookedForm(
+                  form: form,
+                  child: Column(
+                    children: [
+                      const HookedTextFormField(
+                        fieldHook: TestFormSchema.email,
+                        decoration: InputDecoration(labelText: 'Email'),
+                      ),
+                      const HookedTextFormField(
+                        fieldHook: TestFormSchema.password,
+                        decoration: InputDecoration(labelText: 'Password'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () => form.validate(),
+                        child: const Text('Validate'),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      );
+
+      // Both fields are empty, both fail the required validator.
+      await tester.tap(find.byType(ElevatedButton));
+      await tester.pump();
+
+      expect(
+        formController.focusNodeFor(TestFormSchema.email).hasFocus,
+        isTrue,
+      );
+      expect(
+        formController.focusNodeFor(TestFormSchema.password).hasFocus,
+        isFalse,
+      );
+    });
+
+    testWidgets(
+      'validate does not move focus when focusOnInvalid is disabled',
+      (tester) async {
+        late FormFieldsController<TestFormSchema> formController;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: HookBuilder(
+              builder: (context) {
+                final form = useForm<TestFormSchema>();
+                formController = form;
+
+                return Scaffold(
+                  body: HookedForm(
+                    form: form,
+                    child: Column(
+                      children: [
+                        const HookedTextFormField(
+                          fieldHook: TestFormSchema.email,
+                          decoration: InputDecoration(labelText: 'Email'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () => form.validate(),
+                          child: const Text('Validate'),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+
+        await tester.tap(find.byType(ElevatedButton));
+        await tester.pump();
+
+        expect(
+          formController.focusNodeFor(TestFormSchema.email).hasFocus,
+          isFalse,
+        );
+      },
+    );
   });
 }

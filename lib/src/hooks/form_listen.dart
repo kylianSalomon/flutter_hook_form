@@ -1,10 +1,9 @@
 import 'package:flutter/widgets.dart';
-import 'package:flutter_hook_form/src/models/field_schema.dart';
 import 'package:flutter_hook_form/src/models/form_field_controller.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 
 /// Extension on [FormFieldsController] providing reactive field listening.
-extension FormListenExtension<F extends FieldSchema<dynamic>> on FormFieldsController<F> {
+extension FormListenerExtension<E extends Enum> on FormFieldsController<E> {
   /// Listens to changes on the specified [fields] and rebuilds the widget
   /// when any of their values change.
   ///
@@ -37,8 +36,8 @@ extension FormListenExtension<F extends FieldSchema<dynamic>> on FormFieldsContr
   /// );
   /// ```
   R listen<R>(
-    Set<F> fields,
-    R Function(T? Function<T>(FieldSchema<T> field) get) selector,
+    Set<E> fields,
+    R Function(T? Function<T>(E field) get) selector,
   ) {
     final merged = useMemoized(
       () => Listenable.merge(fields.map(fieldListenable).toList()),
@@ -46,7 +45,7 @@ extension FormListenExtension<F extends FieldSchema<dynamic>> on FormFieldsContr
     );
     useListenable(merged);
 
-    T? getter<T>(FieldSchema<T> field) => getValue<T>(field);
+    T? getter<T>(E field) => getValue<T>(field);
     return selector(getter);
   }
 }

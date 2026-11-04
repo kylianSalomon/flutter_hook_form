@@ -12,10 +12,10 @@ class FieldListenerPage extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final form = useForm<DemoFields>(
-      initialValues: {
-        DemoFields.firstName: '',
-        DemoFields.lastName: '',
-        DemoFields.age: '',
+      validators: {
+        .firstName: .required<String>().initWith(''),
+        .lastName: .required<String>().initWith(''),
+        .age: .optional<int>().min(18),
       },
     );
 
@@ -39,9 +39,8 @@ class FieldListenerPage extends HookWidget {
                   children: [
                     Text(
                       'Granular Rebuilds Demo',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                      style: Theme.of(context).textTheme.titleMedium
+                          ?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
                     const Text(
@@ -209,8 +208,7 @@ class _FullNameListener extends HookWidget {
       (get) => [
         get<String>(DemoFields.firstName),
         get<String>(DemoFields.lastName),
-      ].where((s) => s != null && s.isNotEmpty)
-          .join(' '),
+      ].where((s) => s != null && s.isNotEmpty).join(' '),
     );
 
     return _ListenerCard(
@@ -261,16 +259,14 @@ class _ListenerCard extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                    style: Theme.of(context).textTheme.titleSmall
+                        ?.copyWith(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     'Listening to: $field',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey,
-                        ),
+                    style: Theme.of(context).textTheme.bodySmall
+                        ?.copyWith(color: Colors.grey),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -288,10 +284,7 @@ class _ListenerCard extends StatelessWidget {
               ),
               child: Text(
                 'Rebuilds: $rebuildCount',
-                style: TextStyle(
-                  color: color,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(color: color, fontWeight: FontWeight.bold),
               ),
             ),
           ],
@@ -302,13 +295,4 @@ class _ListenerCard extends StatelessWidget {
 }
 
 /// Demo form fields schema
-enum DemoFields<T> implements FieldSchema<T> {
-  firstName<String>(),
-  lastName<String>(),
-  age<String>();
-
-  const DemoFields({this.validators});
-
-  @override
-  final List<Validator<T>>? validators;
-}
+enum DemoFields<T> { firstName<String>(), lastName<String>(), age<String>() }

@@ -3,16 +3,15 @@ import 'dart:ui';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_hook_form/src/models/field_schema.dart';
 
 import '../hooks/use_form_context.dart';
 import '../models/form_field_controller.dart';
 import '../validators/validators.dart';
+import 'field_validation.dart';
 import 'hooked_form.dart';
 
 /// A text form field that integrates with flutter_hook_form.
-class HookedTextFormField<F extends FieldSchema<String>>
-    extends StatelessWidget {
+class HookedTextFormField<E extends Enum> extends StatelessWidget {
   /// Creates a [HookedTextFormField] that gets the form from context.
   ///
   /// This widget wraps a standard [TextFormField] and connects it to a [FormFieldsController].
@@ -154,7 +153,7 @@ class HookedTextFormField<F extends FieldSchema<String>>
   const HookedTextFormField.explicit({
     super.key,
     required this.fieldHook,
-    required FormFieldsController<FieldSchema<dynamic>> form,
+    required this._form,
     this.forceErrorText,
     this.validator,
     this.autovalidateMode,
@@ -232,13 +231,13 @@ class HookedTextFormField<F extends FieldSchema<String>>
     this.magnifierConfiguration,
     this.scrollController,
     this.notifyOnChange = true,
-  }) : _form = form;
+  });
 
   /// The form controller, if provided directly.
-  final FormFieldsController<FieldSchema<dynamic>>? _form;
+  final FormFieldsController<E>? _form;
 
   /// The field identifier from the form schema.
-  final F fieldHook;
+  final E fieldHook;
 
   /// Optional error text to force the field into an error state.
   final String? forceErrorText;
@@ -246,7 +245,8 @@ class HookedTextFormField<F extends FieldSchema<String>>
   /// Optional validator function that overrides the form's validators.
   final String? Function(String?)? validator;
 
-  /// Controls when auto-validation occurs.
+  /// Controls when auto-validation occurs. Overrides the field's
+  /// `FieldConfig.validateOn` and the form's `validateOn`.
   final AutovalidateMode? autovalidateMode;
 
   /// Whether the field is enabled.
@@ -475,100 +475,106 @@ class HookedTextFormField<F extends FieldSchema<String>>
 
   @override
   Widget build(BuildContext context) {
-    final FormFieldsController<FieldSchema<dynamic>> form =
-        _form ?? useFormContext(context);
-    final typedField = fieldHook as FieldSchema<String>;
+    final form = _form ?? useFormContext(context);
+    final effectiveFocusNode = form.focusNodeFor(
+      fieldHook,
+      external: focusNode,
+    );
 
-    return TextFormField(
-      key: form.fieldKey(typedField),
-      validator:
-          validator ??
-          (value) {
-            final forcedError = form.getFieldForcedError(fieldHook);
-            if (forcedError != null) {
-              return forcedError.localize(context, form.getNotifier(typedField));
-            }
-            return form
-                .validators(fieldHook)
-                ?.resolveMessage<String>(context)
-                ?.call(value);
-          },
-      forceErrorText:
-          forceErrorText ??
-          form
-              .getFieldForcedError(fieldHook)
-              .localize(context, form.getNotifier(typedField)),
+    return FieldValidation<E>(
+      form: form,
+      field: fieldHook,
       autovalidateMode: autovalidateMode,
-      enabled: enabled,
-      initialValue: form.getInitialValue(typedField) ?? initialValue,
-      onSaved: onSaved,
-      restorationId: restorationId,
-      showCursor: showCursor,
-      obscuringCharacter: obscuringCharacter ?? '•',
-      obscureText: obscureText ?? false,
-      autocorrect: autocorrect ?? true,
-      smartDashesType: smartDashesType,
-      smartQuotesType: smartQuotesType,
-      enableSuggestions: enableSuggestions ?? true,
-      maxLengthEnforcement: maxLengthEnforcement,
-      maxLines: maxLines ?? 1,
-      minLines: minLines,
-      expands: expands ?? false,
-      maxLength: maxLength,
-      onChanged: (value) {
-        onChanged?.call(value);
-        form.updateValue(typedField, value, notify: notifyOnChange);
-      },
-      onTap: onTap,
-      onTapAlwaysCalled: onTapAlwaysCalled ?? false,
-      onTapOutside: onTapOutside,
-      onEditingComplete: onEditingComplete,
-      onFieldSubmitted: onFieldSubmitted,
-      inputFormatters: inputFormatters,
-      ignorePointers: ignorePointers,
-      cursorWidth: cursorWidth ?? 2.0,
-      cursorHeight: cursorHeight,
-      cursorRadius: cursorRadius,
-      cursorColor: cursorColor,
-      cursorErrorColor: cursorErrorColor,
-      keyboardAppearance: keyboardAppearance,
-      scrollPadding: scrollPadding ?? const EdgeInsets.all(20),
-      enableInteractiveSelection: enableInteractiveSelection,
-      selectionControls: selectionControls,
-      buildCounter: buildCounter,
-      scrollPhysics: scrollPhysics,
-      autofillHints: autofillHints,
-      scrollController: scrollController,
-      enableIMEPersonalizedLearning: enableIMEPersonalizedLearning ?? true,
-      mouseCursor: mouseCursor,
-      contextMenuBuilder: contextMenuBuilder,
-      spellCheckConfiguration: spellCheckConfiguration,
-      magnifierConfiguration: magnifierConfiguration,
-      undoController: undoController,
-      onAppPrivateCommand: onAppPrivateCommand,
-      cursorOpacityAnimates: cursorOpacityAnimates,
-      selectionHeightStyle: selectionHeightStyle ?? BoxHeightStyle.tight,
-      selectionWidthStyle: selectionWidthStyle ?? BoxWidthStyle.tight,
-      dragStartBehavior: dragStartBehavior ?? DragStartBehavior.start,
-      contentInsertionConfiguration: contentInsertionConfiguration,
-      statesController: statesController,
-      clipBehavior: clipBehavior ?? Clip.hardEdge,
-      stylusHandwritingEnabled: scribbleEnabled ?? true,
-      canRequestFocus: canRequestFocus ?? true,
-      autofocus: autofocus ?? false,
-      controller: controller,
-      decoration: decoration,
-      focusNode: focusNode,
-      groupId: groupId ?? EditableText,
-      keyboardType: keyboardType,
-      readOnly: readOnly ?? false,
-      strutStyle: strutStyle,
-      textAlign: textAlign ?? TextAlign.start,
-      textAlignVertical: textAlignVertical,
-      textCapitalization: textCapitalization ?? TextCapitalization.none,
-      textDirection: textDirection,
-      textInputAction: textInputAction,
-      style: style,
+      builder: (mode) => TextFormField(
+        key: form.fieldKey(fieldHook),
+        validator:
+            validator ??
+            (value) {
+              final forcedError = form.getFieldForcedError(fieldHook);
+              if (forcedError != null) {
+                return forcedError.localize(
+                  context,
+                  form.getNotifier(fieldHook),
+                );
+              }
+              return form
+                  .validators(fieldHook)
+                  ?.resolveMessage<String>(context)
+                  ?.call(value);
+            },
+        forceErrorText: forceErrorText,
+        autovalidateMode: mode,
+        enabled: enabled,
+        initialValue: form.getInitialValue(fieldHook) ?? initialValue,
+        onSaved: onSaved,
+        restorationId: restorationId,
+        showCursor: showCursor,
+        obscuringCharacter: obscuringCharacter ?? '•',
+        obscureText: obscureText ?? false,
+        autocorrect: autocorrect ?? true,
+        smartDashesType: smartDashesType,
+        smartQuotesType: smartQuotesType,
+        enableSuggestions: enableSuggestions ?? true,
+        maxLengthEnforcement: maxLengthEnforcement,
+        maxLines: maxLines ?? 1,
+        minLines: minLines,
+        expands: expands ?? false,
+        maxLength: maxLength,
+        onChanged: (value) {
+          onChanged?.call(value);
+          form.updateValue(fieldHook, value, notify: notifyOnChange);
+        },
+        onTap: onTap,
+        onTapAlwaysCalled: onTapAlwaysCalled ?? false,
+        onTapOutside: onTapOutside,
+        onEditingComplete: onEditingComplete,
+        onFieldSubmitted: onFieldSubmitted,
+        inputFormatters: inputFormatters,
+        ignorePointers: ignorePointers,
+        cursorWidth: cursorWidth ?? 2.0,
+        cursorHeight: cursorHeight,
+        cursorRadius: cursorRadius,
+        cursorColor: cursorColor,
+        cursorErrorColor: cursorErrorColor,
+        keyboardAppearance: keyboardAppearance,
+        scrollPadding: scrollPadding ?? const EdgeInsets.all(20),
+        enableInteractiveSelection: enableInteractiveSelection,
+        selectionControls: selectionControls,
+        buildCounter: buildCounter,
+        scrollPhysics: scrollPhysics,
+        autofillHints: autofillHints,
+        scrollController: scrollController,
+        enableIMEPersonalizedLearning: enableIMEPersonalizedLearning ?? true,
+        mouseCursor: mouseCursor,
+        contextMenuBuilder: contextMenuBuilder,
+        spellCheckConfiguration: spellCheckConfiguration,
+        magnifierConfiguration: magnifierConfiguration,
+        undoController: undoController,
+        onAppPrivateCommand: onAppPrivateCommand,
+        cursorOpacityAnimates: cursorOpacityAnimates,
+        selectionHeightStyle: selectionHeightStyle ?? BoxHeightStyle.tight,
+        selectionWidthStyle: selectionWidthStyle ?? BoxWidthStyle.tight,
+        dragStartBehavior: dragStartBehavior ?? DragStartBehavior.start,
+        contentInsertionConfiguration: contentInsertionConfiguration,
+        statesController: statesController,
+        clipBehavior: clipBehavior ?? Clip.hardEdge,
+        stylusHandwritingEnabled: scribbleEnabled ?? true,
+        canRequestFocus: canRequestFocus ?? true,
+        autofocus: autofocus ?? false,
+        controller: controller,
+        decoration: decoration,
+        focusNode: effectiveFocusNode,
+        groupId: groupId ?? EditableText,
+        keyboardType: keyboardType,
+        readOnly: readOnly ?? false,
+        strutStyle: strutStyle,
+        textAlign: textAlign ?? TextAlign.start,
+        textAlignVertical: textAlignVertical,
+        textCapitalization: textCapitalization ?? TextCapitalization.none,
+        textDirection: textDirection,
+        textInputAction: textInputAction,
+        style: style,
+      ),
     );
   }
 }

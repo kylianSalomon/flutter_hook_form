@@ -1,24 +1,23 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutter_hook_form/src/models/field_schema.dart';
+import 'package:flutter_hook_form/src/models/validation_mode.dart';
 import 'package:flutter_hook_form/src/models/validator.dart';
+import 'package:flutter_hook_form/src/validators/field_config.dart';
 
 import 'types.dart';
 
 /// A type that represents the initial values of a form field.
-typedef InitialFieldValues<F extends FieldSchema<dynamic>, T> = Map<F, T>;
+typedef InitialFieldValues<E extends Enum, T> = Map<E, T>;
 
 /// Single per-field value holder. Acts as the canonical store for the field's
 /// value and as the [Listenable] that powers reactive subscribers.
 ///
 /// Uses [setSilently] to update the value without firing listeners, which is
 /// what `updateValue(field, value, notify: false)` needs.
-class _FieldNotifier extends ChangeNotifier
+class _FieldNotifier(var Object? _value)
+    extends ChangeNotifier
     implements ValueListenable<Object?> {
-  _FieldNotifier(this._value);
-
-  Object? _value;
-
   @override
   Object? get value => _value;
 
@@ -46,11 +45,8 @@ class _FieldNotifier extends ChangeNotifier
 /// Equality delegates to the wrapped notifier so multiple wrappers around the
 /// same field compare equal — keeps `useValueListenable` from re-subscribing
 /// on every rebuild.
-class _TypedFieldListenable<T> extends ValueListenable<T?> {
-  _TypedFieldListenable(this._inner);
-
-  final _FieldNotifier _inner;
-
+class const _TypedFieldListenable<T>(final _FieldNotifier _inner)
+    extends ValueListenable<T?> {
   @override
   T? get value => _inner.value as T?;
 
@@ -69,52 +65,113 @@ class _TypedFieldListenable<T> extends ValueListenable<T?> {
 }
 
 /// A controller that manages form field states and validation
-class FormFieldsController<F extends FieldSchema<dynamic>> {
-  /// Creates a [FormFieldsController].
-  FormFieldsController(
-    this.key, {
-    InitialFieldValues<F, Object?>? initialValues,
-  }) : _initialValues = initialValues;
-
+class FormFieldsController<E extends Enum>(
   /// The form key.
-  final FormKey key;
+  final FormKey key, {
+
+  final Map<E, FieldConfig>? _validators,
+
+  /// Whether [validate] moves focus to the first invalid field by default.
+  ///
+  /// Can be overridden per call via `validate(focusOnInvalid: ...)`.
+  final bool focusOnInvalid = false,
+
+  /// Whether [validate] scrolls the first invalid field into view by
+  /// default, when [focusOnInvalid] (or its per-call override) is `true`.
+  ///
+  /// Can be overridden per call via
+  /// `validate(autoScrollWhenFocusOnInvalid: ...)`.
+  final bool autoScrollWhenFocusOnInvalid = false,
+
+  /// When fields validate themselves while the user edits them, for fields
+  /// that do not set `FieldConfig.validateOn`. See [validationModeOf].
+  final ValidationMode validateOn = ValidationMode.disabled,
+}) {
+  /// Creates a [FormFieldsController].
+  this {
+    _initialValues = {
+      ...?_validators?.map((key, value) => MapEntry(key, value.initialValue)),
+    };
+    _fieldKeys = {};
+    _fieldFocusNodes = {};
+    _ownedFocusNodes = {};
+    _forcedErrors = {};
+  }
 
   /// The field keys.
-  final Map<FieldSchema<dynamic>, GlobalKey<FormFieldState<Object?>>> _fieldKeys = {};
+  late final Map<E, GlobalKey<FormFieldState<Object?>>> _fieldKeys;
 
-  /// The initial values.
-  final InitialFieldValues<F, Object?>? _initialValues;
+  /// The focus node for each field that opted into focus-on-invalid support.
+  late final Map<E, FocusNode> _fieldFocusNodes;
 
-  /// The forced errors.
-  final _forcedErrors = <String, String>{};
+  /// Fields whose [FocusNode] was created (and is therefore owned and
+  /// disposed) by this controller, as opposed to one supplied by the caller.
+  late final Set<E> _ownedFocusNodes;
+
+  /// The forced errors, e.g. returned by a server.
+  late final Map<E, String> _forcedErrors;
+
+  late final InitialFieldValues<E, dynamic> _initialValues;
 
   /// Single source of truth for field values. One notifier per field, used
   /// by both [getNotifier] (typed read access) and [fieldListenable]
   /// (untyped change subscription for `form.listen`).
-  final Map<FieldSchema<dynamic>, _FieldNotifier> _fieldNotifiers = {};
+  final Map<E, _FieldNotifier> _fieldNotifiers = {};
 
   /// Lazily creates the notifier for [field], seeded with its initial value.
-  _FieldNotifier _notifierFor(FieldSchema<dynamic> field) {
+  _FieldNotifier _notifierFor(E field) {
     return _fieldNotifiers.putIfAbsent(
       field,
-      () => _FieldNotifier(_initialValues?[field]),
+      () => _FieldNotifier(_initialValues[field]),
     );
   }
 
+  /// Every field the controller knows of: declared in the schema, rendered
+  /// by a hooked widget, or holding a forced error.
+  Set<E> get _knownFields => {
+    ...?_validators?.keys,
+    ..._fieldKeys.keys,
+    ..._forcedErrors.keys,
+  };
+
+  /// A mounted field's context, which sits below the [HookedForm] provider
+  /// and lets cross-field validators run for fields that are not mounted.
+  BuildContext? get _mountedFieldContext =>
+      _fieldKeys.values.map((key) => key.currentContext).nonNulls.firstOrNull;
+
+  /// When [field] validates itself while the user edits it: its
+  /// `FieldConfig.validateOn`, or [validateOn] by default.
+  ValidationMode validationModeOf(E field) {
+    return _validators?[field]?.validationMode ?? validateOn;
+  }
+
   /// Get or create a GlobalKey for a form field
-  GlobalKey<FormFieldState<T>> fieldKey<T>(FieldSchema<T> field) {
+  GlobalKey<FormFieldState> fieldKey(E field) {
     final key = _fieldKeys.putIfAbsent(
       field,
-      () => GlobalKey<FormFieldState<T>>(debugLabel: field.name),
+      () => GlobalKey<FormFieldState>(debugLabel: field.name),
     );
 
-    if (key is! GlobalKey<FormFieldState<T>>) {
-      throw Exception(
-        'Cannot return $key as a GlobalKey<FormFieldState<$T>>, key is of type ${key.runtimeType}',
-      );
+    return key;
+  }
+
+  /// Returns the [FocusNode] used to focus [field] when validation fails
+  /// with [focusOnInvalid] enabled.
+  ///
+  /// Pass [external] to register a [FocusNode] you manage yourself (e.g. one
+  /// created by a hook and wired into a custom [HookedFormField] builder).
+  /// Without [external], a node is lazily created and owned by the
+  /// controller, so it is disposed with [dispose].
+  FocusNode focusNodeFor(E field, {FocusNode? external}) {
+    if (external != null) {
+      _fieldFocusNodes[field] = external;
+      return external;
     }
 
-    return key;
+    return _fieldFocusNodes.putIfAbsent(field, () {
+      _ownedFocusNodes.add(field);
+      return FocusNode(debugLabel: field.name);
+    });
   }
 
   /// Returns a read-only [ValueListenable] for [field].
@@ -132,8 +189,15 @@ class FormFieldsController<F extends FieldSchema<dynamic>> {
   ///   builder: (context, email, _) => Text('Email: $email'),
   /// )
   /// ```
-  ValueListenable<T?> getNotifier<T extends Object?>(FieldSchema<T> field) {
-    return _TypedFieldListenable<T>(_notifierFor(field));
+  ValueListenable<T?> getNotifier<T extends Object?>(E field) {
+    final notifier = _notifierFor(field);
+    if (notifier.value is! T?) {
+      throw Exception(
+        'Cannot return $notifier as a ValueListenable<T>, value is of type ${notifier._value?.runtimeType}',
+      );
+    }
+
+    return _TypedFieldListenable<T>(notifier);
   }
 
   /// Returns a [Listenable] that fires when [field]'s value changes.
@@ -142,25 +206,25 @@ class FormFieldsController<F extends FieldSchema<dynamic>> {
   /// without requiring type information. Backed by the same per-field
   /// notifier as [getNotifier], so updates fire both subscribers from a
   /// single source.
-  Listenable fieldListenable(F field) => _notifierFor(field);
+  Listenable fieldListenable(E field) => _notifierFor(field);
 
   /// Get the value of a form field.
   ///
   /// Reads from the field's notifier (the canonical store). Falls back to
   /// the initial-values map if no write has occurred yet.
-  T? getValue<T>(FieldSchema<T> field) {
+  T? getValue<T>(E field) {
     if (_fieldNotifiers[field] case final notifier?) {
       return notifier.value as T?;
     }
-    if (_initialValues?[field] case final T value) {
+    if (_initialValues[field] case final T value) {
       return value;
     }
     return null;
   }
 
   /// Get the initial value of a form field.
-  T? getInitialValue<T extends Object?>(FieldSchema<T> field) {
-    if (_initialValues?[field] case final T value) {
+  T? getInitialValue<T extends Object?>(E field) {
+    if (_initialValues[field] case final T value) {
       return value;
     }
 
@@ -174,7 +238,12 @@ class FormFieldsController<F extends FieldSchema<dynamic>> {
   /// [ValueListenableBuilder] to rebuild. Setting [notify] to `false`
   /// writes silently — useful when the caller wants to update the value
   /// without triggering reactive rebuilds (e.g., during bulk updates).
-  T? updateValue<T>(FieldSchema<T> field, T? value, {bool notify = true}) {
+  ///
+  /// A forced error on [field] (see [setError]) describes the previous value,
+  /// so it is removed and the field is revalidated. Mounted fields whose
+  /// cross-field validators read [field] are revalidated when they show an
+  /// error or validate on interaction.
+  T? updateValue<T>(E field, T? value, {bool notify = true}) {
     final notifier = _notifierFor(field);
     if (notify) {
       notifier.value = value;
@@ -186,37 +255,114 @@ class FormFieldsController<F extends FieldSchema<dynamic>> {
     // validators, save(), and the rendered text reflect the same value.
     _fieldKeys[field]?.currentState?.didChange(value);
 
+    if (_forcedErrors.remove(field) != null) {
+      _fieldKeys[field]?.currentState?.validate();
+    }
+    _revalidateDependentsOf(field);
+
     return value;
   }
 
+  /// Revalidates the mounted fields whose cross-field validators read
+  /// [source], so their error follows [source]'s new value.
+  void _revalidateDependentsOf(E source) {
+    for (final MapEntry(key: field, value: config)
+        in _validators?.entries ?? <MapEntry<E, FieldConfig>>[]) {
+      final state = _fieldKeys[field]?.currentState;
+      final readsSource = config.validators.any(
+        (validator) =>
+            validator is CrossFieldValidator && validator.field == source,
+      );
+      if (field == source || state == null || !readsSource) {
+        continue;
+      }
+
+      final validatesOnChange = switch (state.widget.autovalidateMode) {
+        AutovalidateMode.always => true,
+        AutovalidateMode.onUserInteraction => state.hasInteractedByUser,
+        _ => false,
+      };
+      if (state.hasError || validatesOnChange) {
+        state.validate();
+      }
+    }
+  }
+
   /// Get the error of a form field.
-  String? getFieldError(F field) {
+  String? getFieldError(E field) {
     return getFieldForcedError(field) ??
         _fieldKeys[field]?.currentState?.errorText;
   }
 
   /// Get the forced error of a form field.
-  String? getFieldForcedError(F field) {
-    return _forcedErrors[field.name];
+  String? getFieldForcedError(E field) {
+    return _forcedErrors[field];
   }
 
-  /// Set the error of a form field.
-  void setError(F field, String error, {bool notify = true}) {
-    _forcedErrors[field.name] = error;
+  /// Forces an error on [field], e.g. one returned by a server. [error] can
+  /// be an error code, localized via `FormErrorMessages.parseErrorCode`.
+  ///
+  /// The error stays until the field's value changes, [clearForcedErrors]
+  /// or [reset] is called, or `validate(clearErrors: true)` runs. When
+  /// [notify] is `true`, the field shows the error right away.
+  void setError(E field, String error, {bool notify = true}) {
+    _forcedErrors[field] = error;
     if (notify) {
       _fieldKeys[field]?.currentState?.validate();
     }
   }
 
+  /// Forces several errors at once, e.g. a server's 422 response mapped to
+  /// fields. Merges with the forced errors already set; see [setError].
+  ///
+  /// When [notify] is `true`, the fields show their error right away and, if
+  /// [focusOnInvalid] is enabled, the first one (in enum order) that is
+  /// mounted gets the focus.
+  ///
+  /// ```dart
+  /// final response = await api.register(payload);
+  /// if (response.statusCode == 422) {
+  ///   form.setErrors({.username: 'username_taken'});
+  /// }
+  /// ```
+  void setErrors(Map<E, String> errors, {bool notify = true}) {
+    _forcedErrors.addAll(errors);
+    if (!notify) {
+      return;
+    }
+
+    for (final field in errors.keys) {
+      _fieldKeys[field]?.currentState?.validate();
+    }
+    if (focusOnInvalid) {
+      _focusFirstInvalidField(
+        errors.keys,
+        scroll: autoScrollWhenFocusOnInvalid,
+      );
+    }
+  }
+
+  /// Same as [setErrors], with fields given by their enum `name`, e.g. the
+  /// `errors` object of a JSON response. Unknown names are ignored.
+  ///
+  /// A name is resolved only for a field the controller knows: declared in
+  /// the schema or rendered by a hooked widget.
+  void setErrorsByName(Map<String, String> errors, {bool notify = true}) {
+    setErrors({
+      for (final field in _knownFields)
+        if (errors[field.name] case final error?) field: error,
+    }, notify: notify);
+  }
+
   /// Check if a form field has an error.
-  bool hasFieldError(F field) {
+  bool hasFieldError(E field) {
     return getFieldError(field) != null;
   }
 
   /// Get the validators of a form field. Use `localize` to localize the
   /// validators.
-  List<Validator>? validators(F field) {
-    return field.validators;
+  List<Validator>? validators(E field) {
+    return _validators?[field]?.validators;
   }
 
   /// Validate the form.
@@ -225,22 +371,141 @@ class FormFieldsController<F extends FieldSchema<dynamic>> {
   /// Consider setting `notify` to `false` if you are using `validate` as a
   /// condition to enable or disable a button.
   ///
-  /// If `clearErrors` is `true`, the forced errors will be cleared.
-  /// Consider setting `clearErrors` to `false` if you are calling `validate`
-  /// as a condition to enable or disable a button.
-  bool validate({bool notify = true, bool clearErrors = true}) {
+  /// Forced errors (see [setError]) are kept and make the form invalid until
+  /// their field changes. Set `clearErrors` to `true` to drop them first.
+  ///
+  /// Fields that are not mounted, e.g. on another page of a wizard, are
+  /// checked by running their schema validators on their stored value.
+  ///
+  /// If `focusOnInvalid` is `true` (defaults to the controller's
+  /// [FormFieldsController.focusOnInvalid]) and validation fails, focus
+  /// moves to the first invalid field's [FocusNode], if it has one — see
+  /// [focusNodeFor]. When `autoScrollWhenFocusOnInvalid` is also `true`
+  /// (defaults to [FormFieldsController.autoScrollWhenFocusOnInvalid]), that
+  /// field is scrolled into view beforehand.
+  bool validate({
+    bool notify = true,
+    bool clearErrors = false,
+    bool? focusOnInvalid,
+    bool? autoScrollWhenFocusOnInvalid,
+  }) {
     if (clearErrors) {
       _forcedErrors.clear();
     }
 
-    final isValid = key.currentState?.validate() ?? false;
+    final mountedValid = key.currentState?.validate() ?? false;
+    final context = _mountedFieldContext;
+    final isValid =
+        mountedValid &&
+        _knownFields
+            .where((field) => _fieldKeys[field]?.currentState == null)
+            .every((field) => _validateField(field, context));
+
+    if (!isValid && (focusOnInvalid ?? this.focusOnInvalid)) {
+      _focusFirstInvalidField(
+        _fieldKeys.keys,
+        scroll:
+            autoScrollWhenFocusOnInvalid ?? this.autoScrollWhenFocusOnInvalid,
+      );
+    }
 
     return isValid;
   }
 
-  /// Clear the forced errors.
+  /// Validates only [fields], e.g. the current step of a wizard, and returns
+  /// whether they are all valid. Mounted fields show their error; fields that
+  /// are not mounted are checked like in [validate].
+  ///
+  /// Focus and scroll behave like in [validate], among [fields].
+  bool validateFields(
+    Set<E> fields, {
+    bool? focusOnInvalid,
+    bool? autoScrollWhenFocusOnInvalid,
+  }) {
+    final context = _mountedFieldContext;
+    // Validate every field, not up to the first invalid one: each mounted
+    // field must show its error.
+    final results = [
+      for (final field in fields) _validateField(field, context),
+    ];
+    final isValid = results.every((valid) => valid);
+
+    if (!isValid && (focusOnInvalid ?? this.focusOnInvalid)) {
+      _focusFirstInvalidField(
+        fields,
+        scroll:
+            autoScrollWhenFocusOnInvalid ?? this.autoScrollWhenFocusOnInvalid,
+      );
+    }
+
+    return isValid;
+  }
+
+  /// Validates [field] through its [FormFieldState] when it is mounted.
+  /// Otherwise runs its schema validators on the stored value; cross-field
+  /// validators need [context] (any mounted field's) and are skipped
+  /// without it.
+  bool _validateField(E field, BuildContext? context) {
+    if (_fieldKeys[field]?.currentState case final state?) {
+      return state.validate();
+    }
+    if (_forcedErrors.containsKey(field)) {
+      return false;
+    }
+
+    final value = getValue<Object?>(field);
+    // Dynamic calls: the stored value's static type is unknown here, and
+    // the validators' function types are narrower than `Object?`.
+    return validators(field)?.every((validator) {
+          final Object? error = switch (validator) {
+            FieldValidator() => (validator as dynamic).validator(value),
+            CrossFieldValidator() when context != null =>
+              (validator as dynamic).validator(value, context),
+            CrossFieldValidator() => null,
+          };
+          return error == null;
+        }) ??
+        true;
+  }
+
+  /// Focuses (and optionally scrolls to) the mounted field in error that is
+  /// declared first in the enum, among [fields].
+  void _focusFirstInvalidField(Iterable<E> fields, {required bool scroll}) {
+    final invalidField = minBy(
+      fields.where(
+        (field) => _fieldKeys[field]?.currentState?.hasError ?? false,
+      ),
+      (field) => field.index,
+    );
+
+    if (invalidField == null) {
+      return;
+    }
+
+    if (scroll) {
+      if (_fieldKeys[invalidField]?.currentContext case final context?) {
+        Scrollable.ensureVisible(
+          context,
+          alignment: 0.5,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      }
+    }
+
+    _fieldFocusNodes[invalidField]?.requestFocus();
+  }
+
+  /// Clears the forced errors. When [notify] is `true`, the affected fields
+  /// are revalidated so the forced error disappears right away.
   void clearForcedErrors({bool notify = true}) {
+    final fields = _forcedErrors.keys.toList();
     _forcedErrors.clear();
+    if (notify) {
+      for (final field in fields) {
+        _fieldKeys[field]?.currentState?.validate();
+      }
+    }
   }
 
   /// Reset the form.
@@ -253,28 +518,37 @@ class FormFieldsController<F extends FieldSchema<dynamic>> {
     // Restore notifiers to initial values (loud notification so subscribers
     // rebuild). ValueNotifier-style equality means no-op resets don't fire.
     for (final entry in _fieldNotifiers.entries) {
-      entry.value.value = _initialValues?[entry.key];
+      entry.value.value = _initialValues[entry.key];
     }
   }
 
   /// Dispose of all resources.
   ///
   /// Call this method when the form is no longer needed to clean up
-  /// the per-field notifiers.
+  /// the per-field notifiers and any [FocusNode] created by [focusNodeFor].
+  /// [FocusNode]s supplied via `focusNodeFor(field, external: ...)` are
+  /// owned by the caller and are left untouched.
   void dispose() {
     for (final notifier in _fieldNotifiers.values) {
       notifier.dispose();
     }
     _fieldNotifiers.clear();
+
+    for (final field in _ownedFocusNodes) {
+      _fieldFocusNodes[field]?.dispose();
+    }
+    _fieldFocusNodes.clear();
+    _ownedFocusNodes.clear();
   }
 
-  /// Validate the form field.
-  bool validateField(F field) {
-    return _fieldKeys[field]?.currentState?.validate() ?? false;
+  /// Validates [field]. A field that is not mounted is checked by running
+  /// its schema validators on its stored value.
+  bool validateField(E field) {
+    return _validateField(field, _mountedFieldContext);
   }
 
   /// Check if the form fields have been interacted with.
-  bool isDirty(Set<F> fields) {
+  bool isDirty(Set<E> fields) {
     return fields.every((field) {
       return _fieldKeys[field]?.currentState?.hasInteractedByUser ?? false;
     });
@@ -307,9 +581,9 @@ class FormFieldsController<F extends FieldSchema<dynamic>> {
   }
 
   /// Get the values of the form fields.
-  Map<F, dynamic> getValues() {
+  Map<E, dynamic> getValues() {
     return _fieldKeys.map(
-      (key, field) => MapEntry(key as F, _fieldNotifiers[key]?.value),
+      (key, field) => MapEntry(key, _fieldNotifiers[key]?.value),
     );
   }
 }

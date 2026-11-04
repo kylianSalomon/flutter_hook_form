@@ -1,5 +1,4 @@
 import 'package:flutter/widgets.dart';
-import 'package:flutter_hook_form/src/models/field_schema.dart';
 
 import '../models/form_field_controller.dart';
 
@@ -7,16 +6,13 @@ import '../models/form_field_controller.dart';
 ///
 /// This is a simple provider - granular field listening is handled by
 /// [ValueNotifier]s in the controller, accessed via [useFieldValue].
-class _HookedFormProviderBase extends InheritedWidget {
-  const _HookedFormProviderBase({required super.child, required this.form});
-
-  final FormFieldsController form;
-
-  static FormFieldsController<FieldSchema> of(
-    BuildContext context,
-  ) {
+class const _HookedFormProviderBase<E extends Enum>({
+  required super.child,
+  required final FormFieldsController<E> form,
+}) extends InheritedWidget {
+  static FormFieldsController<E> of<E extends Enum>(BuildContext context) {
     final widget = context
-        .dependOnInheritedWidgetOfExactType<_HookedFormProviderBase>();
+        .dependOnInheritedWidgetOfExactType<_HookedFormProviderBase<E>>();
 
     if (widget == null) {
       throw FlutterError(
@@ -33,7 +29,7 @@ class _HookedFormProviderBase extends InheritedWidget {
   }
 
   @override
-  bool updateShouldNotify(covariant _HookedFormProviderBase oldWidget) {
+  bool updateShouldNotify(covariant _HookedFormProviderBase<E> oldWidget) {
     return form != oldWidget.form;
   }
 }
@@ -49,24 +45,18 @@ class _HookedFormProviderBase extends InheritedWidget {
 ///   child: MyFormWidget(),
 /// )
 /// ```
-class HookedFormProvider<F extends FieldSchema<dynamic>>
-    extends StatelessWidget {
-  /// Creates a [HookedFormProvider] that provides a [FormFieldsController] to the form fields.
-  const HookedFormProvider({
-    super.key,
-    required this.form,
-    required this.child,
-  });
+class const HookedFormProvider<E extends Enum>({
+  super.key,
 
   /// The form controller.
-  final FormFieldsController<F> form;
+  required final FormFieldsController<E> form,
 
   /// The child of the form.
-  final Widget child;
-
+  required final Widget child,
+}) extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return _HookedFormProviderBase(form: form, child: child);
+    return _HookedFormProviderBase<E>(form: form, child: child);
   }
 }
 
@@ -87,8 +77,8 @@ class HookedFormProvider<F extends FieldSchema<dynamic>>
 ///
 /// DO NOT use this hook to create a [FormFieldsController], please see
 /// [useForm] instead.
-FormFieldsController<FieldSchema> useFormContext(
+FormFieldsController<E> useFormContext<E extends Enum>(
   BuildContext context,
 ) {
-  return _HookedFormProviderBase.of(context);
+  return _HookedFormProviderBase.of<E>(context);
 }
