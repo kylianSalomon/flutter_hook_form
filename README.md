@@ -25,7 +25,9 @@ Most Flutter form packages solve forms the same way: they ship their own text fi
 | Bring your own widgets | ✅ any widget via `HookedFormField` | ✅ but all wiring is manual |
 | Typed value access | ✅ `form.getValue<T>(field)` | ❌ one controller per field |
 | Centralized, reusable schema | ✅ enum + fluent `FieldConfig` | ❌ |
-| Cross-field validation | ✅ built-in (`.matcheField`, `.dateAfterField`) | ❌ manual |
+| Cross-field validation | ✅ built-in (`.matcheField`, `.dateAfterField`, `.requiredIf`) | ❌ manual |
+| Server errors (e.g. 422) shown on fields | ✅ `form.setErrors({...})` | ❌ manual |
+| Per-field validation mode | ✅ `.validateOn(.onUnfocus)` in the schema | ❌ per widget |
 | Granular rebuilds on field change | ✅ `form.listen({...})` | ❌ |
 | Focus + scroll to first invalid field | ✅ built-in (`focusOnInvalid`) | ❌ manual |
 | No controllers to create/dispose | ✅ | ❌ |
@@ -33,6 +35,8 @@ Most Flutter form packages solve forms the same way: they ship their own text fi
 ## What's New
 
 The schema API has been reworked around `FieldConfig` — a fluent, chainable builder (`.required<String>().email().minLength(8).initWith('')`) that replaces the previous per-enum-value validator lists. Field enums are now plain Dart enums — no interface to implement. `useForm` also gained `focusOnInvalid` and `autoScrollWhenFocusOnInvalid`, so a failed `form.validate()` can automatically focus (and scroll to) the first invalid field.
+
+Also new in this beta: `form.setErrors({...})` to show a server's errors (cleared as soon as the user edits the field), `.validateOn(...)` to declare when each field validates (including `afterFirstUnfocus`), `form.validateFields({...})` for multi-step forms, and `.requiredIf(...)` for conditional fields. ⚠️ `validate()` no longer clears forced errors by default — see the [CHANGELOG](CHANGELOG.md).
 
 ## Motivation
 
@@ -57,6 +61,9 @@ Managing forms in Flutter often means creating multiple `TextEditingController` 
     - [HookedFormField](#hookedformfield)
     - [Overriding a field's validator inline](#overriding-a-fields-validator-inline)
     - [Focus on Invalid Field](#focus-on-invalid-field)
+    - [Validation Mode](#validation-mode)
+    - [Server Errors](#server-errors)
+    - [Multi-step Forms](#multi-step-forms)
     - [Form State Management](#form-state-management)
     - [Reactive Field Listening](#reactive-field-listening)
     - [Form Field State](#form-field-state)
@@ -159,6 +166,7 @@ The package comes with several built-in validators, exposed both as fluent `Fiel
 | **File** | `.mimeType({...})` | `MimeTypeValidator` | Validates file MIME type |
 | **Cross-Field** | `.dateAfterField(.startDate)` | `DateAfterValidator` | Validates a date is after another field's date |
 | | `.matcheField(.password)` | `MatchesValidator<T>` | Validates the value matches another field's value |
+| | `.requiredIf(Fields.hasCompany, (v) => v == true)` | `RequiredIfValidator<T, E>` | Requires the value while a condition holds on another field's value |
 
 Chained methods run in the order they're called, and stop at the first error.
 
@@ -189,6 +197,26 @@ final form = useForm<RegistrationFields>(
   },
 );
 ```
+
+`.requiredIf` makes a field required only while a condition holds on another field:
+
+```dart
+enum CompanyFields { hasCompany, companyName }
+
+final form = useForm<CompanyFields>(
+  validators: {
+    .hasCompany: .optional<bool>(),
+    .companyName: .optional<String>().requiredIf(
+      CompanyFields.hasCompany,
+      (hasCompany) => hasCompany == true,
+    ),
+  },
+);
+```
+
+When the other field changes, the dependent field is revalidated if it shows an error or validates on interaction — unchecking `hasCompany` removes the "Required" error on `companyName` right away.
+
+> Dart's dot shorthand can't infer the other field's enum here (the parameter is generic), so write `CompanyFields.hasCompany`, not `.hasCompany`.
 
 ##### Creating Custom Cross-Field Validators
 
@@ -490,6 +518,51 @@ HookedFormField<bool, SignInFields>(
 )
 ```
 
+#### Validation Mode
+
+Declare when a field validates itself while the user edits it, right in the schema, with `.validateOn(...)`. `ValidationMode` mirrors Flutter's `AutovalidateMode` and adds `afterFirstUnfocus`: the field stays silent until the user edits it and leaves it, then validates on every change.
+
+```dart
+final form = useForm<SignInFields>(
+  validateOn: .onUserInteraction, // default for every field, defaults to .disabled
+  validators: {
+    .email: .required<String>().email().validateOn(.afterFirstUnfocus),
+    .password: .required<String>().minLength(8).validateOn(.onUnfocus),
+  },
+);
+```
+
+`HookedTextFormField` and `HookedFormField` pick the mode up automatically. Their `autovalidateMode` argument still takes priority.
+
+#### Server Errors
+
+Validation that needs the server (is this username taken?) stays outside the form: send the request, then show what the server returned with `setErrors`. Each error disappears as soon as the user edits its field.
+
+```dart
+final response = await api.register(form.getValues());
+if (response.statusCode == 422) {
+  form.setErrors({.username: 'username_taken', .email: 'email_taken'});
+  // Or straight from JSON, keyed by enum name; unknown keys are ignored:
+  // form.setErrorsByName(Map<String, String>.from(response.data['errors']));
+}
+```
+
+All fields refresh at once, and with `focusOnInvalid` the first one in error gets the focus. The errors can be error codes, translated by `FormErrorMessages.parseErrorCode` (see [Custom Validation Messages](#custom-validation-messages--internationalization)).
+
+A forced error makes `validate()` fail until its field changes. Call `clearForcedErrors()` or `validate(clearErrors: true)` to drop them yourself. See [doc/USE_CASES.md](doc/USE_CASES.md#server-side-errors-422) for a complete example.
+
+#### Multi-step Forms
+
+`validateFields` validates only some fields, e.g. the current step of a wizard, with the same focus and scroll behavior as `validate()`:
+
+```dart
+if (form.validateFields({.firstName, .lastName})) {
+  pageController.nextPage(duration: duration, curve: Curves.easeInOut);
+}
+```
+
+Fields that are not mounted — on another page of a `PageView` — are checked by running their schema validators on their stored value, so the final `form.validate()` also fails if a step was skipped or left invalid. See [doc/USE_CASES.md](doc/USE_CASES.md#multi-step-forms-wizard) for a complete example.
+
 #### Form State Management
 
 The form controller provides several methods to manage form state:
@@ -764,7 +837,7 @@ class CustomCheckboxField<E extends Enum> extends StatelessWidget {
 
 ## Use Cases
 
-Payload conversion, async validation, and lower-level controller methods (`setError`, `hasBeenInteracted`, `hasChanged`, ...) are covered in [doc/USE_CASES.md](doc/USE_CASES.md).
+Payload conversion, server errors, multi-step forms, async validation, and lower-level controller methods (`setError`, `hasBeenInteracted`, `hasChanged`, ...) are covered in [doc/USE_CASES.md](doc/USE_CASES.md).
 
 ## Additional Information
 
