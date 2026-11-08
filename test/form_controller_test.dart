@@ -1,27 +1,20 @@
-import 'package:flutter/material.dart';
+import 'package:dartnative/dartnative.dart';
 import 'package:flutter_hook_form/flutter_hook_form.dart';
-import 'package:flutter_test/flutter_test.dart';
+import 'package:test/test.dart';
 
 import 'fixtures/test_form_schema.dart';
 
 void main() {
   group('FormFieldsController Tests', () {
     late FormFieldsController<TestFormSchema> controller;
-    late GlobalKey<FormState> formKey;
 
     setUp(() {
-      formKey = GlobalKey<FormState>();
       controller = FormFieldsController<TestFormSchema>(
-        formKey,
         validators: {
           .email: .required<String>().email(),
           .password: .required<String>(),
         },
       );
-    });
-
-    test('controller initializes with correct key', () {
-      expect(controller.key, equals(formKey));
     });
 
     test('fieldKey returns a GlobalKey for a form field', () {
@@ -55,7 +48,6 @@ void main() {
 
     test('controller initializes with initial values', () {
       final controllerWithValues = FormFieldsController<TestFormSchema>(
-        GlobalKey<FormState>(),
         validators: {
           .email: .required<String>().initWith('test@example.com'),
           .password: .required<String>().initWith('password123'),
@@ -74,7 +66,6 @@ void main() {
 
     test('getInitialValue returns stored initial value', () {
       final controllerWithValues = FormFieldsController<TestFormSchema>(
-        GlobalKey<FormState>(),
         validators: {
           .email: .required<String>().initWith('initial@example.com'),
         },

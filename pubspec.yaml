@@ -1,21 +1,22 @@
 name: flutter_hook_form
-description: "A Flutter package that provides a hook to manage form fields."
-version: 5.0.0-beta.4
-repository: https://github.com/kylianSalomon/flutter_hook_form
-issue_tracker: https://github.com/kylianSalomon/flutter_hook_form/issues
+description: "flutter_hook_form for DartNative: same API, without Flutter's Form."
+version: 5.0.0-beta.4-dartnative.1
+repository: https://github.com/kylianSalomon/flutter_hook_form/tree/dartnative
+publish_to: 'none'
 
 environment:
-  sdk: ^3.13.2
-  flutter: ">=1.17.0"
+  sdk: ^3.12.0-192.0.dev
 
 dependencies:
   collection: ">=1.19.0 <2.0.0"
   cross_file: ">=0.3.4+2 <1.0.0"
-  flutter:
-    sdk: flutter
-  flutter_hooks: ">=0.18.4 <1.0.0"
+  dartnative: ^1.0.0
+  flutter_hooks:
+    git:
+      url: https://github.com/kylianSalomon/flutter_hooks.git
+      ref: dartnative
+      path: packages/flutter_hooks
 
 dev_dependencies:
-  flutter_lints: ^5.0.0
-  flutter_test:
-    sdk: flutter
+  lints: ^6.0.0
+  test: ^1.25.0

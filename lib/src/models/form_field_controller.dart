@@ -1,11 +1,9 @@
 import 'package:collection/collection.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/widgets.dart';
+import 'package:dartnative/dartnative.dart';
 import 'package:flutter_hook_form/src/models/validation_mode.dart';
 import 'package:flutter_hook_form/src/models/validator.dart';
 import 'package:flutter_hook_form/src/validators/field_config.dart';
-
-import 'types.dart';
+import 'package:flutter_hook_form/src/widget/form_field.dart';
 
 /// A type that represents the initial values of a form field.
 typedef InitialFieldValues<E extends Enum, T> = Map<E, T>;
@@ -15,9 +13,12 @@ typedef InitialFieldValues<E extends Enum, T> = Map<E, T>;
 ///
 /// Uses [setSilently] to update the value without firing listeners, which is
 /// what `updateValue(field, value, notify: false)` needs.
-class _FieldNotifier(var Object? _value)
-    extends ChangeNotifier
+class _FieldNotifier extends ChangeNotifier
     implements ValueListenable<Object?> {
+  _FieldNotifier(this._value);
+
+  Object? _value;
+
   @override
   Object? get value => _value;
 
@@ -45,8 +46,11 @@ class _FieldNotifier(var Object? _value)
 /// Equality delegates to the wrapped notifier so multiple wrappers around the
 /// same field compare equal — keeps `useValueListenable` from re-subscribing
 /// on every rebuild.
-class const _TypedFieldListenable<T>(final _FieldNotifier _inner)
-    extends ValueListenable<T?> {
+class _TypedFieldListenable<T> extends ValueListenable<T?> {
+  _TypedFieldListenable(this._inner);
+
+  final _FieldNotifier _inner;
+
   @override
   T? get value => _inner.value as T?;
 
@@ -65,53 +69,49 @@ class const _TypedFieldListenable<T>(final _FieldNotifier _inner)
 }
 
 /// A controller that manages form field states and validation
-class FormFieldsController<E extends Enum>(
-  /// The form key.
-  final FormKey key, {
+///
+/// DartNative has no `Form`: the controller validates, saves and resets the
+/// mounted fields itself, through their keys.
+class FormFieldsController<E extends Enum> {
+  /// Creates a [FormFieldsController].
+  FormFieldsController({
+    Map<E, FieldConfig>? validators,
+    this.focusOnInvalid = false,
+    this.validateOn = ValidationMode.disabled,
+  }) : _validators = validators,
+       _initialValues = {
+         ...?validators?.map((key, value) => MapEntry(key, value.initialValue)),
+       };
 
-  final Map<E, FieldConfig>? _validators,
+  final Map<E, FieldConfig>? _validators;
 
   /// Whether [validate] moves focus to the first invalid field by default.
   ///
   /// Can be overridden per call via `validate(focusOnInvalid: ...)`.
-  final bool focusOnInvalid = false,
-
-  /// Whether [validate] scrolls the first invalid field into view by
-  /// default, when [focusOnInvalid] (or its per-call override) is `true`.
-  ///
-  /// Can be overridden per call via
-  /// `validate(autoScrollWhenFocusOnInvalid: ...)`.
-  final bool autoScrollWhenFocusOnInvalid = false,
+  final bool focusOnInvalid;
 
   /// When fields validate themselves while the user edits them, for fields
   /// that do not set `FieldConfig.validateOn`. See [validationModeOf].
-  final ValidationMode validateOn = ValidationMode.disabled,
-}) {
-  /// Creates a [FormFieldsController].
-  this {
-    _initialValues = {
-      ...?_validators?.map((key, value) => MapEntry(key, value.initialValue)),
-    };
-    _fieldKeys = {};
-    _fieldFocusNodes = {};
-    _ownedFocusNodes = {};
-    _forcedErrors = {};
-  }
+  final ValidationMode validateOn;
 
   /// The field keys.
-  late final Map<E, GlobalKey<FormFieldState<Object?>>> _fieldKeys;
+  final Map<E, GlobalKey<FormFieldState<Object?>>> _fieldKeys = {};
 
   /// The focus node for each field that opted into focus-on-invalid support.
-  late final Map<E, FocusNode> _fieldFocusNodes;
+  final Map<E, FocusNode> _fieldFocusNodes = {};
 
   /// Fields whose [FocusNode] was created (and is therefore owned and
   /// disposed) by this controller, as opposed to one supplied by the caller.
-  late final Set<E> _ownedFocusNodes;
+  final Set<E> _ownedFocusNodes = {};
 
   /// The forced errors, e.g. returned by a server.
-  late final Map<E, String> _forcedErrors;
+  final Map<E, String> _forcedErrors = {};
 
-  late final InitialFieldValues<E, dynamic> _initialValues;
+  final InitialFieldValues<E, dynamic> _initialValues;
+
+  /// The states of the mounted fields.
+  Iterable<FormFieldState<Object?>> get _mountedStates =>
+      _fieldKeys.values.map((key) => key.currentState).nonNulls;
 
   /// Single source of truth for field values. One notifier per field, used
   /// by both [getNotifier] (typed read access) and [fieldListenable]
@@ -147,12 +147,7 @@ class FormFieldsController<E extends Enum>(
 
   /// Get or create a GlobalKey for a form field
   GlobalKey<FormFieldState> fieldKey(E field) {
-    final key = _fieldKeys.putIfAbsent(
-      field,
-      () => GlobalKey<FormFieldState>(debugLabel: field.name),
-    );
-
-    return key;
+    return _fieldKeys.putIfAbsent(field, GlobalKey<FormFieldState>.new);
   }
 
   /// Returns the [FocusNode] used to focus [field] when validation fails
@@ -170,7 +165,7 @@ class FormFieldsController<E extends Enum>(
 
     return _fieldFocusNodes.putIfAbsent(field, () {
       _ownedFocusNodes.add(field);
-      return FocusNode(debugLabel: field.name);
+      return FocusNode();
     });
   }
 
@@ -277,12 +272,7 @@ class FormFieldsController<E extends Enum>(
         continue;
       }
 
-      final validatesOnChange = switch (state.widget.autovalidateMode) {
-        AutovalidateMode.always => true,
-        AutovalidateMode.onUserInteraction => state.hasInteractedByUser,
-        _ => false,
-      };
-      if (state.hasError || validatesOnChange) {
+      if (state.hasError || state.validatesOnChange) {
         state.validate();
       }
     }
@@ -335,10 +325,7 @@ class FormFieldsController<E extends Enum>(
       _fieldKeys[field]?.currentState?.validate();
     }
     if (focusOnInvalid) {
-      _focusFirstInvalidField(
-        errors.keys,
-        scroll: autoScrollWhenFocusOnInvalid,
-      );
+      _focusFirstInvalidField(errors.keys);
     }
   }
 
@@ -380,20 +367,22 @@ class FormFieldsController<E extends Enum>(
   /// If `focusOnInvalid` is `true` (defaults to the controller's
   /// [FormFieldsController.focusOnInvalid]) and validation fails, focus
   /// moves to the first invalid field's [FocusNode], if it has one — see
-  /// [focusNodeFor]. When `autoScrollWhenFocusOnInvalid` is also `true`
-  /// (defaults to [FormFieldsController.autoScrollWhenFocusOnInvalid]), that
-  /// field is scrolled into view beforehand.
+  /// [focusNodeFor].
   bool validate({
     bool notify = true,
     bool clearErrors = false,
     bool? focusOnInvalid,
-    bool? autoScrollWhenFocusOnInvalid,
   }) {
     if (clearErrors) {
       _forcedErrors.clear();
     }
 
-    final mountedValid = key.currentState?.validate() ?? false;
+    // Validate every mounted field, not up to the first invalid one: each
+    // must show its error.
+    final mountedValid = _mountedStates
+        .map((state) => state.validate())
+        .toList()
+        .every((valid) => valid);
     final context = _mountedFieldContext;
     final isValid =
         mountedValid &&
@@ -402,11 +391,7 @@ class FormFieldsController<E extends Enum>(
             .every((field) => _validateField(field, context));
 
     if (!isValid && (focusOnInvalid ?? this.focusOnInvalid)) {
-      _focusFirstInvalidField(
-        _fieldKeys.keys,
-        scroll:
-            autoScrollWhenFocusOnInvalid ?? this.autoScrollWhenFocusOnInvalid,
-      );
+      _focusFirstInvalidField(_fieldKeys.keys);
     }
 
     return isValid;
@@ -416,12 +401,8 @@ class FormFieldsController<E extends Enum>(
   /// whether they are all valid. Mounted fields show their error; fields that
   /// are not mounted are checked like in [validate].
   ///
-  /// Focus and scroll behave like in [validate], among [fields].
-  bool validateFields(
-    Set<E> fields, {
-    bool? focusOnInvalid,
-    bool? autoScrollWhenFocusOnInvalid,
-  }) {
+  /// Focus behaves like in [validate], among [fields].
+  bool validateFields(Set<E> fields, {bool? focusOnInvalid}) {
     final context = _mountedFieldContext;
     // Validate every field, not up to the first invalid one: each mounted
     // field must show its error.
@@ -431,11 +412,7 @@ class FormFieldsController<E extends Enum>(
     final isValid = results.every((valid) => valid);
 
     if (!isValid && (focusOnInvalid ?? this.focusOnInvalid)) {
-      _focusFirstInvalidField(
-        fields,
-        scroll:
-            autoScrollWhenFocusOnInvalid ?? this.autoScrollWhenFocusOnInvalid,
-      );
+      _focusFirstInvalidField(fields);
     }
 
     return isValid;
@@ -468,9 +445,9 @@ class FormFieldsController<E extends Enum>(
         true;
   }
 
-  /// Focuses (and optionally scrolls to) the mounted field in error that is
-  /// declared first in the enum, among [fields].
-  void _focusFirstInvalidField(Iterable<E> fields, {required bool scroll}) {
+  /// Focuses the mounted field in error that is declared first in the enum,
+  /// among [fields].
+  void _focusFirstInvalidField(Iterable<E> fields) {
     final invalidField = minBy(
       fields.where(
         (field) => _fieldKeys[field]?.currentState?.hasError ?? false,
@@ -480,17 +457,6 @@ class FormFieldsController<E extends Enum>(
 
     if (invalidField == null) {
       return;
-    }
-
-    if (scroll) {
-      if (_fieldKeys[invalidField]?.currentContext case final context?) {
-        Scrollable.ensureVisible(
-          context,
-          alignment: 0.5,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-        );
-      }
     }
 
     _fieldFocusNodes[invalidField]?.requestFocus();
@@ -512,7 +478,9 @@ class FormFieldsController<E extends Enum>(
   ///
   /// Resets all field values to their initial values and clears forced errors.
   void reset() {
-    key.currentState?.reset();
+    for (final state in _mountedStates) {
+      state.reset();
+    }
     _forcedErrors.clear();
 
     // Restore notifiers to initial values (loud notification so subscribers
@@ -567,17 +535,14 @@ class FormFieldsController<E extends Enum>(
   );
 
   /// Check if the form has changed.
-  bool get hasChanged => _fieldKeys.values.any((field) {
-    if (field.currentWidget case final FormField formField) {
-      return field.currentState?.value != formField.initialValue;
-    }
-
-    return false;
-  });
+  bool get hasChanged =>
+      _mountedStates.any((state) => state.value != state.widget.initialValue);
 
   /// Save the form.
   void save() {
-    key.currentState?.save();
+    for (final state in _mountedStates) {
+      state.save();
+    }
   }
 
   /// Get the values of the form fields.

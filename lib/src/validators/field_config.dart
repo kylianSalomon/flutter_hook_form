@@ -1,15 +1,21 @@
 import 'package:cross_file/cross_file.dart';
-import 'package:flutter/widgets.dart';
+import 'package:dartnative/dartnative.dart';
 import 'package:flutter_hook_form/flutter_hook_form.dart';
 
-class const FieldConfig<T>([
-  final List<Validator<T>> validators = const [],
-  final T? initialValue,
+class FieldConfig<T> {
+  const FieldConfig([
+    this.validators = const [],
+    this.initialValue,
+    this.validationMode,
+  ]);
+
+  final List<Validator<T>> validators;
+  final T? initialValue;
 
   /// When the field validates itself, set with [FieldConfigBase.validateOn].
   /// `null` falls back to the form's default.
-  final ValidationMode? validationMode,
-]) {
+  final ValidationMode? validationMode;
+
   static FieldConfig<T> required<T>({
     String? message,
     String? errorCode,

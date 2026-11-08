@@ -8,6 +8,7 @@ export 'src/models/validator.dart';
 export 'src/validators/cross_field_validators.dart';
 export 'src/validators/field_config.dart';
 export 'src/validators/validators.dart';
+export 'src/widget/form_field.dart' show FormFieldState;
 export 'src/widget/hooked_form.dart';
 export 'src/widget/hooked_form_field.dart';
 export 'src/widget/hooked_text_form_field.dart';

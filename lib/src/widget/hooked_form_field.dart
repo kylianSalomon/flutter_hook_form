@@ -1,12 +1,12 @@
-import 'package:flutter/material.dart';
+import 'package:dartnative/dartnative.dart';
 import 'package:flutter_hook_form/flutter_hook_form.dart';
-import 'package:flutter_hook_form/src/widget/field_validation.dart';
+import 'package:flutter_hook_form/src/widget/form_field.dart';
 
 /// A form field that integrates with flutter_hook_form.
 class HookedFormField<T, E extends Enum> extends StatelessWidget {
   /// Creates a [HookedFormField] that gets the form from context.
   ///
-  /// This widget wraps a standard [FormField] and connects it to a [FormFieldsController].
+  /// This widget builds a field and connects it to a [FormFieldsController].
   ///
   /// Use the recommended [HookedForm] to wrap your form to provide the form
   /// controller to this widget. If not, use [HookedFormField.explicit] to provide
@@ -25,15 +25,12 @@ class HookedFormField<T, E extends Enum> extends StatelessWidget {
   /// )
   ///
   /// /// Alternative
-  /// Form(
-  ///   key: form.key,
-  ///   child: HookedFormField.explicit(
-  ///     form: form, // <--- Form is provided explicitly
-  ///     fieldKey: MyFormSchema.fieldKey,
-  ///     builder: ({value, onChanged, error}){
-  ///       return MyWidget(value: value, onChanged: onChanged, error: error);
-  ///     },
-  ///   ),
+  /// HookedFormField.explicit(
+  ///   form: form, // <--- Form is provided explicitly
+  ///   fieldKey: MyFormSchema.fieldKey,
+  ///   builder: ({value, onChanged, error}){
+  ///     return MyWidget(value: value, onChanged: onChanged, error: error);
+  ///   },
   /// )
   /// ```
   const HookedFormField({
@@ -42,11 +39,10 @@ class HookedFormField<T, E extends Enum> extends StatelessWidget {
     required this.builder,
     this.forceErrorText,
     this.validator,
-    this.autovalidateMode,
+    this.validateOn,
     this.enabled = true,
     this.initialValue,
     this.onSaved,
-    this.restorationId,
     this.notifyOnChange = true,
   }) : _form = null;
 
@@ -58,16 +54,17 @@ class HookedFormField<T, E extends Enum> extends StatelessWidget {
     super.key,
     required this.fieldHook,
     required this.builder,
-    required this._form,
+    required FormFieldsController<E> form,
     this.forceErrorText,
     this.validator,
-    this.autovalidateMode,
+    this.validateOn,
     this.enabled = true,
     this.initialValue,
     this.onSaved,
-    this.restorationId,
     this.notifyOnChange = true,
-  });
+  }) // Dart 3.12 has no private named parameters (`this._form`).
+    // ignore: prefer_initializing_formals
+    : _form = form;
 
   /// The form controller, if provided directly.
   final FormFieldsController<E>? _form;
@@ -90,9 +87,9 @@ class HookedFormField<T, E extends Enum> extends StatelessWidget {
   /// Optional validator function that overrides the form's validators.
   final String? Function(T?)? validator;
 
-  /// Controls when auto-validation occurs. Overrides the field's
+  /// When the field validates itself. Overrides the field's
   /// `FieldConfig.validateOn` and the form's `validateOn`.
-  final AutovalidateMode? autovalidateMode;
+  final ValidationMode? validateOn;
 
   /// Whether the field is enabled.
   final bool enabled;
@@ -102,9 +99,6 @@ class HookedFormField<T, E extends Enum> extends StatelessWidget {
 
   /// Callback when the form is saved.
   final void Function(T?)? onSaved;
-
-  /// Restoration ID for saving and restoring the field state.
-  final String? restorationId;
 
   /// Whether to notify form listeners when the field value changes.
   ///
@@ -117,39 +111,34 @@ class HookedFormField<T, E extends Enum> extends StatelessWidget {
   Widget build(BuildContext context) {
     final form = _form ?? useFormContext<E>(context);
 
-    return FieldValidation<E>(
-      form: form,
-      field: fieldHook,
-      autovalidateMode: autovalidateMode,
-      builder: (mode) => FormField<T>(
-        key: form.fieldKey(fieldHook),
-        validator:
-            validator ??
-            (value) {
-              final forcedError = form.getFieldForcedError(fieldHook);
-              if (forcedError != null) {
-                return forcedError.localize(
-                  context,
-                  form.getNotifier(fieldHook),
-                );
-              }
-              return form
-                  .validators(fieldHook)
-                  ?.resolveMessage<T>(context)
-                  ?.call(value);
-            },
-        forceErrorText: forceErrorText,
-        autovalidateMode: mode,
-        enabled: enabled,
-        initialValue: form.getInitialValue(fieldHook) ?? initialValue,
-        onSaved: onSaved,
-        restorationId: restorationId,
-        builder: (_) {
-          return builder(form.getNotifier<T>(fieldHook).value, (value) {
-            form.updateValue(fieldHook, value, notify: notifyOnChange);
-          }, form.getFieldError(fieldHook));
-        },
-      ),
+    return FormField<T>(
+      key: form.fieldKey(fieldHook),
+      validator:
+          validator ??
+          (value) {
+            final forcedError = form.getFieldForcedError(fieldHook);
+            if (forcedError != null) {
+              return forcedError.localize(
+                context,
+                form.getNotifier(fieldHook),
+              );
+            }
+            return form
+                .validators(fieldHook)
+                ?.resolveMessage<T>(context)
+                ?.call(value);
+          },
+      forceErrorText: forceErrorText,
+      validationMode: validateOn ?? form.validationModeOf(fieldHook),
+      validateOnMount: form.getFieldForcedError(fieldHook) != null,
+      enabled: enabled,
+      initialValue: form.getInitialValue(fieldHook) ?? initialValue,
+      onSaved: onSaved,
+      builder: (_) {
+        return builder(form.getNotifier<T>(fieldHook).value, (value) {
+          form.updateValue(fieldHook, value, notify: notifyOnChange);
+        }, form.getFieldError(fieldHook));
+      },
     );
   }
 }

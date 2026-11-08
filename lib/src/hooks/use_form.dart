@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart';
+import 'package:dartnative/dartnative.dart';
 import 'package:flutter_hook_form/src/models/form_field_controller.dart';
 import 'package:flutter_hook_form/src/models/validation_mode.dart';
 import 'package:flutter_hook_form/src/validators/field_config.dart';
@@ -17,15 +17,12 @@ FormFieldsController<E> useForm<E extends Enum>({
   Map<E, FieldConfig> validators = const {},
   List<Object?> keys = const <Object>[],
   bool focusOnInvalid = false,
-  bool autoScrollWhenFocusOnInvalid = true,
   ValidationMode validateOn = ValidationMode.disabled,
 }) {
   final form = useMemoized(() {
     return FormFieldsController<E>(
-      GlobalKey<FormState>(debugLabel: 'FormFieldsController'),
       validators: validators,
       focusOnInvalid: focusOnInvalid,
-      autoScrollWhenFocusOnInvalid: autoScrollWhenFocusOnInvalid,
       validateOn: validateOn,
     );
   }, keys);

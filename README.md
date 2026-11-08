@@ -1,3 +1,68 @@
+# flutter_hook_form for DartNative
+
+This branch ports flutter_hook_form 5.0.0-beta.4 to
+[DartNative](https://dartnative.com). Same import
+(`package:flutter_hook_form`), same schemas, validators and controller.
+Your app imports `package:dartnative/dartnative.dart` instead of
+`package:flutter/material.dart`, plus the
+[DartNative fork of flutter_hooks](https://github.com/kylianSalomon/flutter_hooks/tree/dartnative).
+
+## Install
+
+Not on a registry. Use git dependencies on the `dartnative` branches:
+
+```yaml
+dependencies:
+  flutter_hook_form:
+    git:
+      url: https://github.com/kylianSalomon/flutter_hook_form.git
+      ref: dartnative
+  flutter_hooks:
+    git:
+      url: https://github.com/kylianSalomon/flutter_hooks.git
+      ref: dartnative
+      path: packages/flutter_hooks
+```
+
+## Differences from the Flutter version
+
+DartNative embeds Dart 3.12 and has no `Form`, `FormField` or
+`TextFormField`. So:
+
+- **No `Form`.** `HookedForm` only provides the controller; the
+  `FormFieldsController` validates, saves and resets the mounted fields
+  itself. The controller has no `key` anymore:
+  `FormFieldsController(validators: ...)`.
+- **`autovalidateMode` becomes `validateOn`** on `HookedFormField` and
+  `HookedTextFormField`, and takes a `ValidationMode` (DartNative's
+  `AutovalidateMode` lacks `onUserInteractionIfError` and `onUnfocus`).
+  `ValidationMode` no longer has an `autovalidateMode` getter.
+- **`HookedTextFormField`** builds DartNative's `TextField` and takes its
+  options only. DartNative's `InputDecoration` has no `errorText`: the error
+  is a `Text` below the field, styled with the new `errorStyle`.
+- **No scroll to the invalid field.** DartNative has no
+  `Scrollable.ensureVisible`: `autoScrollWhenFocusOnInvalid` is removed;
+  `focusOnInvalid` still moves the focus.
+- **`restorationId` is removed**: DartNative has no state restoration.
+- `form.fieldKey(field).currentState` is this package's `FormFieldState`
+  (`value`, `errorText`, `hasError`, `validate()`, `didChange()`, `reset()`,
+  `save()`).
+
+## Tests
+
+`dn test` runs the controller and validator tests, and drives the field's
+state by hand for the validation modes. DartNative has no `WidgetTester`:
+the Flutter widget tests (`integration_test`, `validation_flow_test`,
+`cross_field_validators_test`, `hook_test`, `runtime_type_test`) and the
+Flutter example are removed. Checked on the iOS simulator: errors shown
+after `validate()`, `updateValue` syncs the text, `setErrors`, `reset`.
+Not checked on device: typing, unfocus-driven validation, Android.
+
+The rest of this README describes the Flutter version; the API above
+differs where listed.
+
+---
+
 # flutter_hook_form
 
 A type-safe, schema-driven form controller for Flutter, inspired by _react-hook-form_ and _Zod_. It ships with an optional `flutter_hooks` integration (`useForm`) for the most convenient setup, but the core `FormFieldsController` has no dependency on `flutter_hooks` and can be instantiated however fits your app.

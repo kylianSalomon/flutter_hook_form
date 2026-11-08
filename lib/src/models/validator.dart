@@ -1,43 +1,48 @@
 // ignore_for_file: public_member_api_docs
 
-import 'package:flutter/material.dart';
+import 'package:dartnative/dartnative.dart';
 import 'package:flutter_hook_form/flutter_hook_form.dart';
 
 /// A type alias for a validator function.
 typedef FieldValidatorFn<T> = String? Function(T? value);
 
 /// A type alias for a cross field validator function.
-typedef CrossFieldValidatorFn<T> = String? Function(
-  T? value,
-  BuildContext context,
-);
+typedef CrossFieldValidatorFn<T> =
+    String? Function(
+      T? value,
+      BuildContext context,
+    );
 
 /// Base class for all validators.
-sealed class const Validator<T>({
+sealed class Validator<T> {
+  const Validator({required this.errorCode, this.message});
+
   /// The error code to display if the validation fails.
-  required final String errorCode,
+  final String errorCode;
 
   /// The error message to display if the validation fails.
-  final String? message,
-}) {}
+  final String? message;
+}
 
 /// A validator that validates a single field.
-abstract class const FieldValidator<T>({
-  required super.errorCode,
-  super.message,
-}) extends Validator<T> {
+abstract class FieldValidator<T> extends Validator<T> {
+  const FieldValidator({required super.errorCode, super.message});
+
   /// The validator function.
   FieldValidatorFn<T> get validator;
 }
 
 /// A validator that validates a cross field.
-abstract class const CrossFieldValidator<T, E extends Enum>({
-  required super.errorCode,
+abstract class CrossFieldValidator<T, E extends Enum> extends Validator<T> {
+  const CrossFieldValidator({
+    required super.errorCode,
+    required this.field,
+    super.message,
+  });
 
   /// The field to compare with.
-  required final E field,
-  super.message,
-}) extends Validator<T> {
+  final E field;
+
   /// Asserts that the value is of the correct type.
   void assertValueIsOfType(BuildContext context) {
     final form = useFormContext<E>(context);

@@ -6,7 +6,7 @@ import 'package:flutter_hook_form/flutter_hook_form.dart';
 /// value is after the cross field value.
 class DateAfterValidator<E extends Enum>
     extends CrossFieldValidator<DateTime, E> {
-  const new({
+  const DateAfterValidator({
     required super.field,
     super.message,
     String? errorCode,
@@ -35,8 +35,11 @@ class DateAfterValidator<E extends Enum>
 /// Compare the value with the value of the cross field and validate if the
 /// value matches the cross field value.
 class MatchesValidator<T, E extends Enum> extends CrossFieldValidator<T, E> {
-  const new({required super.field, super.message, String? errorCode})
-    : super(errorCode: errorCode ?? 'field_does_not_match');
+  const MatchesValidator({
+    required super.field,
+    super.message,
+    String? errorCode,
+  }) : super(errorCode: errorCode ?? 'field_does_not_match');
 
   @override
   CrossFieldValidatorFn<T> get validator {
@@ -58,7 +61,7 @@ class MatchesValidator<T, E extends Enum> extends CrossFieldValidator<T, E> {
 /// Requires a value while [condition] holds for the value of the cross
 /// field. Built with `FieldConfig.requiredIf`.
 class RequiredIfValidator<T, E extends Enum> extends CrossFieldValidator<T, E> {
-  const new({
+  const RequiredIfValidator({
     required super.field,
     required this.condition,
     super.message,

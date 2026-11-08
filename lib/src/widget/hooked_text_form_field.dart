@@ -1,44 +1,29 @@
-import 'dart:ui';
-
-import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:dartnative/dartnative.dart';
 
 import '../hooks/use_form_context.dart';
 import '../models/form_field_controller.dart';
+import '../models/validation_mode.dart';
 import '../validators/validators.dart';
-import 'field_validation.dart';
+import 'form_field.dart';
 import 'hooked_form.dart';
 
 /// A text form field that integrates with flutter_hook_form.
-class HookedTextFormField<E extends Enum> extends StatelessWidget {
+///
+/// DartNative has no `TextFormField`: this widget builds a [TextField] and
+/// shows the error below it, styled with [errorStyle]. Its options are the
+/// ones of DartNative's [TextField].
+class HookedTextFormField<E extends Enum> extends StatefulWidget {
   /// Creates a [HookedTextFormField] that gets the form from context.
   ///
-  /// This widget wraps a standard [TextFormField] and connects it to a [FormFieldsController].
-  ///
   /// Use the recommended [HookedForm] to wrap your form to provide the form
-  /// controller to this widget. If not, use [HookedTextFormField.explicit] to provide
-  /// the form controller explicitly.
+  /// controller to this widget. If not, use [HookedTextFormField.explicit] to
+  /// provide the form controller explicitly.
   ///
-  /// If you want to notify the form when the field value changes, set
-  /// [notifyOnChange] to `true`.
   /// ```dart
-  /// /// Recommended
-  /// HookedForm( // <--- Form is provided via context
+  /// HookedForm(
   ///   form: form,
   ///   child: HookedTextFormField<MyFormSchema>(
-  ///     fieldKey: MyFormSchema.fieldKey,
-  ///     builder: (field) => MyWidget(field: field),
-  ///   ),
-  /// )
-  ///
-  /// /// Alternative
-  /// Form(
-  ///   key: form.key,
-  ///   child: HookedTextFormField.explicit(
-  ///     form: form, // <--- Form is provided explicitly
-  ///     fieldKey: MyFormSchema.fieldKey,
-  ///     builder: (field) => MyWidget(field: field),
+  ///     fieldHook: MyFormSchema.email,
   ///   ),
   /// )
   /// ```
@@ -47,191 +32,78 @@ class HookedTextFormField<E extends Enum> extends StatelessWidget {
     required this.fieldHook,
     this.forceErrorText,
     this.validator,
-    this.autovalidateMode,
-    this.enabled,
+    this.validateOn,
+    this.enabled = true,
     this.initialValue,
     this.onSaved,
-    this.restorationId,
-    @Deprecated(
-      'Use `contextMenuBuilder` instead. '
-      'This feature was deprecated after v3.3.0-0.5.pre.',
-    )
-    this.toolbarOptions,
-    this.showCursor,
-    this.obscuringCharacter,
-    this.obscureText,
-    this.autocorrect,
-    this.smartDashesType,
-    this.smartQuotesType,
-    this.enableSuggestions,
-    this.maxLengthEnforcement,
-    this.maxLines,
-    this.minLines,
-    this.expands,
-    this.maxLength,
-    this.onChanged,
-    this.onTap,
-    this.onTapAlwaysCalled,
-    this.onTapOutside,
-    this.onEditingComplete,
-    this.onFieldSubmitted,
-    this.inputFormatters,
-    this.ignorePointers,
-    this.cursorWidth,
-    this.cursorHeight,
-    this.cursorRadius,
-    this.cursorColor,
-    this.cursorErrorColor,
-    this.keyboardAppearance,
-    this.scrollPadding,
-    this.enableInteractiveSelection,
-    this.selectionControls,
-    this.buildCounter,
-    this.scrollPhysics,
-    this.autofillHints,
-    this.enableIMEPersonalizedLearning,
-    this.mouseCursor,
-    this.contextMenuBuilder,
-    this.spellCheckConfiguration,
-    this.undoController,
-    this.onAppPrivateCommand,
-    this.cursorOpacityAnimates,
-    this.selectionHeightStyle,
-    this.selectionWidthStyle,
-    this.dragStartBehavior,
-    this.contentInsertionConfiguration,
-    this.statesController,
-    this.clipBehavior,
-    this.scribbleEnabled,
-    this.canRequestFocus,
-    this.autofocus,
-    this.controller,
-    this.decoration,
-    this.focusNode,
-    this.groupId,
-    this.keyboardType,
-    this.readOnly,
-    this.strutStyle,
-    this.textAlign,
-    this.textAlignVertical,
-    this.textCapitalization,
-    this.textDirection,
-    this.textInputAction,
-    this.style,
-    this.textStyle,
-    this.magnifierConfiguration,
-    this.scrollController,
     this.notifyOnChange = true,
+    this.errorStyle,
+    this.controller,
+    this.focusNode,
+    this.decoration = const InputDecoration(),
+    this.keyboardType = TextInputType.text,
+    this.textInputAction,
+    this.textCapitalization = TextCapitalization.none,
+    this.style,
+    this.textAlign = TextAlign.start,
+    this.textAlignVertical,
+    this.maxLines = 1,
+    this.minLines,
+    this.maxLength,
+    this.inputFormatters,
+    this.autofillHints,
+    this.obscureText = false,
+    this.autocorrect = true,
+    this.autofocus = false,
+    this.readOnly = false,
+    this.cursorColor,
+    this.onChanged,
+    this.onFieldSubmitted,
+    this.onTap,
+    this.onEditingComplete,
+    this.buildCounter,
   }) : _form = null;
 
   /// Creates a [HookedTextFormField] with an explicitly provided form.
-  ///
-  /// Consider using [HookedTextFormField.explicit] if you did not use [HookedForm] to
-  /// wrap your form or use [HookedFormProvider] to provide the form.
-  ///
-  /// If you want to notify the form when the field value changes, set
-  /// [notifyOnChange] to `true`.
-  ///
-  /// ```dart
-  /// /// Recommended way of using the [HookedTextFormField.explicit] constructor
-  /// Form(
-  ///   key: form.key,
-  ///   child: HookedTextFormField.explicit(
-  ///     fieldKey: MyFormSchema.fieldKey,
-  ///     form: form,
-  ///   ),
-  /// )
-  ///
-  /// /// Works but not recommended
-  /// HookedForm(
-  ///   form: form,
-  ///   child: HookedTextFormField.explicit(// <-- Should use regular constructor
-  ///     fieldKey: MyFormSchema.fieldKey,
-  ///     form: form,
-  ///   ),
-  /// )
   const HookedTextFormField.explicit({
     super.key,
     required this.fieldHook,
-    required this._form,
+    required FormFieldsController<E> form,
     this.forceErrorText,
     this.validator,
-    this.autovalidateMode,
-    this.enabled,
+    this.validateOn,
+    this.enabled = true,
     this.initialValue,
     this.onSaved,
-    this.restorationId,
-    @Deprecated(
-      'Use `contextMenuBuilder` instead. '
-      'This feature was deprecated after v3.3.0-0.5.pre.',
-    )
-    this.toolbarOptions,
-    this.showCursor,
-    this.obscuringCharacter,
-    this.obscureText,
-    this.autocorrect,
-    this.smartDashesType,
-    this.smartQuotesType,
-    this.enableSuggestions,
-    this.maxLengthEnforcement,
-    this.maxLines,
-    this.minLines,
-    this.expands,
-    this.maxLength,
-    this.onChanged,
-    this.onTap,
-    this.onTapAlwaysCalled,
-    this.onTapOutside,
-    this.onEditingComplete,
-    this.onFieldSubmitted,
-    this.inputFormatters,
-    this.ignorePointers,
-    this.cursorWidth,
-    this.cursorHeight,
-    this.cursorRadius,
-    this.cursorColor,
-    this.cursorErrorColor,
-    this.keyboardAppearance,
-    this.scrollPadding,
-    this.enableInteractiveSelection,
-    this.selectionControls,
-    this.buildCounter,
-    this.scrollPhysics,
-    this.autofillHints,
-    this.enableIMEPersonalizedLearning,
-    this.mouseCursor,
-    this.contextMenuBuilder,
-    this.spellCheckConfiguration,
-    this.undoController,
-    this.onAppPrivateCommand,
-    this.cursorOpacityAnimates,
-    this.selectionHeightStyle,
-    this.selectionWidthStyle,
-    this.dragStartBehavior,
-    this.contentInsertionConfiguration,
-    this.statesController,
-    this.clipBehavior,
-    this.scribbleEnabled,
-    this.canRequestFocus,
-    this.autofocus,
-    this.controller,
-    this.decoration,
-    this.focusNode,
-    this.groupId,
-    this.keyboardType,
-    this.readOnly,
-    this.strutStyle,
-    this.textAlign,
-    this.textAlignVertical,
-    this.textCapitalization,
-    this.textDirection,
-    this.textInputAction,
-    this.style,
-    this.textStyle,
-    this.magnifierConfiguration,
-    this.scrollController,
     this.notifyOnChange = true,
-  });
+    this.errorStyle,
+    this.controller,
+    this.focusNode,
+    this.decoration = const InputDecoration(),
+    this.keyboardType = TextInputType.text,
+    this.textInputAction,
+    this.textCapitalization = TextCapitalization.none,
+    this.style,
+    this.textAlign = TextAlign.start,
+    this.textAlignVertical,
+    this.maxLines = 1,
+    this.minLines,
+    this.maxLength,
+    this.inputFormatters,
+    this.autofillHints,
+    this.obscureText = false,
+    this.autocorrect = true,
+    this.autofocus = false,
+    this.readOnly = false,
+    this.cursorColor,
+    this.onChanged,
+    this.onFieldSubmitted,
+    this.onTap,
+    this.onEditingComplete,
+    this.buildCounter,
+  }) // Dart 3.12 has no private named parameters (`this._form`).
+    // ignore: prefer_initializing_formals
+    : _form = form;
 
   /// The form controller, if provided directly.
   final FormFieldsController<E>? _form;
@@ -245,117 +117,101 @@ class HookedTextFormField<E extends Enum> extends StatelessWidget {
   /// Optional validator function that overrides the form's validators.
   final String? Function(String?)? validator;
 
-  /// Controls when auto-validation occurs. Overrides the field's
+  /// When the field validates itself. Overrides the field's
   /// `FieldConfig.validateOn` and the form's `validateOn`.
-  final AutovalidateMode? autovalidateMode;
+  final ValidationMode? validateOn;
 
   /// Whether the field is enabled.
-  final bool? enabled;
+  final bool enabled;
 
-  /// Initial value for the field.
+  /// Initial value, used when the form gives none and [controller] is
+  /// `null`.
   final String? initialValue;
 
   /// Callback when the form is saved.
   final void Function(String?)? onSaved;
 
-  /// Restoration ID for saving and restoring the field state.
-  final String? restorationId;
+  /// Whether to notify form listeners when the field value changes.
+  ///
+  /// Defaults to `true`. Required for [FormFieldsController.listen] to react
+  /// to this field's changes.
+  final bool notifyOnChange;
 
-  /// The toolbar options for the text form field.
-  @Deprecated(
-    'Use `contextMenuBuilder` instead. '
-    'This feature was deprecated after v3.3.0-0.5.pre.',
-  )
-  final ToolbarOptions? toolbarOptions;
+  /// The style of the error shown below the field.
+  final TextStyle? errorStyle;
 
-  /// Whether to show the cursor.
-  final bool? showCursor;
+  /// See [TextField.controller]. Created and disposed by the widget when
+  /// `null`.
+  final TextEditingController? controller;
 
-  /// The character to use when obscuring text.
-  final String? obscuringCharacter;
+  /// See [TextField.focusNode]. Registered with
+  /// [FormFieldsController.focusNodeFor] for focus-on-invalid.
+  final FocusNode? focusNode;
 
-  /// Whether to obscure text.
-  final bool? obscureText;
+  /// See [TextField.decoration].
+  final InputDecoration? decoration;
 
-  /// Whether to autocorrect text.
-  final bool? autocorrect;
+  /// See [TextField.keyboardType].
+  final TextInputType keyboardType;
 
-  /// The smart dashes type.
-  final SmartDashesType? smartDashesType;
+  /// See [TextField.textInputAction].
+  final TextInputAction? textInputAction;
 
-  /// The smart quotes type.
-  final SmartQuotesType? smartQuotesType;
+  /// See [TextField.textCapitalization].
+  final TextCapitalization textCapitalization;
 
-  /// Whether to enable suggestions.
-  final bool? enableSuggestions;
+  /// See [TextField.style].
+  final TextStyle? style;
 
-  /// The max length enforcement.
-  final MaxLengthEnforcement? maxLengthEnforcement;
+  /// See [TextField.textAlign].
+  final TextAlign textAlign;
 
-  /// The maximum number of lines the text can have.
+  /// See [TextField.textAlignVertical].
+  final TextAlignVertical? textAlignVertical;
+
+  /// See [TextField.maxLines].
   final int? maxLines;
 
-  /// The minimum number of lines the text can have.
+  /// See [TextField.minLines].
   final int? minLines;
 
-  /// Whether the text can expand to fit the content.
-  final bool? expands;
-
-  /// The maximum length of the text.
+  /// See [TextField.maxLength].
   final int? maxLength;
 
-  /// The callback that is called when the text changes.
-  final void Function(String)? onChanged;
-
-  /// The callback that is called when the text is tapped.
-  final void Function()? onTap;
-
-  /// The callback that is called when the text is tapped always.
-  final bool? onTapAlwaysCalled;
-
-  /// The callback that is called when the text is tapped outside.
-  final void Function(PointerDownEvent)? onTapOutside;
-
-  /// The callback that is called when the text editing is completed.
-  final VoidCallback? onEditingComplete;
-
-  /// The callback that is called when the text field is submitted.
-  final void Function(String)? onFieldSubmitted;
-
-  /// The input formatters for the text form field.
+  /// See [TextField.inputFormatters].
   final List<TextInputFormatter>? inputFormatters;
 
-  /// Whether to ignore pointers.
-  final bool? ignorePointers;
+  /// See [TextField.autofillHints].
+  final List<String>? autofillHints;
 
-  /// The width of the cursor.
-  final double? cursorWidth;
+  /// See [TextField.obscureText].
+  final bool obscureText;
 
-  /// The height of the cursor.
-  final double? cursorHeight;
+  /// See [TextField.autocorrect].
+  final bool autocorrect;
 
-  /// The radius of the cursor.
-  final Radius? cursorRadius;
+  /// See [TextField.autofocus].
+  final bool autofocus;
 
-  /// The color of the cursor.
+  /// See [TextField.readOnly].
+  final bool readOnly;
+
+  /// See [TextField.cursorColor].
   final Color? cursorColor;
 
-  /// The color of the cursor when there is an error.
-  final Color? cursorErrorColor;
+  /// See [TextField.onChanged].
+  final ValueChanged<String>? onChanged;
 
-  /// The appearance of the keyboard.
-  final Brightness? keyboardAppearance;
+  /// See [TextField.onSubmitted].
+  final void Function(String)? onFieldSubmitted;
 
-  /// The padding of the scroll view.
-  final EdgeInsets? scrollPadding;
+  /// See [TextField.onTap].
+  final VoidCallback? onTap;
 
-  /// Whether to enable interactive selection.
-  final bool? enableInteractiveSelection;
+  /// See [TextField.onEditingComplete].
+  final VoidCallback? onEditingComplete;
 
-  /// The selection controls for the text form field.
-  final TextSelectionControls? selectionControls;
-
-  /// The counter for the text form field.
+  /// See [TextField.buildCounter].
   final Widget? Function(
     BuildContext, {
     required int currentLength,
@@ -364,217 +220,110 @@ class HookedTextFormField<E extends Enum> extends StatelessWidget {
   })?
   buildCounter;
 
-  /// The scroll physics for the text form field.
-  final ScrollPhysics? scrollPhysics;
+  @override
+  State<HookedTextFormField<E>> createState() => _HookedTextFormFieldState<E>();
+}
 
-  /// The autofill hints for the text form field.
-  final List<String>? autofillHints;
+class _HookedTextFormFieldState<E extends Enum>
+    extends State<HookedTextFormField<E>> {
+  TextEditingController? _ownController;
 
-  /// Whether to enable IME personalized learning.
-  final bool? enableIMEPersonalizedLearning;
+  TextEditingController get _controller =>
+      widget.controller ?? (_ownController ??= TextEditingController());
 
-  /// The mouse cursor for the text form field.
-  final MouseCursor? mouseCursor;
-
-  /// The context menu builder for the text form field.
-  final Widget Function(BuildContext, EditableTextState)? contextMenuBuilder;
-
-  /// The spell check configuration for the text form field.
-  final SpellCheckConfiguration? spellCheckConfiguration;
-
-  /// The undo controller for the text form field.
-  final UndoHistoryController? undoController;
-
-  /// The app private command for the text form field.
-  final void Function(String, Map<String, dynamic>)? onAppPrivateCommand;
-
-  /// Whether the cursor opacity animates.
-  final bool? cursorOpacityAnimates;
-
-  /// The selection height style for the text form field.
-  final BoxHeightStyle? selectionHeightStyle;
-
-  /// The selection width style for the text form field.
-  final BoxWidthStyle? selectionWidthStyle;
-
-  /// The drag start behavior for the text form field.
-  final DragStartBehavior? dragStartBehavior;
-
-  /// The content insertion configuration for the text form field.
-  final ContentInsertionConfiguration? contentInsertionConfiguration;
-
-  /// The states controller for the text form field.
-  final WidgetStatesController? statesController;
-
-  /// The clip behavior for the text form field.
-  final Clip? clipBehavior;
-
-  /// Whether to enable scribble.
-  final bool? scribbleEnabled;
-
-  /// Whether to enable request focus.
-  final bool? canRequestFocus;
-
-  /// Whether to autofocus the text form field.
-  final bool? autofocus;
-
-  /// The controller for the text form field.
-  final TextEditingController? controller;
-
-  /// The decoration for the text form field.
-  final InputDecoration? decoration;
-
-  /// The focus node for the text form field.
-  final FocusNode? focusNode;
-
-  /// The group id for the text form field.
-  final Object? groupId;
-
-  /// The keyboard type for the text form field.
-  final TextInputType? keyboardType;
-
-  /// Whether the text form field is read only.
-  final bool? readOnly;
-
-  /// The strut style for the text form field.
-  final StrutStyle? strutStyle;
-
-  /// The text alignment for the text form field.
-  final TextAlign? textAlign;
-
-  /// The text alignment vertical for the text form field.
-  final TextAlignVertical? textAlignVertical;
-
-  /// The text capitalization for the text form field.
-  final TextCapitalization? textCapitalization;
-
-  /// The text direction for the text form field.
-  final TextDirection? textDirection;
-
-  /// The text input action for the text form field.
-  final TextInputAction? textInputAction;
-
-  /// The style for the text form field.
-  final TextStyle? style;
-
-  /// The text style for the text form field.
-  final TextStyle? textStyle;
-
-  /// The magnifier configuration for the text form field.
-  final TextMagnifierConfiguration? magnifierConfiguration;
-
-  /// The scroll controller for the text form field.
-  final ScrollController? scrollController;
-
-  /// Whether to notify form listeners when the field value changes.
-  ///
-  /// Defaults to `true`. Required for [FormFieldsController.listen] to react
-  /// to this field's changes. Set to `false` only if you need to suppress
-  /// reactive updates for performance reasons.
-  final bool notifyOnChange;
+  @override
+  void dispose() {
+    _ownController?.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final form = _form ?? useFormContext(context);
-    final effectiveFocusNode = form.focusNodeFor(
-      fieldHook,
-      external: focusNode,
-    );
+    final form = widget._form ?? useFormContext<E>(context);
+    final field = widget.fieldHook;
+    final focusNode = form.focusNodeFor(field, external: widget.focusNode);
 
-    return FieldValidation<E>(
-      form: form,
-      field: fieldHook,
-      autovalidateMode: autovalidateMode,
-      builder: (mode) => TextFormField(
-        key: form.fieldKey(fieldHook),
-        validator:
-            validator ??
-            (value) {
-              final forcedError = form.getFieldForcedError(fieldHook);
-              if (forcedError != null) {
-                return forcedError.localize(
-                  context,
-                  form.getNotifier(fieldHook),
-                );
-              }
-              return form
-                  .validators(fieldHook)
-                  ?.resolveMessage<String>(context)
-                  ?.call(value);
-            },
-        forceErrorText: forceErrorText,
-        autovalidateMode: mode,
-        enabled: enabled,
-        initialValue: form.getInitialValue(fieldHook) ?? initialValue,
-        onSaved: onSaved,
-        restorationId: restorationId,
-        showCursor: showCursor,
-        obscuringCharacter: obscuringCharacter ?? '•',
-        obscureText: obscureText ?? false,
-        autocorrect: autocorrect ?? true,
-        smartDashesType: smartDashesType,
-        smartQuotesType: smartQuotesType,
-        enableSuggestions: enableSuggestions ?? true,
-        maxLengthEnforcement: maxLengthEnforcement,
-        maxLines: maxLines ?? 1,
-        minLines: minLines,
-        expands: expands ?? false,
-        maxLength: maxLength,
-        onChanged: (value) {
-          onChanged?.call(value);
-          form.updateValue(fieldHook, value, notify: notifyOnChange);
-        },
-        onTap: onTap,
-        onTapAlwaysCalled: onTapAlwaysCalled ?? false,
-        onTapOutside: onTapOutside,
-        onEditingComplete: onEditingComplete,
-        onFieldSubmitted: onFieldSubmitted,
-        inputFormatters: inputFormatters,
-        ignorePointers: ignorePointers,
-        cursorWidth: cursorWidth ?? 2.0,
-        cursorHeight: cursorHeight,
-        cursorRadius: cursorRadius,
-        cursorColor: cursorColor,
-        cursorErrorColor: cursorErrorColor,
-        keyboardAppearance: keyboardAppearance,
-        scrollPadding: scrollPadding ?? const EdgeInsets.all(20),
-        enableInteractiveSelection: enableInteractiveSelection,
-        selectionControls: selectionControls,
-        buildCounter: buildCounter,
-        scrollPhysics: scrollPhysics,
-        autofillHints: autofillHints,
-        scrollController: scrollController,
-        enableIMEPersonalizedLearning: enableIMEPersonalizedLearning ?? true,
-        mouseCursor: mouseCursor,
-        contextMenuBuilder: contextMenuBuilder,
-        spellCheckConfiguration: spellCheckConfiguration,
-        magnifierConfiguration: magnifierConfiguration,
-        undoController: undoController,
-        onAppPrivateCommand: onAppPrivateCommand,
-        cursorOpacityAnimates: cursorOpacityAnimates,
-        selectionHeightStyle: selectionHeightStyle ?? BoxHeightStyle.tight,
-        selectionWidthStyle: selectionWidthStyle ?? BoxWidthStyle.tight,
-        dragStartBehavior: dragStartBehavior ?? DragStartBehavior.start,
-        contentInsertionConfiguration: contentInsertionConfiguration,
-        statesController: statesController,
-        clipBehavior: clipBehavior ?? Clip.hardEdge,
-        stylusHandwritingEnabled: scribbleEnabled ?? true,
-        canRequestFocus: canRequestFocus ?? true,
-        autofocus: autofocus ?? false,
-        controller: controller,
-        decoration: decoration,
-        focusNode: effectiveFocusNode,
-        groupId: groupId ?? EditableText,
-        keyboardType: keyboardType,
-        readOnly: readOnly ?? false,
-        strutStyle: strutStyle,
-        textAlign: textAlign ?? TextAlign.start,
-        textAlignVertical: textAlignVertical,
-        textCapitalization: textCapitalization ?? TextCapitalization.none,
-        textDirection: textDirection,
-        textInputAction: textInputAction,
-        style: style,
-      ),
+    return FormField<String>(
+      key: form.fieldKey(field),
+      validator:
+          widget.validator ??
+          (value) {
+            final forcedError = form.getFieldForcedError(field);
+            if (forcedError != null) {
+              return forcedError.localize(context, form.getNotifier(field));
+            }
+            return form
+                .validators(field)
+                ?.resolveMessage<String>(context)
+                ?.call(value);
+          },
+      forceErrorText: widget.forceErrorText,
+      validationMode: widget.validateOn ?? form.validationModeOf(field),
+      validateOnMount: form.getFieldForcedError(field) != null,
+      enabled: widget.enabled,
+      initialValue:
+          widget.controller?.text ??
+          form.getInitialValue<String>(field) ??
+          widget.initialValue,
+      onSaved: widget.onSaved,
+      focusNode: focusNode,
+      builder: (state) {
+        // Text flows Dart → native only: follow the field's value, set by the
+        // user, `form.updateValue` or `form.reset`.
+        final text = state.value ?? '';
+        if (_controller.text != text) {
+          _controller.text = text;
+        }
+        final error = form.getFieldForcedError(field) ?? state.errorText;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _controller,
+              focusNode: focusNode,
+              decoration: widget.decoration,
+              keyboardType: widget.keyboardType,
+              textInputAction: widget.textInputAction,
+              textCapitalization: widget.textCapitalization,
+              style: widget.style,
+              textAlign: widget.textAlign,
+              textAlignVertical: widget.textAlignVertical,
+              maxLines: widget.maxLines,
+              minLines: widget.minLines,
+              maxLength: widget.maxLength,
+              inputFormatters: widget.inputFormatters,
+              autofillHints: widget.autofillHints,
+              obscureText: widget.obscureText,
+              autocorrect: widget.autocorrect,
+              autofocus: widget.autofocus,
+              readOnly: widget.readOnly,
+              enabled: widget.enabled,
+              cursorColor: widget.cursorColor,
+              onChanged: (value) {
+                _controller.text = value;
+                widget.onChanged?.call(value);
+                form.updateValue(field, value, notify: widget.notifyOnChange);
+              },
+              onSubmitted: widget.onFieldSubmitted,
+              onTap: widget.onTap,
+              onEditingComplete: widget.onEditingComplete,
+              buildCounter: widget.buildCounter,
+            ),
+            if (error != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  error,
+                  style:
+                      widget.errorStyle ??
+                      const TextStyle(color: Color(0xFFB3261E), fontSize: 12),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 }

@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart';
+import 'package:dartnative/dartnative.dart';
 
 import '../models/form_field_controller.dart';
 
@@ -6,10 +6,11 @@ import '../models/form_field_controller.dart';
 ///
 /// This is a simple provider - granular field listening is handled by
 /// [ValueNotifier]s in the controller, accessed via [useFieldValue].
-class const _HookedFormProviderBase<E extends Enum>({
-  required super.child,
-  required final FormFieldsController<E> form,
-}) extends InheritedWidget {
+class _HookedFormProviderBase<E extends Enum> extends InheritedWidget {
+  const _HookedFormProviderBase({required super.child, required this.form});
+
+  final FormFieldsController<E> form;
+
   static FormFieldsController<E> of<E extends Enum>(BuildContext context) {
     final widget = context
         .dependOnInheritedWidgetOfExactType<_HookedFormProviderBase<E>>();
@@ -45,15 +46,20 @@ class const _HookedFormProviderBase<E extends Enum>({
 ///   child: MyFormWidget(),
 /// )
 /// ```
-class const HookedFormProvider<E extends Enum>({
-  super.key,
+class HookedFormProvider<E extends Enum> extends StatelessWidget {
+  /// Creates a [HookedFormProvider].
+  const HookedFormProvider({
+    super.key,
+    required this.form,
+    required this.child,
+  });
 
   /// The form controller.
-  required final FormFieldsController<E> form,
+  final FormFieldsController<E> form;
 
   /// The child of the form.
-  required final Widget child,
-}) extends StatelessWidget {
+  final Widget child;
+
   @override
   Widget build(BuildContext context) {
     return _HookedFormProviderBase<E>(form: form, child: child);

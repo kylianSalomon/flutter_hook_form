@@ -1,7 +1,7 @@
 // ignore_for_file: public_member_api_docs
 
 import 'package:cross_file/cross_file.dart';
-import 'package:flutter/widgets.dart';
+import 'package:dartnative/dartnative.dart';
 import 'package:flutter_hook_form/src/messages/form_messages.dart';
 import 'package:flutter_hook_form/src/models/validator.dart';
 import 'package:flutter_hook_form/src/validators/cross_field_validators.dart';
@@ -11,7 +11,7 @@ final _phonePattern = RegExp(r'^\+?[0-9]{9,14}$');
 
 /// Required field validator.
 class RequiredValidator<T> extends FieldValidator<T> {
-  const new({super.message, String? errorCode})
+  const RequiredValidator({super.message, String? errorCode})
     : super(errorCode: errorCode ?? 'required');
 
   @override
@@ -35,7 +35,7 @@ class RequiredValidator<T> extends FieldValidator<T> {
 
 /// Optional field validator.
 class OptionalValidator<T> extends FieldValidator<T> {
-  const new({super.message, String? errorCode})
+  const OptionalValidator({super.message, String? errorCode})
     : super(errorCode: errorCode ?? 'invalid_field_type');
 
   @override
@@ -48,7 +48,7 @@ class OptionalValidator<T> extends FieldValidator<T> {
 
 /// Email validator.
 class EmailValidator extends FieldValidator<String> {
-  const new({super.message, String? errorCode})
+  const EmailValidator({super.message, String? errorCode})
     : super(errorCode: errorCode ?? 'invalid_email');
 
   @override
@@ -69,7 +69,7 @@ class EmailValidator extends FieldValidator<String> {
 
 /// Minimum length validator.
 class MinLengthValidator extends FieldValidator<String> {
-  const new(this.length, {super.message, String? errorCode})
+  const MinLengthValidator(this.length, {super.message, String? errorCode})
     : super(errorCode: errorCode ?? 'min_length');
 
   final int length;
@@ -88,7 +88,7 @@ class MinLengthValidator extends FieldValidator<String> {
 
 /// Pattern validator.
 class PatternValidator extends FieldValidator<String> {
-  const new(this.pattern, {super.message, String? errorCode})
+  const PatternValidator(this.pattern, {super.message, String? errorCode})
     : super(errorCode: errorCode ?? 'invalid_pattern');
 
   final RegExp pattern;
@@ -107,7 +107,7 @@ class PatternValidator extends FieldValidator<String> {
 
 /// Maximum length validator.
 class MaxLengthValidator extends FieldValidator<String> {
-  const new(this.length, {super.message, String? errorCode})
+  const MaxLengthValidator(this.length, {super.message, String? errorCode})
     : super(errorCode: errorCode ?? 'max_length');
 
   final int length;
@@ -126,7 +126,7 @@ class MaxLengthValidator extends FieldValidator<String> {
 
 /// Phone validator.
 class PhoneValidator extends FieldValidator<String> {
-  const new({super.message, String? errorCode})
+  const PhoneValidator({super.message, String? errorCode})
     : super(errorCode: errorCode ?? 'invalid_phone');
 
   @override
@@ -147,7 +147,7 @@ class PhoneValidator extends FieldValidator<String> {
 
 /// Minimum validator.
 class MinValidator<T extends num> extends FieldValidator<T> {
-  const new(this.min, {super.message, String? errorCode})
+  const MinValidator(this.min, {super.message, String? errorCode})
     : super(errorCode: errorCode ?? 'num_infer_to_min');
 
   final num min;
@@ -166,7 +166,7 @@ class MinValidator<T extends num> extends FieldValidator<T> {
 
 /// Maximum validator.
 class MaxValidator<T extends num> extends FieldValidator<T> {
-  const new(this.max, {super.message, String? errorCode})
+  const MaxValidator(this.max, {super.message, String? errorCode})
     : super(errorCode: errorCode ?? 'num_superior_to_max');
 
   final num max;
@@ -184,7 +184,7 @@ class MaxValidator<T extends num> extends FieldValidator<T> {
 }
 
 class RangeValidator<T extends num> extends FieldValidator<T> {
-  const new(this.min, this.max, {super.message, String? errorCode})
+  const RangeValidator(this.min, this.max, {super.message, String? errorCode})
     : super(errorCode: errorCode ?? 'num_out_of_range');
 
   final num min;
@@ -203,7 +203,7 @@ class RangeValidator<T extends num> extends FieldValidator<T> {
 
 /// Mime type validator.
 class MimeTypeValidator extends FieldValidator<XFile> {
-  const new(this.mimeType, {super.message, String? errorCode})
+  const MimeTypeValidator(this.mimeType, {super.message, String? errorCode})
     : super(errorCode: errorCode ?? 'invalid_file_format');
 
   final Set<String> mimeType;
@@ -222,7 +222,7 @@ class MimeTypeValidator extends FieldValidator<XFile> {
 
 /// Date after validator.
 class IsAfterValidator extends FieldValidator<DateTime> {
-  const new(this.min, {super.message, String? errorCode})
+  const IsAfterValidator(this.min, {super.message, String? errorCode})
     : super(errorCode: errorCode ?? 'date_after');
 
   final String min;
@@ -241,7 +241,7 @@ class IsAfterValidator extends FieldValidator<DateTime> {
 
 /// Date before validator.
 class IsBeforeValidator extends FieldValidator<DateTime> {
-  const new(this.max, {super.message, String? errorCode})
+  const IsBeforeValidator(this.max, {super.message, String? errorCode})
     : super(errorCode: errorCode ?? 'date_before');
 
   final String max;
@@ -260,7 +260,7 @@ class IsBeforeValidator extends FieldValidator<DateTime> {
 
 /// Minimum items validator.
 class ListMinItemsValidator<T> extends FieldValidator<List<T>> {
-  const new(this.length, {super.message, String? errorCode})
+  const ListMinItemsValidator(this.length, {super.message, String? errorCode})
     : super(errorCode: errorCode ?? 'min_items');
 
   final int length;
@@ -279,7 +279,7 @@ class ListMinItemsValidator<T> extends FieldValidator<List<T>> {
 
 /// Maximum items validator.
 class ListMaxItemsValidator<T> extends FieldValidator<List<T>> {
-  const new(this.length, {super.message, String? errorCode})
+  const ListMaxItemsValidator(this.length, {super.message, String? errorCode})
     : super(errorCode: errorCode ?? 'max_items');
 
   final int length;
@@ -307,7 +307,7 @@ extension MessageResolver on List<Validator<dynamic>>? {
       validator,
     ) {
       if (validator is! Validator<T>) {
-        throw ErrorDescription(
+        throw ArgumentError(
           '''Cannot resolve message for type $T. Please provide the type of the 
           validators when calling the resolveMessage method.''',
         );
